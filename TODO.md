@@ -28,8 +28,8 @@ Ticks are updated as work lands. Every item is built **program-aware** (see Deci
 
 ## 🛠️ Phase 0 — Stabilize
 
-- [ ] Commit the app and push to GitHub
-- [ ] Server: new branch off latest production for the affiliate rebuild
+- [x] Commit the app and push to GitHub
+- [x] Server: new branch off latest production for the affiliate rebuild (`feat-affiliate-programs`)
 - [ ] Fix `visitApi` import break (check-in, lead form, call-log form)
 - [ ] Fix all TypeScript errors (`npx tsc --noEmit` passes)
 - [ ] Server: fix route order (`/stats`, `/monthly`, `/summary`, `/search` shadowed by `/{id}`)
