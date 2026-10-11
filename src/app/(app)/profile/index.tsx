@@ -1,356 +1,182 @@
 // app/(app)/profile/index.tsx
+import { earningsApi } from '@/api/earnings';
+import { tierApi } from '@/api/tiers';
+import { ProgramSwitcher } from '@/components/programs/program-switcher';
 import { AppColors } from '@/constants/colors';
 import { useAuth } from '@/context/AuthContext';
 import { useAppTheme } from '@/hooks/use-app-theme';
 import { typography } from '@/styles/typography';
+import { ActivityCounts } from '@/types/models';
+import { IconName } from '@/utils/icons';
+import { formatPaisa } from '@/utils/money';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { useRouter } from 'expo-router';
-import { useEffect, useMemo } from 'react';
-import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Href, useFocusEffect, useRouter } from 'expo-router';
+import { useCallback, useMemo, useState } from 'react';
+import { Alert, ScrollView, Share, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 export default function ProfileScreen() {
   const router = useRouter();
-  const { user, logout } = useAuth();
+  const { user, logout, activeMembership, activeMemberships } = useAuth();
   const { colors } = useAppTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
 
+  const [counts, setCounts] = useState<ActivityCounts | null>(null);
+  const [lifetimePaisa, setLifetimePaisa] = useState<number | null>(null);
+  const [showSwitcher, setShowSwitcher] = useState(false);
+
+  const load = useCallback(async () => {
+    if (!activeMembership) return;
+    try {
+      const [tier, earnings] = await Promise.all([tierApi.getCurrent(), earningsApi.getSummary()]);
+      setCounts(tier.data.data.counts);
+      setLifetimePaisa(earnings.data.data.lifetime_paisa);
+    } catch (error) {
+      console.error('Error loading profile stats:', error);
+    }
+  }, [activeMembership]);
+
+  useFocusEffect(
+    useCallback(() => {
+      load();
+    }, [load])
+  );
+
+  const pendingCount = (user?.memberships ?? []).filter((m) => m.status === 'pending' || m.status === 'invited').length;
+  const canSwitch = activeMemberships.length > 1 || pendingCount > 0;
+
+  const shareCode = () => {
+    if (!activeMembership) return;
+    Share.share({
+      message: `Sign up for ${activeMembership.program?.name ?? 'MedicineXP'} with my code ${activeMembership.referral_code}`,
+    });
+  };
+
   const handleLogout = () => {
-    Alert.alert('Logout', 'Are you sure you want to logout?', [
-      { text: 'Logout', style: 'destructive', onPress: logout },
+    Alert.alert('Log out', 'Are you sure you want to log out?', [
       { text: 'Cancel', style: 'cancel' },
+      { text: 'Log out', style: 'destructive', onPress: logout },
     ]);
   };
 
-  const handleOpenOnboarding = () => {
-    router.push('/onboarding?returnTo=/(app)/profile');
-  };
-
-  useEffect(() => {
-    if (!user?.id) {
-      router.push('/auth/login');
-    }
-  }, [user]);
-
-  const menuItems = [
-    {
-      icon: 'person-outline' as const,
-      label: 'My Profile',
-      onPress: () => {},
-    },
-    {
-      icon: 'trophy-outline' as const,
-      label: 'Tiers & Rewards',
-      onPress: () => router.push('/(app)/tiers'),
-      badge: user?.tier?.tier_name || 'New',
-    },
-    {
-      icon: 'business-outline' as const,
-      label: 'My Organizations',
-      onPress: () => router.push('/(app)/organizations'),
-      badge: 'View',
-    },
-    {
-      icon: 'calendar-outline' as const,
-      label: 'My Meetups',
-      onPress: () => router.push('/(app)/meetups'),
-      badge: 'Schedule',
-    },
-    {
-      icon: 'cube-outline' as const,
-      label: 'My Inventory',
-      onPress: () => router.push('/(app)/inventory'),
-      badge: 'Stock',
-    },
-    {
-      icon: 'grid-outline' as const, // or 'apps-outline'
-      label: 'Distributions',
-      onPress: () => router.push('/(app)/distributions'),
-      badge: 'Active',
-    },
-    {
-      icon: 'pricetag-outline' as const, // or 'ticket-outline'
-      label: 'Coupons',
-      onPress: () => router.push('/(app)/coupons'),
-      badge: 'Offers',
-    },
-    {
-      icon: 'call-outline' as const,
-      label: 'Call Logs',
-      onPress: () => router.push('/(app)/call-logs'),
-      badge: 'History',
-    },
-    {
-      icon: 'school-outline' as const,
-      label: 'How It Works',
-      onPress: handleOpenOnboarding,
-      badge: 'Guide',
-    },
-    {
-      icon: 'settings-outline' as const,
-      label: 'Settings',
-      onPress: () => {},
-    },
-    {
-      icon: 'help-circle-outline' as const,
-      label: 'Help & Support',
-      onPress: () => {},
-    },
-    {
-      icon: 'information-circle-outline' as const,
-      label: 'About',
-      onPress: () => {},
-    },
+  const menu: { icon: IconName; label: string; route: Href; hint?: string }[] = [
+    { icon: 'trophy-outline', label: 'Tiers & rewards', route: '/(app)/tiers', hint: activeMembership?.tier?.name },
+    { icon: 'business-outline', label: 'Pharmacies & clinics', route: '/(app)/venues' },
+    { icon: 'bag-handle-outline', label: 'My materials', route: '/(app)/materials' },
+    { icon: 'cube-outline', label: 'Drop-offs', route: '/(app)/distributions' },
+    { icon: 'call-outline', label: 'Calls', route: '/(app)/call-logs' },
+    { icon: 'pricetag-outline', label: 'Coupons', route: '/(app)/coupons' },
+    { icon: 'people-circle-outline', label: 'Meetups', route: '/(app)/meetups' },
   ];
 
   return (
-    <ScrollView style={styles.container}>
-      {/* Profile Header */}
+    <ScrollView style={{ flex: 1, backgroundColor: colors.background }} contentContainerStyle={styles.content}>
       <View style={styles.header}>
-        <View style={styles.avatarContainer}>
-          <View style={styles.avatar}>
-            <Text style={[typography.h3, styles.avatarText]}>
-              {user?.name?.charAt(0).toUpperCase() || '?'}
+        <View style={[styles.avatar, { backgroundColor: colors.primary }]}>
+          <Text style={[typography.h3, { color: colors.primaryForeground }]}>{user?.name?.charAt(0).toUpperCase() || '?'}</Text>
+        </View>
+        <Text style={[typography.h5, { color: colors.foreground, fontWeight: '700' }]}>{user?.name}</Text>
+        <Text style={[typography.body2, { color: colors.mutedForeground }]}>{user?.email}</Text>
+        {user?.contact ? <Text style={[typography.body2, { color: colors.mutedForeground }]}>{user.contact}</Text> : null}
+      </View>
+
+      {/* Program */}
+      <TouchableOpacity
+        style={[styles.programCard, { backgroundColor: colors.card, borderColor: colors.primary }]}
+        onPress={() => setShowSwitcher(true)}
+        disabled={!canSwitch}
+      >
+        <View style={{ flex: 1, gap: 2 }}>
+          <Text style={[typography.caption, { color: colors.mutedForeground }]}>Working for</Text>
+          <Text style={[typography.h5, { color: colors.foreground, fontWeight: '700' }]}>
+            {activeMembership?.program?.name ?? 'No active program'}
+          </Text>
+          {activeMembership?.tier && (
+            <Text style={[typography.caption, { color: colors.primary }]}>{activeMembership.tier.name} tier</Text>
+          )}
+          {pendingCount > 0 && (
+            <Text style={[typography.caption, { color: colors.warning }]}>
+              {pendingCount} program{pendingCount > 1 ? 's' : ''} waiting for approval
             </Text>
-          </View>
-          {user?.tier && (
-            <View style={styles.tierBadge}>
-              <Text style={[typography.caption, styles.tierText]}>
-                {user.tier.tier_name}
-              </Text>
-            </View>
           )}
         </View>
-        <Text style={[typography.h5, styles.userName]}>{user?.name || 'User'}</Text>
-        <Text style={[typography.body2, styles.userEmail]}>{user?.email}</Text>
-        {user?.contact && (
-          <Text style={[typography.body2, styles.userContact]}>{user.contact}</Text>
+        {canSwitch && (
+          <View style={[styles.switchPill, { backgroundColor: colors.primary + '15' }]}>
+            <Ionicons name="swap-horizontal" size={16} color={colors.primary} />
+            <Text style={[typography.caption, { color: colors.primary, fontWeight: '600' }]}>Switch</Text>
+          </View>
         )}
+      </TouchableOpacity>
+
+      {activeMembership && (
+        <TouchableOpacity style={[styles.codeCard, { backgroundColor: colors.card, borderColor: colors.border }]} onPress={shareCode}>
+          <View style={{ flex: 1 }}>
+            <Text style={[typography.caption, { color: colors.mutedForeground }]}>Your referral code</Text>
+            <Text style={[styles.code, { color: colors.foreground }]}>{activeMembership.referral_code}</Text>
+          </View>
+          <Ionicons name="share-social-outline" size={22} color={colors.primary} />
+        </TouchableOpacity>
+      )}
+
+      <View style={[styles.stats, { backgroundColor: colors.card, borderColor: colors.border }]}>
+        <Stat label="Pharmacies signed" value={counts?.sales ?? '—'} colors={colors} />
+        <Stat label="Earned" value={lifetimePaisa != null ? formatPaisa(lifetimePaisa) : '—'} colors={colors} />
+        <Stat label="Visits" value={counts?.visits ?? '—'} colors={colors} />
       </View>
 
-      {/* Stats */}
-      <View style={styles.statsContainer}>
-        <View style={styles.statItem}>
-          <Text style={[typography.h6, styles.statValue]}>0</Text>
-          <Text style={[typography.caption, styles.statLabel]}>Total Sales</Text>
-        </View>
-        <View style={styles.statDivider} />
-        <View style={styles.statItem}>
-          <Text style={[typography.h6, styles.statValue]}>$0</Text>
-          <Text style={[typography.caption, styles.statLabel]}>Total Earned</Text>
-        </View>
-        <View style={styles.statDivider} />
-        <View style={styles.statItem}>
-          <Text style={[typography.h6, styles.statValue]}>0</Text>
-          <Text style={[typography.caption, styles.statLabel]}>Leads</Text>
-        </View>
-      </View>
-
-      {/* Menu */}
-      <View style={styles.menuContainer}>
-        {menuItems.map((item, index, arr) => (
+      <View style={[styles.menu, { backgroundColor: colors.card, borderColor: colors.border }]}>
+        {menu.map((item, index) => (
           <TouchableOpacity
             key={item.label}
-            style={[
-              styles.menuItem,
-              index === arr.length - 1 && styles.menuItemLast,
-            ]}
-            onPress={item.onPress}
+            style={[styles.menuItem, index < menu.length - 1 && { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.border }]}
+            onPress={() => router.push(item.route)}
           >
-            <View style={styles.menuItemLeft}>
-              <Ionicons 
-                name={item.icon} 
-                size={22} 
-                color={
-                  item.icon === 'trophy-outline' ? colors.primary : 
-                  item.icon === 'calendar-outline' ? colors.success :
-                  item.icon === 'cube-outline' ? colors.accent :
-                  colors.mutedForeground
-                } 
-              />
-              <Text style={[typography.body1, styles.menuItemLabel]}>
-                {item.label}
-              </Text>
-            </View>
-            <View style={styles.menuItemRight}>
-              {item.badge && (
-                <View style={[
-                  styles.badge,
-                  item.label === 'Tiers & Rewards' && { backgroundColor: colors.primary + '15' },
-                  item.label === 'My Meetups' && { backgroundColor: colors.success + '15' },
-                  item.label === 'My Inventory' && { backgroundColor: colors.accent + '15' },
-                  item.badge === 'New' && { backgroundColor: colors.warning + '15' },
-                ]}>
-                  <Text style={[
-                    typography.caption, 
-                    styles.badgeText,
-                    item.label === 'Tiers & Rewards' && { color: colors.primary },
-                    item.label === 'My Meetups' && { color: colors.success },
-                    item.label === 'My Inventory' && { color: colors.accent },
-                    item.badge === 'New' && { color: colors.warning },
-                  ]}>
-                    {item.badge}
-                  </Text>
-                </View>
-              )}
-              <Ionicons name="chevron-forward" size={20} color={colors.border} />
-            </View>
+            <Ionicons name={item.icon} size={22} color={colors.primary} />
+            <Text style={[typography.body1, { flex: 1, color: colors.foreground }]}>{item.label}</Text>
+            {item.hint ? <Text style={[typography.caption, { color: colors.mutedForeground }]}>{item.hint}</Text> : null}
+            <Ionicons name="chevron-forward" size={18} color={colors.mutedForeground} />
           </TouchableOpacity>
         ))}
       </View>
 
-      {/* Logout Button */}
-      <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-        <Ionicons name="log-out-outline" size={22} color={colors.destructive} />
-        <Text style={[typography.body1, styles.logoutText]}>Logout</Text>
+      <TouchableOpacity
+        style={[styles.menuItem, styles.menu, { backgroundColor: colors.card, borderColor: colors.border }]}
+        onPress={() => router.push('/onboarding?returnTo=/(app)/profile')}
+      >
+        <Ionicons name="school-outline" size={22} color={colors.primary} />
+        <Text style={[typography.body1, { flex: 1, color: colors.foreground }]}>How it works</Text>
+        <Ionicons name="chevron-forward" size={18} color={colors.mutedForeground} />
       </TouchableOpacity>
 
-      <Text style={[typography.caption, styles.versionText]}>Version 1.0.0</Text>
+      <TouchableOpacity style={[styles.logout, { borderColor: colors.destructive }]} onPress={handleLogout}>
+        <Ionicons name="log-out-outline" size={20} color={colors.destructive} />
+        <Text style={[typography.body1, { color: colors.destructive, fontWeight: '600' }]}>Log out</Text>
+      </TouchableOpacity>
+
+      <ProgramSwitcher visible={showSwitcher} onClose={() => setShowSwitcher(false)} onSwitched={() => load()} />
     </ScrollView>
+  );
+}
+
+function Stat({ label, value, colors }: { label: string; value: number | string; colors: AppColors }) {
+  return (
+    <View style={{ flex: 1, alignItems: 'center', gap: 2 }}>
+      <Text style={[typography.h6, { color: colors.foreground, fontWeight: '700' }]}>{value}</Text>
+      <Text style={[typography.caption, { color: colors.mutedForeground, textAlign: 'center' }]}>{label}</Text>
+    </View>
   );
 }
 
 const createStyles = (colors: AppColors) =>
   StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: colors.background,
-    },
-    header: {
-      backgroundColor: colors.card,
-      alignItems: 'center',
-      paddingVertical: 30,
-      paddingHorizontal: 20,
-      borderBottomWidth: 1,
-      borderBottomColor: colors.border,
-    },
-    avatarContainer: {
-      position: 'relative',
-      marginBottom: 12,
-    },
-    avatar: {
-      width: 80,
-      height: 80,
-      borderRadius: 40,
-      backgroundColor: colors.primary,
-      justifyContent: 'center',
-      alignItems: 'center',
-    },
-    avatarText: {
-      color: colors.primaryForeground,
-    },
-    tierBadge: {
-      position: 'absolute',
-      bottom: 0,
-      right: 0,
-      backgroundColor: colors.warning,
-      paddingHorizontal: 10,
-      paddingVertical: 4,
-      borderRadius: 12,
-    },
-    tierText: {
-      color: '#FFFFFF',
-      fontWeight: '600',
-    },
-    userName: {
-      color: colors.foreground,
-    },
-    userEmail: {
-      color: colors.mutedForeground,
-      marginTop: 2,
-    },
-    userContact: {
-      color: colors.mutedForeground,
-      marginTop: 2,
-    },
-    statsContainer: {
-      flexDirection: 'row',
-      backgroundColor: colors.card,
-      paddingVertical: 16,
-      marginHorizontal: 16,
-      marginTop: 16,
-      borderRadius: 12,
-      borderWidth: 1,
-      borderColor: colors.border,
-    },
-    statItem: {
-      flex: 1,
-      alignItems: 'center',
-    },
-    statValue: {
-      color: colors.foreground,
-    },
-    statLabel: {
-      color: colors.mutedForeground,
-      marginTop: 2,
-    },
-    statDivider: {
-      width: 1,
-      backgroundColor: colors.border,
-    },
-    menuContainer: {
-      backgroundColor: colors.card,
-      marginHorizontal: 16,
-      marginTop: 16,
-      borderRadius: 12,
-      overflow: 'hidden',
-      borderWidth: 1,
-      borderColor: colors.border,
-    },
-    menuItem: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      padding: 16,
-      borderBottomWidth: 1,
-      borderBottomColor: colors.border,
-    },
-    menuItemLast: {
-      borderBottomWidth: 0,
-    },
-    menuItemLeft: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 12,
-    },
-    menuItemLabel: {
-      color: colors.foreground,
-    },
-    menuItemRight: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 8,
-    },
-    badge: {
-      backgroundColor: colors.primary + '15',
-      paddingHorizontal: 10,
-      paddingVertical: 3,
-      borderRadius: 12,
-    },
-    badgeText: {
-      fontSize: 10,
-      fontWeight: '600',
-    },
-    logoutButton: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'center',
-      backgroundColor: colors.card,
-      marginHorizontal: 16,
-      marginTop: 16,
-      paddingVertical: 14,
-      borderRadius: 12,
-      gap: 8,
-      borderWidth: 1,
-      borderColor: colors.border,
-    },
-    logoutText: {
-      color: colors.destructive,
-      fontWeight: '600',
-    },
-    versionText: {
-      textAlign: 'center',
-      color: colors.icon,
-      marginTop: 20,
-      marginBottom: 30,
-    },
+    content: { padding: 16, paddingTop: 56, gap: 12, paddingBottom: 40 },
+    header: { alignItems: 'center', gap: 2, marginBottom: 4 },
+    avatar: { width: 72, height: 72, borderRadius: 36, alignItems: 'center', justifyContent: 'center', marginBottom: 8 },
+    programCard: { flexDirection: 'row', alignItems: 'center', padding: 16, borderRadius: 14, borderWidth: 2 },
+    switchPill: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 14 },
+    codeCard: { flexDirection: 'row', alignItems: 'center', padding: 14, borderRadius: 12, borderWidth: 1 },
+    code: { fontSize: 22, fontWeight: '800', letterSpacing: 2 },
+    stats: { flexDirection: 'row', paddingVertical: 14, borderRadius: 12, borderWidth: 1 },
+    menu: { borderRadius: 12, borderWidth: 1, overflow: 'hidden' },
+    menuItem: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 14, paddingVertical: 14 },
+    logout: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 14, borderRadius: 12, borderWidth: 1, marginTop: 8 },
   });

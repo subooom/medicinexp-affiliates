@@ -45,8 +45,8 @@ Ticks are updated as work lands. Every item is built **program-aware** (see Deci
 - [x] Stock ledger: locations (hub, MR bag) + movements; drop-offs checked against the MR's bag under a lock
 - [x] Sales, commissions, payout runs, payout items, bonuses (tables, models, MR earnings API; creating commissions from payments is Phase 2)
 - [x] Seed MedicineXP as program #1 with its tiers and materials *(renewal-year rates 3/4/6/7/9% are placeholders to confirm)*
-- [ ] App: active-program context + switcher (hidden with one program)
-- [ ] App: move every screen to the new API (`/venues` instead of `/organizations`, new lead/visit/earnings fields, money in paisa)
+- [x] App: active-program context + switcher (hidden with one program)
+- [x] App: move every screen to the new API (`/venues` instead of `/organizations`, new lead/visit/earnings fields, money in paisa)
 - [x] Server: offline-safe writes — every record accepts a phone-generated `client_uuid` (repeats are ignored) and the time recorded on the phone, so queued items keep their real time and don't trip the 10-minute rule
 
 ## 📶 Offline mode (field reps work with bad signal all day)
@@ -68,17 +68,17 @@ Ticks are updated as work lands. Every item is built **program-aware** (see Deci
 - [x] Affiliate can create account
 - [x] Affiliate can see the hint modal
 - [x] Affiliate can create a visit *(fixed 2026-10-11: `visitApi` restored; visit date now uses the local day, not UTC)*
-- [ ] ⚠️ Affiliate can edit a visit — notes and status now editable from the detail screen; date/time/venue still can't be changed
+- [ ] ⚠️ Affiliate can edit a visit — notes and status editable; rescheduling a planned visit is supported by the API but not in the app yet
 - [x] Affiliate can browse visits *(fixed: load more)*
 - [x] Affiliate can view a visit *(fixed: real detail screen)*
 - [x] Affiliate can search for an organization while creating/editing a visit
 - [x] Affiliate can create an organization while creating/editing a visit
 - [x] Affiliate can search nearby organizations while creating/editing a visit
-- [ ] ⚠️ Affiliate can distribute a marketing material while creating/editing a visit — blocked by check-in crash; distributions not linked to the visit; stock taken from a global count
-- [ ] ⚠️ Affiliate can choose a lead_type while creating/editing a lead (`customer` | `associate` | `organization` | `contact`) — server never saves `lead_type`, `associated_entity` or chosen status
+- [x] Affiliate can distribute a marketing material while creating/editing a visit *(from the MR's bag, linked to the visit)*
+- [x] Affiliate can choose a lead_type while creating/editing a lead (`customer` | `associate` | `organization` | `contact`)
 - [x] Affiliate can search for an organization while creating/editing a lead
-- [ ] ⚠️ Affiliate can create a lead — visit link now saved; still: email required by server but optional in form, `affiliated_organization_id` NOT NULL never set (Phase 1)
-- [ ] ⚠️ Affiliate can edit a lead — server fixed (validated fields, right visit table); app still only edits notes/status, no edit form
+- [x] Affiliate can create a lead *(email optional)*
+- [x] Affiliate can edit a lead *(full edit form)*
 - [x] Affiliate can view a lead
 - [x] Affiliate can browse leads
 - [x] Affiliate can create a call log with a lead
@@ -89,75 +89,75 @@ Ticks are updated as work lands. Every item is built **program-aware** (see Deci
 - [x] Affiliate can click the last call log from the leads list page to go to call log read page
 - [x] Affiliate can schedule a call log with an organization or a lead
 - [x] Affiliates can see their total earnings *(fixed in app: amounts with commas parse correctly; commissions screen shows रू and no longer crashes on string amounts. Server should still send plain numbers — Phase 1)*
-- [ ] ⚠️ Affiliates can see how much they are getting paid that week — "Payout in 4 days" is hardcoded; no weekly amount
+- [x] Affiliates can see how much they are getting paid that week
 - [x] Affiliate can, during check in, tap the select material option to select it and to open a material modal showing materials show page with basic detail, image, and their distribution history for that marketing material
-- [ ] ⚠️ Affiliate can, during check in, add selected material with help of +1, +2, etc. buttons — no such buttons; tap adds 1; per-venue cap only enforced in the app
+- [x] Affiliate can, during check in, add selected material with help of +1, +2, etc. buttons *(+1/+2/+5, capped by bag and per-visit limit on the server)*
 - [x] Affiliate can set organization type during organization creation
 - [x] Affiliate can register a visit every 10 minutes
 - [x] Affiliate can see the tier list summary page
-- [ ] ⚠️ Affiliate can see the tier detail page — 403 unless tier's organization matches the MR's, which sign-up never sets
+- [x] Affiliate can see the tier detail page
 - [x] Affiliates can view a link to organizations list page in their profile
 - [x] Affiliates can view a link to call logs list page in their profile
 - [ ] ⚠️ Affiliates can view a link to coupons list page in their profile — link now opens a "coming soon" screen; coupons feature and server `CouponController` still to build
 - [x] Affiliates can view a link to distributions list page in their profile
-- [ ] ⚠️ Affiliates can edit a call log from organizations edit modal — not built; organization detail never shows its call logs
-- [ ] ⚠️ Affiliates can browse/filter organizations in organizations list page — search only, no type/city filter
+- [x] Affiliates can edit a call log from organizations edit modal *(venue page → call → edit)*
+- [x] Affiliates can browse/filter organizations in organizations list page *(type and "added by me" filters, search, paging)*
 - [x] Affiliates can read organization details in organizations details page *(fixed: call logs section)*
 
 ### Pending features & enhancements
 
 - [ ] Affiliate can view a video of the sign-up process
-- [ ] Affiliates can create a call log from call logs list page *(button exists)*
-- [ ] Affiliates can edit a call log from call logs edit modal *(Edit button routes to a missing screen)*
-- [ ] Affiliates can delete a call log from call logs list page
-- [ ] Affiliates can browse/filter call logs in call logs list page *(exists, filter bug above)*
-- [ ] Affiliates can read call log details in call logs details page *(exists)*
+- [x] Affiliates can create a call log from call logs list page
+- [x] Affiliates can edit a call log from call logs edit modal *(edit screen)*
+- [x] Affiliates can delete a call log from call logs list page *(long-press)*
+- [x] Affiliates can browse/filter call logs in call logs list page
+- [x] Affiliates can read call log details in call logs details page
 - [ ] Affiliates can create an organization from call logs list page
-- [ ] Affiliates can delete an organization from organizations list page
-- [ ] Affiliates can edit organizations they have created *(edit screen exists but allows any organization)*
-- [ ] Affiliates can create a distribution from distributions list page
-- [ ] Affiliates can edit a distribution from distributions edit modal
-- [ ] Affiliates can delete a distribution from distributions list page
-- [ ] Affiliates can browse/filter distributions in distributions list page
-- [ ] Affiliates can read distributions details in distributions details page *(screen exists)*
+- [x] Affiliates can delete an organization from organizations list page *(from the venue page; only venues you added, with no activity)*
+- [x] Affiliates can edit organizations they have created
+- [x] ~~Affiliates can create a distribution from distributions list page~~ *(replaced: drop-offs are recorded at check-in, from the MR's bag)*
+- [x] ~~Affiliates can edit a distribution from distributions edit modal~~ *(replaced: stock ledger rows are never edited; corrections are adjustments by the program)*
+- [x] ~~Affiliates can delete a distribution from distributions list page~~ *(replaced: same as above)*
+- [x] Affiliates can browse/filter distributions in distributions list page *(Drop-offs list)*
+- [x] Affiliates can read distributions details in distributions details page *(opens the visit it was left on)*
 - [ ] Affiliates can view a link to meetups list page in their profile
-- [ ] Affiliates can view an inventory list page in their profile
+- [x] Affiliates can view an inventory list page in their profile *(My materials)*
 - [ ] Affiliate can manage an inventory bucket/cart (add and remove products/materials)
 - [ ] Affiliate can see their new coupon codes when they level up
 - [ ] Affiliates can see a list of coupon codes assigned to them, all with different perks
 - [ ] Affiliates should be encouraged to use their coupon code to sign up pharmacies/medical organizations
 - [ ] Affiliates can see the coupons assigned to them in the coupons list page
 - [ ] Affiliate can register a sale
-- [ ] Affiliate can see how much they earned
-- [ ] Affiliates can see when they will be getting the withdrawal
+- [x] Affiliate can see how much they earned
+- [x] Affiliates can see when they will be getting the withdrawal *(next payout date, delay reason)*
 - [ ] Affiliates can verify the payment cycle
 - [ ] Affiliates can get sign-up bonus of 100 rupees which they can withdraw on their first sale, along with the commission
-- [ ] Affiliates can see paid status when the payment has been made
-- [ ] Affiliates can see their payment history
-- [ ] Affiliate can view the marketing materials assigned to them
+- [x] Affiliates can see paid status when the payment has been made
+- [x] Affiliates can see their payment history
+- [x] Affiliate can view the marketing materials assigned to them
 - [ ] Affiliate can request marketing material / supplies from an Organization
 - [ ] Affiliate can view marketing material pickup request status
 - [ ] Affiliate can pick up marketing material and supplies from an Organization hub
-- [ ] Affiliate can correctly view their stock/bucket of marketing materials during check-in
-- [ ] Affiliate can see scheduled call logs
+- [x] Affiliate can correctly view their stock/bucket of marketing materials during check-in
+- [x] Affiliate can see scheduled call logs *(Upcoming tab + dashboard)*
 - [ ] Affiliate can see a meetup if it's been scheduled with an Organization or MedicineXP
 - [ ] Affiliate can request a meeting with MedicineXP / Organization
 - [ ] Affiliate can mark as being in the location when they arrive for pickup/meetup
 
 ### 🆕 Field & selling features (added 2026-10-11)
 
-- [ ] Affiliate can switch between their programs (e.g. MedicineXP ↔ a pharma company)
+- [x] Affiliate can switch between their programs (e.g. MedicineXP ↔ a pharma company)
 - [ ] **Referral QR code / link** — pharmacy signs up on its own phone with the MR's code pre-filled; sale is credited automatically
 - [ ] Pharmacy subscription payment automatically creates the MR's commission (no manual "convert lead")
 - [ ] **Offline demo video** of MedicineXP, downloaded to the phone and playable without internet
-- [ ] **Live earnings** — "You earned रू X this week, paid Friday", each commission named after the pharmacy that paid
+- [x] **Live earnings** — "You earned रू X this week, paid Friday", each commission named after the pharmacy that paid *(commissions appear once Phase 2 creates them from payments)*
 - [ ] **Voice memos** — hold to record after a visit; transcribed (mixed Nepali/English) into summary, objections, interest level and follow-up date
 - [ ] **One-tap check-in with GPS and a shop photo** as proof of visit
 - [ ] **Follow-up reminders** — push notifications from scheduled call logs
 - [ ] **Map of nearby pharmacies** — visited / interested / signed-up / not-yet-visited pins for route planning
 - [ ] **Add a pharmacy by photographing its signboard or license** — name, address and phone filled in automatically
 - [ ] **Objection notes & pricing cheat sheet** — per program: "they already use X, so say Y", current plans and discounts
-- [ ] **Tap to call or WhatsApp a lead**, logging the call automatically
+- [ ] **Tap to call or WhatsApp a lead**, logging the call automatically *(call and WhatsApp buttons done on the lead page; automatic logging still to do)*
 
 ---
 
