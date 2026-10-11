@@ -50,6 +50,7 @@ async function prefetch(force = false) {
     quiet(callLogApi.getAll({ page: 1, per_page: 20 })),
     quiet(materialApi.getAll()),
     quiet(materialApi.getAll({ in_bag: true })),
+    quiet(materialApi.getAll({ in_bag: true, all_programs: true })),
     quiet(earningsApi.getSummary()),
     quiet(earningsApi.getCommissions({ per_page: 50 })),
     quiet(earningsApi.getPayouts({ per_page: 50 })),

@@ -189,6 +189,8 @@ export interface Material {
 
 // From GET /materials: the material plus what this MR carries and has dropped off
 export interface MaterialWithStock extends Material {
+  program_id: number;
+  program_name: string | null;
   in_bag: number;
   total_dropped_off: number;
   recent_dropoffs: Dropoff[];
@@ -211,6 +213,8 @@ export interface DropoffInput {
   material_id: number;
   quantity: number;
   client_uuid?: string;
+  // Another program the MR is in: stored as that program's own visit (same place and time)
+  program_id?: number;
 }
 
 // ---------------------------------------------------------------------------

@@ -105,7 +105,8 @@ export default function CheckInScreen() {
   useEffect(() => {
     locate();
     materialApi
-      .getAll({ in_bag: true })
+      // Every program's materials: one check-in can hand out several programs' items
+      .getAll({ in_bag: true, all_programs: true })
       .then((response) => setMaterials(response.data.data))
       .catch((error) => console.error('Error loading materials:', error));
 
@@ -169,6 +170,8 @@ export default function CheckInScreen() {
         material_id: Number(materialId),
         quantity,
         client_uuid: uuidv4(),
+        // The server files these under each material's own program
+        program_id: materials.find((m) => m.id === Number(materialId))?.program_id,
       }));
       if (dropoffs.length > 0) {
         payload.dropoffs = dropoffs;
