@@ -35,7 +35,9 @@ export default function TierDetailScreen() {
   const tierColor = tier.color || colors.primary;
   const schedule = [...tier.commission_schedule].sort((a, b) => a.from_year - b.from_year);
   const requirements = Object.entries(tier.requirements).filter(([, value]) => value > 0);
-  const couponCount = tier.perks?.coupon_count;
+  const couponCount: number = tier.perks?.coupon_count ?? 0;
+  const couponDiscount: number | null = tier.perks?.coupon_discount_percentage ?? null;
+  const perkItems: string[] = Array.isArray(tier.perks?.items) ? tier.perks.items : [];
 
   return (
     <ScrollView style={{ flex: 1, backgroundColor: colors.background }} contentContainerStyle={{ padding: 16, gap: 12 }}>
@@ -85,15 +87,24 @@ export default function TierDetailScreen() {
         )}
       </View>
 
-      {couponCount ? (
+      {couponCount || perkItems.length ? (
         <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
           <Text style={[typography.body1, styles.title, { color: colors.foreground }]}>Perks</Text>
-          <View style={styles.row}>
-            <Ionicons name="pricetag-outline" size={16} color={colors.primary} />
-            <Text style={[typography.body2, { color: colors.foreground }]}>
-              {couponCount} discount coupon{couponCount > 1 ? 's' : ''} to offer pharmacies
-            </Text>
-          </View>
+          {couponCount ? (
+            <View style={styles.row}>
+              <Ionicons name="pricetag-outline" size={16} color={colors.primary} />
+              <Text style={[typography.body2, { color: colors.foreground, flex: 1 }]}>
+                {couponCount} extra single-use coupon{couponCount > 1 ? 's' : ''} to offer pharmacies
+                {couponDiscount ? ` (${couponDiscount}% off)` : ''}, on top of your referral code
+              </Text>
+            </View>
+          ) : null}
+          {perkItems.map((item) => (
+            <View key={item} style={styles.row}>
+              <Ionicons name="gift-outline" size={16} color={colors.primary} />
+              <Text style={[typography.body2, { color: colors.foreground, flex: 1 }]}>{item}</Text>
+            </View>
+          ))}
         </View>
       ) : null}
     </ScrollView>

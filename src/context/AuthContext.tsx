@@ -1,6 +1,9 @@
 // src/context/AuthContext.tsx
 import { authApi, programApi } from '@/api/auth';
 import { ACTIVE_PROGRAM_KEY } from '@/api/client';
+import { responseCache } from '@/offline/cache';
+import { outbox } from '@/offline/outbox';
+import { venueIndex } from '@/offline/venue-index';
 import { Membership, User } from '@/types/models';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
@@ -56,7 +59,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const clearSession = useCallback(async () => {
-    await AsyncStorage.multiRemove(['auth_token', 'user_data', ACTIVE_PROGRAM_KEY]);
+    await AsyncStorage.multiRemove(['auth_token', 'user_data', ACTIVE_PROGRAM_KEY, 'push_token_sent']);
     setUser(null);
     setActiveProgramId(null);
   }, []);
@@ -104,6 +107,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch (error: any) {
       Alert.alert('Logout error', error.message || 'Something happened');
     } finally {
+      // Only on a deliberate logout: the next person on this phone must not see this
+      // MR's data. (An expired session keeps unsent offline work for after re-login.)
+      await Promise.all([responseCache.clear(), venueIndex.clear(), outbox.clear()]).catch(() => undefined);
       await clearSession();
       router.replace('/auth/login');
     }

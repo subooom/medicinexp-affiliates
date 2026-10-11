@@ -5,7 +5,8 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { useRouter } from 'expo-router';
 import { StyleSheet, Text, TouchableOpacity } from 'react-native';
 
-export function SyncBanner() {
+/** topInset: used at the very top of a screen with no header, below the status bar */
+export function SyncBanner({ topInset = false }: { topInset?: boolean }) {
   const router = useRouter();
   const { online, pending, failed } = useSyncState();
 
@@ -25,7 +26,7 @@ export function SyncBanner() {
   }
 
   return (
-    <TouchableOpacity style={[styles.banner, { backgroundColor: tone.bg }]} onPress={() => router.push('/sync')} accessibilityRole="button">
+    <TouchableOpacity style={[styles.banner, { backgroundColor: tone.bg }, topInset && { paddingTop: 44 }]} onPress={() => router.push('/sync')} accessibilityRole="button">
       <Ionicons name={failed > 0 ? 'alert-circle' : online ? 'cloud-upload-outline' : 'cloud-offline-outline'} size={16} color={tone.fg} />
       <Text style={[typography.caption, { color: tone.fg, fontWeight: '700', flex: 1 }]}>{text}</Text>
       <Ionicons name="chevron-forward" size={14} color={tone.fg} />

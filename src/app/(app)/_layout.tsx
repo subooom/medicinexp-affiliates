@@ -15,6 +15,10 @@ const HIDDEN_ROUTES = [
   'coupons',
   'meetups',
   'inventory',
+  'pickups',
+  'pitch',
+  'map',
+  'sync',
 ];
 
 export default function AppLayout() {

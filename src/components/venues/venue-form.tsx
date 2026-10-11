@@ -1,5 +1,8 @@
 // src/components/venues/venue-form.tsx
 import { venueApi } from '@/api/venues';
+import { takePhoto } from '@/components/field/photo-capture';
+import { guessFromSignboard } from '@/utils/signboard';
+import { extractTextFromImage, isSupported as ocrSupported } from 'expo-text-extractor';
 import { queuedMessage, sendOrQueue } from '@/offline/send';
 import { venueIndex } from '@/offline/venue-index';
 import { AppColors } from '@/constants/colors';
@@ -75,6 +78,37 @@ export function VenueForm({ venue, submitLabel, onSaved }: VenueFormProps) {
   }, []);
 
   const selectedType = types.find((t) => t.id === typeId) ?? null;
+  const [scanning, setScanning] = useState(false);
+
+  // Read the signboard / licence on the phone (no internet, nothing sent anywhere) and
+  // fill the empty fields with what it finds
+  const scanSignboard = async () => {
+    const photo = await takePhoto();
+    if (!photo) return;
+    setScanning(true);
+    try {
+      const guess = guessFromSignboard(await extractTextFromImage(photo.uri));
+      const filled: string[] = [];
+      setValues((prev) => {
+        const next = { ...prev };
+        (['name', 'address', 'phone', 'pan_number'] as const).forEach((key) => {
+          if (!next[key].trim() && guess[key]) {
+            next[key] = guess[key]!;
+            filled.push(key === 'pan_number' ? 'PAN' : key);
+          }
+        });
+        return next;
+      });
+      Alert.alert(
+        filled.length ? 'Filled in from the photo' : 'Could not read much',
+        filled.length ? `Check the ${filled.join(', ')} before saving.` : 'Type the details in, or try a closer, straighter photo.'
+      );
+    } catch {
+      Alert.alert('Could not read the photo', 'Type the details in instead.');
+    } finally {
+      setScanning(false);
+    }
+  };
 
   const useCurrentLocation = async () => {
     setLocating(true);
@@ -141,6 +175,16 @@ export function VenueForm({ venue, submitLabel, onSaved }: VenueFormProps) {
 
   return (
     <ScrollView contentContainerStyle={styles.form} keyboardShouldPersistTaps="handled">
+      {!venue && ocrSupported && (
+        <TouchableOpacity
+          style={[styles.input, styles.selector, { backgroundColor: colors.primary + '10', borderColor: colors.primary, justifyContent: 'center', gap: 8 }]}
+          onPress={scanSignboard}
+          disabled={scanning}
+        >
+          {scanning ? <ActivityIndicator color={colors.primary} /> : <Ionicons name="scan-outline" size={20} color={colors.primary} />}
+          <Text style={[typography.body1, { color: colors.primary, fontWeight: '600' }]}>{scanning ? 'Reading…' : 'Scan signboard or licence'}</Text>
+        </TouchableOpacity>
+      )}
       <View style={styles.field}>
         <Text style={[typography.body2, styles.label, { color: colors.foreground }]}>Type</Text>
         <TouchableOpacity

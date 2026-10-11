@@ -77,7 +77,9 @@
             "com.google.android.as"
           ]
         }
-      ]
+      ],
+      "expo-image",
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true,

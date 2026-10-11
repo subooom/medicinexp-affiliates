@@ -1,4 +1,5 @@
 // app/(app)/index.tsx — Dashboard
+import { SyncBanner } from '@/components/ui/sync-banner';
 import { dashboardApi } from '@/api/dashboard';
 import { Logo } from '@/components/common/logo';
 import { ProgramSwitcher } from '@/components/programs/program-switcher';
@@ -89,11 +90,16 @@ export default function DashboardScreen() {
     { label: 'Check in', icon: 'location', route: '/(app)/visits/checkin' },
     { label: 'New lead', icon: 'person-add', route: '/(app)/leads/create' },
     { label: 'Log call', icon: 'call', route: '/(app)/call-logs/create' },
-    { label: 'Materials', icon: 'bag-handle', route: '/(app)/materials' },
+    { label: 'Near me', icon: 'map', route: '/(app)/map' as Href },
+    { label: 'Pitch kit', icon: 'easel', route: '/(app)/pitch' as Href },
+    { label: 'My stock', icon: 'bag-handle', route: '/(app)/inventory' },
+    { label: 'Coupons', icon: 'pricetag', route: '/(app)/coupons' },
   ];
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
+      {/* Only shows when offline or something is waiting to sync */}
+      <SyncBanner topInset />
       <ScrollView
         contentContainerStyle={{ paddingBottom: 32 }}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(); }} tintColor={colors.primary} />}
@@ -332,8 +338,8 @@ const createStyles = (colors: AppColors) =>
     heroSub: { color: '#fff', fontSize: 13, marginTop: 2 },
     heroDivider: { height: 1, backgroundColor: 'rgba(255,255,255,0.2)', marginVertical: 12 },
     heroRow: { flexDirection: 'row', gap: 8 },
-    quickActions: { flexDirection: 'row', gap: 8, paddingHorizontal: 16, marginTop: 16 },
-    quickAction: { flex: 1, alignItems: 'center', gap: 6, paddingVertical: 12, borderRadius: 12, borderWidth: 1 },
+    quickActions: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, paddingHorizontal: 16, marginTop: 16 },
+    quickAction: { width: '23%', flexGrow: 1, alignItems: 'center', gap: 6, paddingVertical: 12, borderRadius: 12, borderWidth: 1 },
     quickIcon: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
     card: { marginHorizontal: 16, marginTop: 12, padding: 14, borderRadius: 12, borderWidth: 1, gap: 8 },
     cardTitle: { fontWeight: '600' },
