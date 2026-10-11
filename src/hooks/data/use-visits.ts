@@ -12,7 +12,7 @@ interface UseVisitsResult {
   refreshing: boolean;
   refresh: () => Promise<void>;
   loadMore: () => Promise<void>;
-  updateVisit: (id: number, data: Partial<Visit>) => Promise<Visit>;
+  updateVisit: (id: number, data: Partial<Pick<Visit, 'notes' | 'status' | 'visited_at'>>) => Promise<Visit>;
   deleteVisit: (id: number) => Promise<void>;
   hasMore: boolean;
   clearError: () => void;
@@ -99,12 +99,11 @@ export function useVisits(filters?: VisitFilters): UseVisitsResult {
     }
   }, [fetchPage, page, hasMore, loading]);
 
-  const updateVisit = useCallback(async (id: number, updateData: Partial<Visit>): Promise<Visit> => {
+  const updateVisit = useCallback(async (id: number, updateData: Partial<Pick<Visit, 'notes' | 'status' | 'visited_at'>>): Promise<Visit> => {
     const response = await visitApi.update(id, updateData);
     const updated: Visit = response.data.data;
     if (isMounted.current) {
-      // The update response has no organization relation; keep the one we already have
-      setData((prev) => prev.map((v) => (v.id === id ? { ...v, ...updated, organization: v.organization } : v)));
+      setData((prev) => prev.map((v) => (v.id === id ? { ...v, ...updated, venue: updated.venue ?? v.venue } : v)));
     }
     return updated;
   }, []);
@@ -159,10 +158,10 @@ export function useVisit(id: number) {
   }, [load]);
 
   const updateVisit = useCallback(
-    async (updateData: Partial<Visit>) => {
+    async (updateData: Partial<Pick<Visit, 'notes' | 'status' | 'visited_at'>>) => {
       const response = await visitApi.update(id, updateData);
       const updated: Visit = response.data.data;
-      setData((prev) => (prev ? { ...prev, ...updated, organization: prev.organization } : updated));
+      setData((prev) => (prev ? { ...prev, ...updated, venue: updated.venue ?? prev.venue } : updated));
       return updated;
     },
     [id]

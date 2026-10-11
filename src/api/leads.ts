@@ -1,16 +1,35 @@
 // src/api/leads.ts
+import { ApiResponse, Lead, LeadInput, LeadStatus, LeadType, Paginated } from '@/types/models';
 import apiClient from './client';
 
+export interface LeadFilters {
+  status?: LeadStatus;
+  lead_type?: LeadType;
+  open?: boolean;
+  follow_up_due?: boolean;
+  search?: string;
+  page?: number;
+  per_page?: number;
+}
+
+export interface LeadStats {
+  total: number;
+  open: number;
+  converted: number;
+  lost: number;
+  conversion_rate: number;
+  follow_ups_due: number;
+  by_status: Record<string, number>;
+}
+
 export const leadApi = {
-  getAll: (params?: any) => apiClient.get('/leads', { params }),
-  getById: (id: number) => apiClient.get(`/leads/${id}`),
-  create: (data: any) => apiClient.post('/leads', data),
-  update: (id: number, data: any) => apiClient.put(`/leads/${id}`, data),
+  getAll: (params?: LeadFilters) => apiClient.get<ApiResponse<Paginated<Lead>>>('/leads', { params }),
+  getById: (id: number) => apiClient.get<ApiResponse<Lead>>(`/leads/${id}`),
+  create: (data: LeadInput) => apiClient.post<ApiResponse<Lead>>('/leads', data),
+  update: (id: number, data: LeadInput) => apiClient.put<ApiResponse<Lead>>(`/leads/${id}`, data),
   delete: (id: number) => apiClient.delete(`/leads/${id}`),
-  updateStatus: (id: number, status: string) => 
-    apiClient.patch(`/leads/${id}/status`, { status }),
-  convert: (id: number, data: any) => 
-    apiClient.post(`/leads/${id}/convert`, data),
-  getStats: () => apiClient.get('/leads/stats'),
-  getMonthly: (params?: any) => apiClient.get('/leads/monthly', { params }),
+  // "converted" isn't set by hand: it happens when the pharmacy signs up and pays
+  updateStatus: (id: number, status: 'new' | 'contacted' | 'qualified' | 'lost', lostReason?: string) =>
+    apiClient.patch<ApiResponse<Lead>>(`/leads/${id}/status`, { status, lost_reason: lostReason }),
+  getStats: () => apiClient.get<ApiResponse<LeadStats>>('/leads/stats'),
 };

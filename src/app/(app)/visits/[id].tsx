@@ -138,14 +138,14 @@ export default function VisitDetailScreen() {
         <TouchableOpacity
           style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}
           activeOpacity={0.7}
-          disabled={!visit.organization}
-          onPress={() => router.push({ pathname: '/(app)/organizations/[id]', params: { id: visit.organization_id } })}
+          disabled={!visit.venue}
+          onPress={() => router.push({ pathname: '/(app)/venues/[id]', params: { id: visit.venue_id } })}
         >
           <View style={styles.header}>
             <View style={styles.headerLeft}>
               <View style={[styles.statusDot, { backgroundColor: statusColor }]} />
               <Text style={[typography.h4, styles.headerTitle, { color: colors.foreground }]}>
-                {visit.organization?.name || 'Unknown'}
+                {visit.venue?.name || 'Unknown'}
               </Text>
             </View>
             <View style={[styles.statusBadge, { backgroundColor: statusColor + '15' }]}>
@@ -154,11 +154,11 @@ export default function VisitDetailScreen() {
               </Text>
             </View>
           </View>
-          {visit.organization && (
+          {visit.venue && (
             <View style={styles.detailRow}>
               <Ionicons name="location-outline" size={18} color={colors.mutedForeground} />
               <Text style={[typography.body2, styles.detailText, { color: colors.mutedForeground }]}>
-                {[visit.organization.address, visit.organization.city].filter(Boolean).join(', ')}
+                {[visit.venue.address, visit.venue.city].filter(Boolean).join(', ')}
               </Text>
             </View>
           )}
@@ -170,26 +170,22 @@ export default function VisitDetailScreen() {
             <View style={styles.detailRow}>
               <Ionicons name="calendar-outline" size={18} color={colors.mutedForeground} />
               <Text style={[typography.body2, styles.detailText, { color: colors.foreground }]}>
-                {new Date(visit.visit_date).toLocaleDateString()}
+                {new Date(visit.visited_at).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}
               </Text>
             </View>
-            <View style={styles.detailRow}>
-              <Ionicons name="time-outline" size={18} color={colors.mutedForeground} />
-              <Text style={[typography.body2, styles.detailText, { color: colors.foreground }]}>{visit.visit_time}</Text>
-            </View>
-            {visit.check_in_time && (
-              <View style={styles.detailRow}>
-                <Ionicons name="log-in-outline" size={18} color={colors.mutedForeground} />
-                <Text style={[typography.body2, styles.detailText, { color: colors.foreground }]}>
-                  Checked in: {new Date(visit.check_in_time).toLocaleString()}
-                </Text>
-              </View>
-            )}
-            {visit.check_out_time && (
+            {visit.checked_out_at && (
               <View style={styles.detailRow}>
                 <Ionicons name="log-out-outline" size={18} color={colors.mutedForeground} />
                 <Text style={[typography.body2, styles.detailText, { color: colors.foreground }]}>
-                  Checked out: {new Date(visit.check_out_time).toLocaleString()}
+                  Checked out: {new Date(visit.checked_out_at).toLocaleString()}
+                </Text>
+              </View>
+            )}
+            {visit.distance_from_venue_m != null && (
+              <View style={styles.detailRow}>
+                <Ionicons name="walk-outline" size={18} color={colors.mutedForeground} />
+                <Text style={[typography.body2, styles.detailText, { color: colors.foreground }]}>
+                  {visit.distance_from_venue_m} m from the shop at check-in
                 </Text>
               </View>
             )}
@@ -203,6 +199,22 @@ export default function VisitDetailScreen() {
             )}
           </View>
         </View>
+
+        {/* Materials left */}
+        {visit.dropoffs && visit.dropoffs.length > 0 && (
+          <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
+            <Text style={[typography.body1, styles.sectionTitle, { color: colors.foreground }]}>Materials left</Text>
+            {visit.dropoffs.map((dropoff) => (
+              <View key={dropoff.id} style={styles.detailRow}>
+                <Ionicons name="cube-outline" size={18} color={colors.mutedForeground} />
+                <Text style={[typography.body2, styles.detailText, { color: colors.foreground }]}>
+                  {dropoff.quantity} × {dropoff.material?.name ?? 'Material'}
+                  {dropoff.received_by ? ` (received by ${dropoff.received_by})` : ''}
+                </Text>
+              </View>
+            ))}
+          </View>
+        )}
 
         {/* Notes */}
         <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>

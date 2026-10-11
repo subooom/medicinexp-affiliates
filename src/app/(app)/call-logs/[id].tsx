@@ -5,8 +5,8 @@ import { useAppTheme } from '@/hooks/use-app-theme';
 import { typography } from '@/styles/typography';
 import { CallLog } from '@/types/models';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useEffect, useMemo, useState } from 'react';
+import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
+import { useCallback, useMemo, useState } from 'react';
 import { ActivityIndicator, Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 export default function CallLogDetailScreen() {
@@ -17,14 +17,25 @@ export default function CallLogDetailScreen() {
   const [callLog, setCallLog] = useState<CallLog | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    loadCallLog();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      loadCallLog();
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [id])
+  );
+
+  const markDone = async () => {
+    try {
+      const response = await callLogApi.complete(parseInt(id));
+      setCallLog(response.data.data);
+    } catch (error: any) {
+      Alert.alert('Could not update', error.message || 'Please try again.');
+    }
+  };
 
   const loadCallLog = async () => {
     try {
       const response = await callLogApi.getById(parseInt(id));
-      console.log(response)
       setCallLog(response.data.data);
     } catch (error) {
       console.error('Error loading call log:', error);
@@ -96,7 +107,7 @@ export default function CallLogDetailScreen() {
           <View style={styles.headerLeft}>
             <View style={[styles.statusDot, { backgroundColor: getStatusColor(callLog.status) }]} />
             <Text style={[typography.h4, styles.headerTitle, { color: colors.foreground }]}>
-              {callLog.lead?.customer_name || callLog.organization?.name || 'Unknown'}
+              {callLog.lead?.display_name || callLog.venue?.name || 'Unknown'}
             </Text>
           </View>
           <View style={[styles.statusBadge, { backgroundColor: getStatusColor(callLog.status) + '15' }]}>
@@ -110,24 +121,24 @@ export default function CallLogDetailScreen() {
           <View style={styles.detailRow}>
             <Ionicons name="calendar-outline" size={18} color={colors.mutedForeground} />
             <Text style={[typography.body2, styles.detailText, { color: colors.foreground }]}>
-              {new Date(callLog.call_date).toLocaleDateString()}
+              {callLog.call_date}
             </Text>
           </View>
           <View style={styles.detailRow}>
             <Ionicons name="time-outline" size={18} color={colors.mutedForeground} />
             <Text style={[typography.body2, styles.detailText, { color: colors.foreground }]}>
-              {callLog.call_time}
+              {callLog.call_time.slice(0, 5)}
             </Text>
           </View>
-          {callLog.duration > 0 && (
+          {callLog.duration_minutes > 0 && (
             <View style={styles.detailRow}>
               <Ionicons name="timer-outline" size={18} color={colors.mutedForeground} />
               <Text style={[typography.body2, styles.detailText, { color: colors.foreground }]}>
-                {callLog.duration} minutes
+                {callLog.duration_minutes} minutes
               </Text>
             </View>
           )}
-          {callLog.is_scheduled && callLog.scheduled_at && (
+          {callLog.status === 'scheduled' && callLog.scheduled_at && (
             <View style={styles.detailRow}>
               <Ionicons name="calendar-outline" size={18} color={colors.primary} />
               <Text style={[typography.body2, styles.detailText, { color: colors.primary }]}>
@@ -139,15 +150,15 @@ export default function CallLogDetailScreen() {
             <View style={styles.detailRow}>
               <Ionicons name="person-outline" size={18} color={colors.mutedForeground} />
               <Text style={[typography.body2, styles.detailText, { color: colors.foreground }]}>
-                Lead: {callLog.lead.customer_name}
+                Lead: {callLog.lead.display_name}
               </Text>
             </View>
           )}
-          {callLog.organization && (
+          {callLog.venue && (
             <View style={styles.detailRow}>
               <Ionicons name="business-outline" size={18} color={colors.mutedForeground} />
               <Text style={[typography.body2, styles.detailText, { color: colors.foreground }]}>
-                Organization: {callLog.organization.name}
+                Pharmacy: {callLog.venue.name}
               </Text>
             </View>
           )}
@@ -168,9 +179,21 @@ export default function CallLogDetailScreen() {
 
       {/* Action Buttons */}
       <View style={styles.actionsContainer}>
+        {callLog.status === 'scheduled' && (
+          <TouchableOpacity
+            style={[styles.actionButton, { backgroundColor: colors.success }]}
+            onPress={markDone}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="checkmark-circle-outline" size={20} color={colors.primaryForeground} />
+            <Text style={[typography.button, styles.actionButtonText, { color: colors.primaryForeground }]}>
+              Mark as done
+            </Text>
+          </TouchableOpacity>
+        )}
         <TouchableOpacity
           style={[styles.actionButton, styles.editButton, { backgroundColor: colors.primary }]}
-          onPress={() => router.push(`/call-logs/${callLog.id}/edit`)}
+          onPress={() => router.push({ pathname: '/(app)/call-logs/edit/[id]', params: { id: callLog.id } })}
           activeOpacity={0.7}
         >
           <Ionicons name="pencil-outline" size={20} color={colors.primaryForeground} />

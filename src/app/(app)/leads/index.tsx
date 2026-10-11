@@ -1,62 +1,41 @@
 // app/(app)/leads/index.tsx
-import { leadApi } from '@/api/leads';
+import { LeadFilters, leadApi } from '@/api/leads';
 import { AppColors } from '@/constants/colors';
 import { useAppTheme } from '@/hooks/use-app-theme';
 import { typography } from '@/styles/typography';
-import { IconName } from '@/utils/icons';
-import { Lead } from '@/types/models';
+import { Lead, LeadStatus } from '@/types/models';
+import { leadStatusLabel, leadTypeColor, leadTypeInfo } from '@/utils/lead-types';
+import { getLeadStatusColor } from '@/utils/status-colors';
+import { getTimeAgo } from '@/utils/time';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { useRouter } from 'expo-router';
-import { useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, FlatList, RefreshControl, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useFocusEffect, useRouter } from 'expo-router';
+import { useCallback, useMemo, useRef, useState } from 'react';
+import { ActivityIndicator, FlatList, RefreshControl, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
-type LeadType = 'customer' | 'associate' | 'organization' | 'contact';
+type Filter = 'open' | 'follow_up' | LeadStatus | 'all';
 
-const getLeadTypeIcon = (type: LeadType): IconName => {
-  switch (type) {
-    case 'customer': return 'person-outline';
-    case 'associate': return 'people-outline';
-    case 'organization': return 'business-outline';
-    case 'contact': return 'call-outline';
-    default: return 'person-outline';
+const FILTERS: { key: Filter; label: string }[] = [
+  { key: 'open', label: 'Open' },
+  { key: 'follow_up', label: 'Follow-ups due' },
+  { key: 'new', label: 'New' },
+  { key: 'contacted', label: 'Contacted' },
+  { key: 'qualified', label: 'Interested' },
+  { key: 'converted', label: 'Customers' },
+  { key: 'lost', label: 'Lost' },
+  { key: 'all', label: 'All' },
+];
+
+const filterParams = (filter: Filter): LeadFilters => {
+  switch (filter) {
+    case 'open':
+      return { open: true };
+    case 'follow_up':
+      return { follow_up_due: true };
+    case 'all':
+      return {};
+    default:
+      return { status: filter };
   }
-};
-
-const getLeadTypeLabel = (type: LeadType): string => {
-  switch (type) {
-    case 'customer': return 'Customer';
-    case 'associate': return 'Associate';
-    case 'organization': return 'Organization';
-    case 'contact': return 'Contact';
-    default: return 'Customer';
-  }
-};
-
-const getLeadTypeColor = (type: LeadType, colors: AppColors): string => {
-  switch (type) {
-    case 'customer': return colors.primary || '#2563EB';
-    case 'associate': return colors.accent || '#8B5CF6';
-    case 'organization': return colors.success || '#10B981';
-    case 'contact': return colors.warning || '#F59E0B';
-    default: return colors.mutedForeground || '#6B7280';
-  }
-};
-
-// Helper function to format time ago
-const getTimeAgo = (dateString: string): string => {
-  const date = new Date(dateString);
-  const now = new Date();
-  const seconds = Math.floor((now.getTime() - date.getTime()) / 1000);
-
-  if (seconds < 60) return 'Just now';
-  const minutes = Math.floor(seconds / 60);
-  if (minutes < 60) return `${minutes}m ago`;
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours}h ago`;
-  const days = Math.floor(hours / 24);
-  if (days === 1) return 'Yesterday';
-  if (days < 7) return `${days}d ago`;
-  return date.toLocaleDateString();
 };
 
 export default function LeadsListScreen() {
@@ -65,428 +44,194 @@ export default function LeadsListScreen() {
   const styles = useMemo(() => createStyles(colors), [colors]);
 
   const [leads, setLeads] = useState<Lead[]>([]);
+  const [filter, setFilter] = useState<Filter>('open');
+  const [search, setSearch] = useState('');
+  const [page, setPage] = useState(1);
+  const [lastPage, setLastPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  useEffect(() => {
-    loadLeads();
-  }, []);
-
-  const loadLeads = async () => {
+  const load = useCallback(async (pageToLoad: number, nextFilter: Filter, nextSearch: string) => {
     try {
-      const response = await leadApi.getAll();
-      setLeads(response.data.data.data || []); // paginated
+      const params: LeadFilters = { ...filterParams(nextFilter), page: pageToLoad, per_page: 20 };
+      if (nextSearch.length >= 2) params.search = nextSearch;
+      const response = await leadApi.getAll(params);
+      const result = response.data.data;
+      setLeads((prev) => (pageToLoad === 1 ? result.data : [...prev, ...result.data]));
+      setPage(result.current_page);
+      setLastPage(result.last_page);
     } catch (error) {
       console.error('Error loading leads:', error);
     } finally {
       setLoading(false);
       setRefreshing(false);
+      setLoadingMore(false);
     }
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      load(1, filter, search);
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [load, filter])
+  );
+
+  const handleSearch = (text: string) => {
+    setSearch(text);
+    if (searchTimer.current) clearTimeout(searchTimer.current);
+    searchTimer.current = setTimeout(() => {
+      if (text.length === 0 || text.length >= 2) load(1, filter, text);
+    }, 300);
   };
 
-  const onRefresh = () => {
-    setRefreshing(true);
-    loadLeads();
+  const loadMore = () => {
+    if (loadingMore || page >= lastPage) return;
+    setLoadingMore(true);
+    load(page + 1, filter, search);
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'converted': return colors.success || '#10B981';
-      case 'qualified': return colors.primary || '#3B82F6';
-      case 'contacted': return colors.warning || '#F59E0B';
-      case 'new': return '#8B5CF6';
-      case 'lost': return colors.destructive || '#EF4444';
-      default: return colors.mutedForeground || '#6B7280';
-    }
-  };
+  const renderLead = ({ item }: { item: Lead }) => {
+    const type = leadTypeInfo(item.lead_type);
+    const typeColor = leadTypeColor(item.lead_type, colors);
+    const statusColor = getLeadStatusColor(colors, item.status);
+    const call = item.latest_call_log;
+    const followUpDue = item.next_follow_up_at && new Date(item.next_follow_up_at) <= new Date();
 
-  const getStatusLabel = (status: string) => {
-    return status.charAt(0).toUpperCase() + status.slice(1);
-  };
-
-  if (loading) {
     return (
-      <View style={[styles.loadingContainer, { backgroundColor: colors.background }]}>
-        <ActivityIndicator size="large" color={colors.primary} />
-      </View>
+      <TouchableOpacity
+        style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}
+        onPress={() => router.push({ pathname: '/(app)/leads/[id]', params: { id: item.id } })}
+        activeOpacity={0.7}
+      >
+        <View style={styles.cardHeader}>
+          <View style={[styles.typeIcon, { backgroundColor: typeColor + '15' }]}>
+            <Ionicons name={type.icon} size={16} color={typeColor} />
+          </View>
+          <Text style={[typography.body1, styles.name, { color: colors.foreground }]} numberOfLines={1}>
+            {item.display_name}
+          </Text>
+          <View style={[styles.badge, { backgroundColor: statusColor + '15' }]}>
+            <Text style={[typography.caption, { color: statusColor, fontWeight: '600' }]}>{leadStatusLabel(item.status)}</Text>
+          </View>
+        </View>
+
+        <Text style={[typography.caption, { color: colors.mutedForeground }]} numberOfLines={1}>
+          {[type.label, item.venue && item.lead_type !== 'organization' ? item.venue.name : null, item.contact_phone].filter(Boolean).join(' • ')}
+        </Text>
+
+        {item.next_follow_up_at && item.status !== 'converted' && item.status !== 'lost' && (
+          <View style={styles.metaRow}>
+            <Ionicons name="alarm-outline" size={13} color={followUpDue ? colors.warning : colors.mutedForeground} />
+            <Text style={[typography.caption, { color: followUpDue ? colors.warning : colors.mutedForeground }]}>
+              Follow up {new Date(item.next_follow_up_at).toLocaleDateString()}
+            </Text>
+          </View>
+        )}
+
+        {call && (
+          <TouchableOpacity
+            style={[styles.callSnippet, { backgroundColor: colors.background, borderColor: colors.border }]}
+            onPress={() => router.push({ pathname: '/(app)/call-logs/[id]', params: { id: call.id } })}
+          >
+            <Ionicons name={call.direction === 'incoming' ? 'arrow-down-outline' : 'arrow-up-outline'} size={13} color={colors.mutedForeground} />
+            <Text style={[typography.caption, { flex: 1, color: colors.foreground }]} numberOfLines={1}>
+              {call.notes || 'Call'}
+            </Text>
+            <Text style={[typography.caption, { color: colors.mutedForeground }]}>{getTimeAgo(`${call.call_date}T${call.call_time}`)}</Text>
+          </TouchableOpacity>
+        )}
+      </TouchableOpacity>
     );
-  }
+  };
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      {/* Header */}
       <View style={[styles.header, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
-        <Text style={[typography.h4, styles.headerTitle, { color: colors.foreground }]}>Leads</Text>
-        <TouchableOpacity 
-          style={[styles.addButton, { backgroundColor: colors.primary }]} 
-          onPress={() => router.push('/(app)/leads/create')}
-        >
+        <Text style={[typography.h4, { color: colors.foreground, fontWeight: '600' }]}>Leads</Text>
+        <TouchableOpacity style={[styles.addButton, { backgroundColor: colors.primary }]} onPress={() => router.push('/(app)/leads/create')}>
           <Ionicons name="add" size={24} color={colors.primaryForeground} />
         </TouchableOpacity>
       </View>
 
-      {/* List */}
-      <FlatList
-        data={leads}
-        keyExtractor={(item) => item.id.toString()}
-        refreshControl={
-          <RefreshControl 
-            refreshing={refreshing} 
-            onRefresh={onRefresh} 
-            tintColor={colors.primary} 
-          />
-        }
-        contentContainerStyle={styles.listContent}
-        renderItem={({ item }) => {
-          const leadType = item.lead_type as LeadType || 'customer';
-          const typeColor = getLeadTypeColor(leadType, colors);
-          
-          // Grab the most recent call log if available
-          const latestCallLog = item.latest_call_log ?? null;
-          
-          return (
-            <TouchableOpacity 
-              style={[styles.leadCard, { backgroundColor: colors.card, borderColor: colors.border }]} 
-              onPress={() => router.push({
-                pathname: '/(app)/leads/[id]',
-                params: { id: item.id }
-              })}
-              activeOpacity={0.7}
-            >
-              <View style={styles.leadHeader}>
-                <View style={styles.leadNameContainer}>
-                  <View style={[styles.leadTypeIcon, { backgroundColor: typeColor + '15' }]}>
-                    <Ionicons 
-                      name={getLeadTypeIcon(leadType)} 
-                      size={14} 
-                      color={typeColor} 
-                    />
-                  </View>
-                  <Text style={[typography.body1, styles.customerName, { color: colors.foreground }]}>
-                    {item.customer_name}
-                  </Text>
-                </View>
-                <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item.status) }]}>
-                  <Text style={[typography.caption, styles.statusText, { color: colors.primaryForeground }]}>
-                    {getStatusLabel(item.status)}
-                  </Text>
-                </View>
-              </View>
-              
-              <Text style={[typography.body2, styles.customerEmail, { color: colors.mutedForeground }]}>
-                {item.customer_email}
-              </Text>
-              
-              {/* Lead Type Label */}
-              <View style={styles.leadTypeContainer}>
-                <View style={[styles.leadTypeBadge, { backgroundColor: typeColor + '10' }]}>
-                  <Ionicons 
-                    name={getLeadTypeIcon(leadType)} 
-                    size={12} 
-                    color={typeColor} 
-                  />
-                  <Text style={[typography.caption, styles.leadTypeText, { color: typeColor }]}>
-                    {getLeadTypeLabel(leadType)}
-                  </Text>
-                </View>
-                {item.organization && (
-                  <Text style={[typography.caption, styles.organizationName, { color: colors.mutedForeground }]}>
-                    • {item.organization.name}
-                  </Text>
-                )}
-              </View>
+      <View style={[styles.search, { backgroundColor: colors.card, borderColor: colors.border }]}>
+        <Ionicons name="search-outline" size={20} color={colors.mutedForeground} />
+        <TextInput
+          style={[typography.body1, { flex: 1, color: colors.foreground }]}
+          placeholder="Search name, phone or pharmacy"
+          placeholderTextColor={colors.mutedForeground}
+          value={search}
+          onChangeText={handleSearch}
+        />
+      </View>
 
-              {/* Latest Call Log Snippet */}
-              {latestCallLog ? (
-                <TouchableOpacity 
-                  onPress={(e) => {
-                    e.stopPropagation();
-                    router.push({
-                      pathname: '/(app)/call-logs/[id]',
-                      params: { id: latestCallLog.id.toString() }
-                    });
-                  }} 
-                  style={[styles.callLogCard, { backgroundColor: colors.background, borderColor: colors.border }]}
-                >
-                  <View style={styles.callLogHeader}>
-                    <View style={styles.callLogMeta}>
-                      <Ionicons 
-                        name={latestCallLog.direction === 'incoming' ? 'call-sharp' : 'call-outline'} 
-                        size={12} 
-                        color={latestCallLog.direction === 'incoming' ? '#22C55E' : '#3B82F6'} 
-                      />
-                      <Text style={[typography.caption, styles.callLogTitle, { color: colors.foreground }]}>
-                        {latestCallLog.direction === 'incoming' ? 'Incoming' : 'Outgoing'}
-                      </Text>
-                      <Text style={[typography.caption, { color: colors.mutedForeground, fontSize: 10 }]}>
-                        • {getTimeAgo(latestCallLog.created_at || latestCallLog.call_date)}
-                      </Text>
-                    </View>
-                    <View style={[styles.miniStatusBadge, { 
-                      backgroundColor: latestCallLog.status === 'completed' ? '#22C55E20' : 
-                                       latestCallLog.status === 'scheduled' ? '#F59E0B20' : 
-                                       latestCallLog.status === 'missed' ? '#EF444420' : '#6B728020'
-                    }]}>
-                      <Text style={[typography.caption, styles.miniStatusText, { 
-                        color: latestCallLog.status === 'completed' ? '#22C55E' : 
-                               latestCallLog.status === 'scheduled' ? '#F59E0B' : 
-                               latestCallLog.status === 'missed' ? '#EF4444' : '#6B7280' 
-                      }]}>
-                        {latestCallLog.status}
-                      </Text>
-                    </View>
-                  </View>
+      <View>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips}>
+          {FILTERS.map((option) => {
+            const selected = option.key === filter;
+            return (
+              <TouchableOpacity
+                key={option.key}
+                style={[styles.chip, { borderColor: selected ? colors.primary : colors.border }, selected && { backgroundColor: colors.primary }]}
+                onPress={() => setFilter(option.key)}
+              >
+                <Text style={[typography.caption, { color: selected ? colors.primaryForeground : colors.foreground }]}>{option.label}</Text>
+              </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
+      </View>
 
-                  {/* Notes snippet */}
-                  {latestCallLog.notes ? (
-                    <Text 
-                      style={[typography.caption, styles.callLogNotes, { color: colors.mutedForeground }]} 
-                      numberOfLines={1}
-                    >
-                      {latestCallLog.notes}
-                    </Text>
-                  ) : null}
-                </TouchableOpacity>
-              ) : (
-                <View style={[styles.callLogCardEmpty, { borderColor: colors.border }]}>
-                  <Ionicons name="call-outline" size={11} color={colors.mutedForeground} />
-                  <Text style={[typography.caption, { color: colors.mutedForeground, fontStyle: 'italic', fontSize: 11 }]}>
-                    No call logs recorded yet
-                  </Text>
-                </View>
-              )}
-              
-              <View style={styles.leadFooter}>
-                <View style={styles.leadMeta}>
-                  <Ionicons name="calendar-outline" size={14} color={colors.mutedForeground} />
-                  <Text style={[typography.caption, styles.metaText, { color: colors.mutedForeground }]}>
-                    Created {new Date(item.created_at).toLocaleDateString()}
-                  </Text>
-                </View>
-                {item.status === 'converted' && item.converted_at && (
-                  <View style={styles.leadMeta}>
-                    <Ionicons name="checkmark-circle" size={14} color={colors.success} />
-                    <Text style={[typography.caption, styles.metaText, styles.convertedText, { color: colors.success }]}>
-                      Converted
-                    </Text>
-                  </View>
-                )}
-              </View>
-            </TouchableOpacity>
-          );
-        }}
-        ListEmptyComponent={
-          <View style={styles.emptyContainer}>
-            <Ionicons name="people-outline" size={64} color={colors.mutedForeground} />
-            <Text style={[typography.h4, styles.emptyTitle, { color: colors.foreground }]}>No leads yet</Text>
-            <Text style={[typography.body2, styles.emptyText, { color: colors.mutedForeground }]}>
-              Start generating leads by creating your first lead
-            </Text>
-            <TouchableOpacity 
-              style={[styles.emptyButton, { backgroundColor: colors.primary }]} 
-              onPress={() => router.push('/(app)/leads/create')}
-            >
-              <Text style={[typography.buttonSmall, styles.emptyButtonText, { color: colors.primaryForeground }]}>
-                Create Lead
-              </Text>
-            </TouchableOpacity>
-          </View>
-        }
-      />
+      {loading ? (
+        <ActivityIndicator size="large" color={colors.primary} style={{ marginTop: 40 }} />
+      ) : (
+        <FlatList
+          data={leads}
+          keyExtractor={(item) => item.id.toString()}
+          renderItem={renderLead}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(1, filter, search); }} tintColor={colors.primary} />
+          }
+          contentContainerStyle={styles.list}
+          onEndReached={loadMore}
+          onEndReachedThreshold={0.4}
+          ListFooterComponent={loadingMore ? <ActivityIndicator color={colors.primary} style={{ marginVertical: 16 }} /> : null}
+          ListEmptyComponent={
+            <View style={styles.empty}>
+              <Ionicons name="people-outline" size={40} color={colors.mutedForeground} />
+              <Text style={[typography.body1, { color: colors.mutedForeground }]}>No leads here</Text>
+            </View>
+          }
+        />
+      )}
     </View>
   );
 }
 
 const createStyles = (colors: AppColors) =>
   StyleSheet.create({
-    container: {
-      flex: 1,
-    },
-    loadingContainer: {
-      flex: 1,
-      justifyContent: 'center',
-      alignItems: 'center',
-    },
+    container: { flex: 1 },
     header: {
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
-      padding: 16,
+      paddingHorizontal: 16,
+      paddingTop: 48,
+      paddingBottom: 12,
       borderBottomWidth: 1,
     },
-    headerTitle: {
-      fontWeight: '600',
-    },
-    addButton: {
-      width: 40,
-      height: 40,
-      borderRadius: 20,
-      justifyContent: 'center',
-      alignItems: 'center',
-    },
-    listContent: {
-      padding: 16,
-      flexGrow: 1,
-    },
-    leadCard: {
-      borderRadius: 14,
-      padding: 16,
-      marginBottom: 12,
-      borderWidth: 1,
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 1 },
-      shadowOpacity: 0.05,
-      shadowRadius: 2,
-      elevation: 2,
-    },
-    leadHeader: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-    },
-    leadNameContainer: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 8,
-      flex: 1,
-    },
-    leadTypeIcon: {
-      width: 24,
-      height: 24,
-      borderRadius: 12,
-      justifyContent: 'center',
-      alignItems: 'center',
-    },
-    customerName: {
-      fontWeight: '600',
-      flex: 1,
-    },
-    customerEmail: {
-      marginTop: 2,
-      marginLeft: 32,
-    },
-    leadTypeContainer: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      marginTop: 4,
-      marginLeft: 32,
-      gap: 6,
-    },
-    leadTypeBadge: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      paddingHorizontal: 8,
-      paddingVertical: 2,
-      borderRadius: 12,
-      gap: 4,
-    },
-    leadTypeText: {
-      fontWeight: '500',
-    },
-    organizationName: {
-      fontWeight: '400',
-    },
-    callLogCard: {
-      marginTop: 10,
-      marginLeft: 32,
-      paddingHorizontal: 10,
-      paddingVertical: 8,
-      borderRadius: 8,
-      borderWidth: 1,
-      gap: 4,
-    },
-    callLogCardEmpty: {
-      marginTop: 10,
-      marginLeft: 32,
-      paddingHorizontal: 10,
-      paddingVertical: 6,
-      borderRadius: 8,
-      borderWidth: 1,
-      borderStyle: 'dashed',
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 6,
-    },
-    callLogHeader: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-    },
-    callLogMeta: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 4,
-    },
-    callLogTitle: {
-      fontWeight: '600',
-      fontSize: 11,
-    },
-    callLogNotes: {
-      fontSize: 11,
-    },
-    statusBadge: {
-      paddingHorizontal: 8,
-      paddingVertical: 2,
-      borderRadius: 10,
-      marginLeft: 4,
-    },
-    statusText: {
-      fontSize: 10,
-      fontWeight: '600',
-      textTransform: 'capitalize',
-    },
-    miniStatusBadge: {
-      paddingHorizontal: 6,
-      paddingVertical: 1,
-      borderRadius: 6,
-    },
-    miniStatusText: {
-      fontSize: 9,
-      fontWeight: '600',
-      textTransform: 'capitalize',
-    },
-    leadFooter: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      marginTop: 12,
-      marginLeft: 32,
-      paddingTop: 8,
-      borderTopWidth: 0.5,
-      borderTopColor: 'rgba(150, 150, 150, 0.15)',
-    },
-    leadMeta: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 4,
-    },
-    metaText: {
-      fontWeight: '400',
-    },
-    convertedText: {
-      fontWeight: '600',
-    },
-    emptyContainer: {
-      flex: 1,
-      justifyContent: 'center',
-      alignItems: 'center',
-      paddingVertical: 60,
-    },
-    emptyTitle: {
-      marginTop: 12,
-    },
-    emptyText: {
-      textAlign: 'center',
-      marginTop: 8,
-      paddingHorizontal: 32,
-    },
-    emptyButton: {
-      paddingHorizontal: 24,
-      paddingVertical: 12,
-      borderRadius: 8,
-      marginTop: 16,
-    },
-    emptyButtonText: {
-      fontWeight: '600',
-    },
+    addButton: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
+    search: { flexDirection: 'row', alignItems: 'center', gap: 8, marginHorizontal: 16, marginTop: 12, paddingHorizontal: 12, paddingVertical: 10, borderRadius: 12, borderWidth: 1 },
+    chips: { paddingHorizontal: 16, paddingVertical: 10, gap: 8 },
+    chip: { paddingHorizontal: 14, paddingVertical: 7, borderRadius: 16, borderWidth: 1 },
+    list: { padding: 16, paddingTop: 4, paddingBottom: 80, flexGrow: 1 },
+    card: { borderRadius: 12, borderWidth: 1, padding: 12, marginBottom: 10, gap: 6 },
+    cardHeader: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+    typeIcon: { width: 28, height: 28, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
+    name: { flex: 1, fontWeight: '600' },
+    badge: { paddingHorizontal: 8, paddingVertical: 2, borderRadius: 10 },
+    metaRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+    callSnippet: { flexDirection: 'row', alignItems: 'center', gap: 6, padding: 8, borderRadius: 8, borderWidth: 1 },
+    empty: { alignItems: 'center', gap: 8, paddingVertical: 60 },
   });

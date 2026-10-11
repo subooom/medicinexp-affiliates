@@ -2,7 +2,10 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 
-const API_URL = 'https://medicinexp-staging.com/api/affiliates'; // Android emulator
+const API_URL = 'https://medicinexp-staging.com/api/affiliates';
+
+// AsyncStorage key for the program the MR is working in (set by the program switcher)
+export const ACTIVE_PROGRAM_KEY = 'active_program_id';
 
 const apiClient = axios.create({
   baseURL: API_URL,
@@ -16,9 +19,16 @@ const apiClient = axios.create({
 // Request interceptor
 apiClient.interceptors.request.use(
   async (config) => {
-    const token = await AsyncStorage.getItem('auth_token');
+    const [token, programId] = await Promise.all([
+      AsyncStorage.getItem('auth_token'),
+      AsyncStorage.getItem(ACTIVE_PROGRAM_KEY),
+    ]);
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
+    }
+    // Everything after login is scoped to the program the MR is working in
+    if (programId) {
+      config.headers['X-Program-Id'] = programId;
     }
     return config;
   },

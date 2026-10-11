@@ -42,3 +42,18 @@ export function getVisitStatusColor(colors: AppColors, status: string): string {
       return colors.info;
   }
 }
+
+export function getCallStatusColor(colors: AppColors, status: string): string {
+  switch (status) {
+    case 'completed':
+      return colors.success;
+    case 'scheduled':
+      return colors.primary;
+    case 'missed':
+      return colors.warning;
+    case 'cancelled':
+      return colors.destructive;
+    default:
+      return colors.mutedForeground;
+  }
+}

@@ -3,13 +3,22 @@ import { callLogApi } from '@/api/call-logs';
 import { AppColors } from '@/constants/colors';
 import { useAppTheme } from '@/hooks/use-app-theme';
 import { typography } from '@/styles/typography';
-import { CallLog } from '@/types/models';
+import { CallLog, CallStatus } from '@/types/models';
+import { getCallStatusColor } from '@/utils/status-colors';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { useRouter } from 'expo-router';
-import { useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, FlatList, RefreshControl, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useFocusEffect, useRouter } from 'expo-router';
+import { useCallback, useMemo, useState } from 'react';
+import { ActivityIndicator, Alert, FlatList, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
-type FilterType = 'all' | 'completed' | 'scheduled' | 'missed' | 'cancelled';
+type Filter = 'upcoming' | 'all' | Exclude<CallStatus, 'scheduled'>;
+
+const FILTERS: { key: Filter; label: string }[] = [
+  { key: 'upcoming', label: 'Upcoming' },
+  { key: 'all', label: 'All' },
+  { key: 'completed', label: 'Done' },
+  { key: 'missed', label: 'Missed' },
+  { key: 'cancelled', label: 'Cancelled' },
+];
 
 export default function CallLogsListScreen() {
   const router = useRouter();
@@ -17,421 +26,177 @@ export default function CallLogsListScreen() {
   const styles = useMemo(() => createStyles(colors), [colors]);
 
   const [callLogs, setCallLogs] = useState<CallLog[]>([]);
+  const [filter, setFilter] = useState<Filter>('all');
+  const [page, setPage] = useState(1);
+  const [lastPage, setLastPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [filter, setFilter] = useState<FilterType>('all');
+  const [loadingMore, setLoadingMore] = useState(false);
 
-  useEffect(() => {
-    loadCallLogs();
-  }, []);
-
-  // Takes the filter explicitly: right after setFilter() the state still holds the old value
-  const loadCallLogs = async (status: FilterType = filter) => {
+  const load = useCallback(async (pageToLoad: number, nextFilter: Filter) => {
     try {
-      const params: any = {};
-      if (status !== 'all') {
-        params.status = status;
-      }
-      const response = await callLogApi.getAll(params);
-      setCallLogs(response.data.data.data || []);
+      const response =
+        nextFilter === 'upcoming'
+          ? await callLogApi.getScheduled({ page: pageToLoad, per_page: 20 })
+          : await callLogApi.getAll({ page: pageToLoad, per_page: 20, status: nextFilter === 'all' ? undefined : nextFilter });
+      const result = response.data.data;
+      setCallLogs((prev) => (pageToLoad === 1 ? result.data : [...prev, ...result.data]));
+      setPage(result.current_page);
+      setLastPage(result.last_page);
     } catch (error) {
       console.error('Error loading call logs:', error);
     } finally {
       setLoading(false);
       setRefreshing(false);
+      setLoadingMore(false);
     }
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      load(1, filter);
+    }, [load, filter])
+  );
+
+  const loadMore = () => {
+    if (loadingMore || page >= lastPage) return;
+    setLoadingMore(true);
+    load(page + 1, filter);
   };
 
-  const onRefresh = () => {
-    setRefreshing(true);
-    loadCallLogs();
+  const confirmDelete = (call: CallLog) => {
+    Alert.alert('Delete this call log?', call.notes || undefined, [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Delete',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            await callLogApi.delete(call.id);
+            setCallLogs((prev) => prev.filter((c) => c.id !== call.id));
+          } catch (error: any) {
+            Alert.alert('Could not delete', error.message || 'Please try again.');
+          }
+        },
+      },
+    ]);
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'completed': return colors.success || '#10B981';
-      case 'scheduled': return colors.primary || '#3B82F6';
-      case 'missed': return colors.warning || '#F59E0B';
-      case 'cancelled': return colors.destructive || '#EF4444';
-      default: return colors.mutedForeground || '#6B7280';
-    }
-  };
-
-  const getStatusLabel = (status: string) => {
-    return status.charAt(0).toUpperCase() + status.slice(1);
-  };
-
-  const getEntityIcon = (type: string) => {
-    switch (type) {
-      case 'lead':
-        return 'person-outline';
-      case 'organization':
-        return 'business-outline';
-      case 'visit':
-        return 'calendar-outline';
-      default:
-        return 'link-outline';
-    }
-  };
-
-  const getEntityLabel = (item: CallLog) => {
-    if (item.lead) {
-      return `Lead: ${item.lead.customer_name}`;
-    }
-    if (item.organization) {
-      return `Organization: ${item.organization.name}`;
-    }
-    if (item.visit) {
-      return `Visit: ${new Date(item.visit.visit_date).toLocaleDateString()}`;
-    }
-    return null;
-  };
-
-  const getEntityType = (item: CallLog) => {
-    if (item.lead) return 'lead';
-    if (item.organization) return 'organization';
-    if (item.visit) return 'visit';
-    return null;
-  };
-
-  const getEntityColor = (type: string) => {
-    switch (type) {
-      case 'lead':
-        return colors.primary || '#3B82F6';
-      case 'organization':
-        return colors.success || '#10B981';
-      case 'visit':
-        return colors.warning || '#F59E0B';
-      default:
-        return colors.mutedForeground || '#6B7280';
-    }
-  };
-
-  const filters = [
-    { key: 'all', label: 'All' },
-    { key: 'completed', label: 'Completed' },
-    { key: 'scheduled', label: 'Scheduled' },
-    { key: 'missed', label: 'Missed' },
-    { key: 'cancelled', label: 'Cancelled' },
-  ];
-
-  const renderCallLog = ({ item }: { item: CallLog }) => {
-    const entityType = getEntityType(item);
-    const entityLabel = getEntityLabel(item);
-    const entityIcon = entityType ? getEntityIcon(entityType) : null;
-    const entityColor = entityType ? getEntityColor(entityType) : colors.mutedForeground;
+  const renderCall = ({ item }: { item: CallLog }) => {
+    const statusColor = getCallStatusColor(colors, item.status);
+    const who = item.lead?.display_name || item.venue?.name || 'Unknown';
 
     return (
-      <TouchableOpacity 
-        style={[styles.callLogCard, { backgroundColor: colors.card, borderColor: colors.border }]} 
-        onPress={() => router.push(`/call-logs/${item.id}`)}
+      <TouchableOpacity
+        style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}
+        onPress={() => router.push({ pathname: '/(app)/call-logs/[id]', params: { id: item.id } })}
+        onLongPress={() => confirmDelete(item)}
         activeOpacity={0.7}
       >
-        <View style={styles.callLogHeader}>
-          <View style={styles.callLogLeft}>
-            <View style={[styles.statusDot, { backgroundColor: getStatusColor(item.status) }]} />
-            <Text style={[typography.body1, styles.callLogName, { color: colors.foreground }]}>
-              {item.lead?.customer_name || item.organization?.name || 'Unknown'}
-            </Text>
-          </View>
-          <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item.status) + '15' }]}>
-            <Text style={[typography.caption, styles.statusText, { color: getStatusColor(item.status) }]}>
-              {getStatusLabel(item.status)}
-            </Text>
+        <View style={styles.cardHeader}>
+          <Ionicons name={item.direction === 'incoming' ? 'arrow-down-outline' : 'arrow-up-outline'} size={16} color={colors.mutedForeground} />
+          <Text style={[typography.body1, styles.name, { color: colors.foreground }]} numberOfLines={1}>{who}</Text>
+          <View style={[styles.badge, { backgroundColor: statusColor + '15' }]}>
+            <Text style={[typography.caption, { color: statusColor, fontWeight: '600', textTransform: 'capitalize' }]}>{item.status}</Text>
           </View>
         </View>
-
-        {/* Linked Entity */}
-        {entityType && entityLabel && (
-          <TouchableOpacity 
-            style={[styles.entityContainer, { backgroundColor: entityColor + '10', borderColor: entityColor + '30' }]}
-            onPress={() => {
-              if (entityType === 'lead' && item.lead) {
-                router.push(`/leads/${item.lead.id}`);
-              } else if (entityType === 'organization' && item.organization) {
-                router.push(`/organizations/${item.organization.id}`);
-              } else if (entityType === 'visit' && item.visit) {
-                router.push(`/visits/${item.visit.id}`);
-              }
-            }}
-          >
-            {entityIcon && (
-              <Ionicons name={entityIcon as any} size={16} color={entityColor} />
-            )}
-            <Text style={[typography.caption, styles.entityText, { color: entityColor }]}>
-              {entityLabel}
-            </Text>
-            <Ionicons name="chevron-forward-outline" size={14} color={entityColor} />
-          </TouchableOpacity>
+        {item.lead && item.venue && (
+          <Text style={[typography.caption, { color: colors.mutedForeground }]} numberOfLines={1}>{item.venue.name}</Text>
         )}
-
-        <Text style={[typography.body2, styles.callLogNotes, { color: colors.mutedForeground }]}>
-          {item.notes || 'No notes'}
-        </Text>
-
-        <View style={styles.callLogFooter}>
-          <View style={styles.callLogMeta}>
-            <Ionicons name="calendar-outline" size={14} color={colors.mutedForeground} />
-            <Text style={[typography.caption, styles.metaText, { color: colors.mutedForeground }]}>
-              {new Date(item.call_date).toLocaleDateString()}
-            </Text>
-          </View>
-          {item.duration > 0 && (
-            <View style={styles.callLogMeta}>
-              <Ionicons name="time-outline" size={14} color={colors.mutedForeground} />
-              <Text style={[typography.caption, styles.metaText, { color: colors.mutedForeground }]}>
-                {item.duration} min
-              </Text>
-            </View>
-          )}
-          {item.is_scheduled && (
-            <View style={styles.callLogMeta}>
-              <Ionicons name="calendar-outline" size={14} color={colors.primary} />
-              <Text style={[typography.caption, styles.metaText, { color: colors.primary }]}>
-                Scheduled
-              </Text>
-            </View>
-          )}
+        {item.notes ? (
+          <Text style={[typography.body2, { color: colors.mutedForeground }]} numberOfLines={2}>{item.notes}</Text>
+        ) : null}
+        <View style={styles.meta}>
+          <Ionicons name="calendar-outline" size={13} color={colors.mutedForeground} />
+          <Text style={[typography.caption, { color: colors.mutedForeground }]}>
+            {item.call_date} • {item.call_time.slice(0, 5)}
+            {item.duration_minutes ? ` • ${item.duration_minutes} min` : ''}
+          </Text>
         </View>
       </TouchableOpacity>
     );
   };
 
-  if (loading) {
-    return (
-      <View style={[styles.loadingContainer, { backgroundColor: colors.background }]}>
-        <ActivityIndicator size="large" color={colors.primary} />
-      </View>
-    );
-  }
-
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      {/* Header */}
       <View style={[styles.header, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
-        <Text style={[typography.h4, styles.headerTitle, { color: colors.foreground }]}>Call Logs</Text>
-        <TouchableOpacity 
-          style={[styles.addButton, { backgroundColor: colors.primary }]} 
-          onPress={() => router.push('/(app)/call-logs/create')}
-        >
+        <TouchableOpacity onPress={() => router.back()} style={{ width: 40 }}>
+          <Ionicons name="chevron-back" size={28} color={colors.foreground} />
+        </TouchableOpacity>
+        <Text style={[typography.h4, { color: colors.foreground, fontWeight: '600' }]}>Calls</Text>
+        <TouchableOpacity style={[styles.addButton, { backgroundColor: colors.primary }]} onPress={() => router.push('/(app)/call-logs/create')}>
           <Ionicons name="add" size={24} color={colors.primaryForeground} />
         </TouchableOpacity>
       </View>
 
-      {/* Filters */}
-      <View style={[styles.filterContainer, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
-        <FlatList
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          data={filters}
-          keyExtractor={(item) => item.key}
-          renderItem={({ item }) => (
-            <TouchableOpacity
-              style={[
-                styles.filterButton,
-                filter === item.key && styles.filterButtonActive,
-              ]}
-              onPress={() => {
-                setFilter(item.key as FilterType);
-                loadCallLogs(item.key as FilterType);
-              }}
-            >
-              <Text
-                style={[
-                  typography.caption,
-                  styles.filterText,
-                  filter === item.key && styles.filterTextActive,
-                ]}
+      <View>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips}>
+          {FILTERS.map((option) => {
+            const selected = option.key === filter;
+            return (
+              <TouchableOpacity
+                key={option.key}
+                style={[styles.chip, { borderColor: selected ? colors.primary : colors.border }, selected && { backgroundColor: colors.primary }]}
+                onPress={() => setFilter(option.key)}
               >
-                {item.label}
-              </Text>
-            </TouchableOpacity>
-          )}
-          contentContainerStyle={styles.filtersList}
-        />
+                <Text style={[typography.caption, { color: selected ? colors.primaryForeground : colors.foreground }]}>{option.label}</Text>
+              </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
       </View>
 
-      {/* List */}
-      <FlatList
-        data={callLogs}
-        keyExtractor={(item) => item.id.toString()}
-        refreshControl={
-          <RefreshControl 
-            refreshing={refreshing} 
-            onRefresh={onRefresh} 
-            tintColor={colors.primary} 
-          />
-        }
-        contentContainerStyle={styles.listContent}
-        renderItem={renderCallLog}
-        ListEmptyComponent={
-          <View style={styles.emptyContainer}>
-            <Ionicons name="call-outline" size={64} color={colors.mutedForeground} />
-            <Text style={[typography.h4, styles.emptyTitle, { color: colors.foreground }]}>No call logs</Text>
-            <Text style={[typography.body2, styles.emptyText, { color: colors.mutedForeground }]}>
-              Start logging your calls to keep track of your conversations
-            </Text>
-            <TouchableOpacity 
-              style={[styles.emptyButton, { backgroundColor: colors.primary }]} 
-              onPress={() => router.push('/(app)/call-logs/create')}
-            >
-              <Text style={[typography.buttonSmall, styles.emptyButtonText, { color: colors.primaryForeground }]}>
-                Log First Call
+      {loading ? (
+        <ActivityIndicator size="large" color={colors.primary} style={{ marginTop: 40 }} />
+      ) : (
+        <FlatList
+          data={callLogs}
+          keyExtractor={(item) => item.id.toString()}
+          renderItem={renderCall}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(1, filter); }} tintColor={colors.primary} />}
+          contentContainerStyle={styles.list}
+          onEndReached={loadMore}
+          onEndReachedThreshold={0.4}
+          ListFooterComponent={loadingMore ? <ActivityIndicator color={colors.primary} style={{ marginVertical: 16 }} /> : null}
+          ListHeaderComponent={
+            callLogs.length > 0 ? (
+              <Text style={[typography.caption, { color: colors.mutedForeground, marginBottom: 8 }]}>Long-press a call to delete it</Text>
+            ) : null
+          }
+          ListEmptyComponent={
+            <View style={styles.empty}>
+              <Ionicons name="call-outline" size={40} color={colors.mutedForeground} />
+              <Text style={[typography.body1, { color: colors.mutedForeground }]}>
+                {filter === 'upcoming' ? 'No calls scheduled' : 'No calls here'}
               </Text>
-            </TouchableOpacity>
-          </View>
-        }
-      />
+            </View>
+          }
+        />
+      )}
     </View>
   );
 }
 
 const createStyles = (colors: AppColors) =>
   StyleSheet.create({
-    container: {
-      flex: 1,
-    },
-    loadingContainer: {
-      flex: 1,
-      justifyContent: 'center',
-      alignItems: 'center',
-    },
+    container: { flex: 1 },
     header: {
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
-      padding: 16,
+      paddingHorizontal: 16,
+      paddingTop: 48,
+      paddingBottom: 12,
       borderBottomWidth: 1,
     },
-    headerTitle: {
-      fontWeight: '600',
-    },
-    addButton: {
-      width: 40,
-      height: 40,
-      borderRadius: 20,
-      justifyContent: 'center',
-      alignItems: 'center',
-    },
-    filterContainer: {
-      paddingVertical: 8,
-      borderBottomWidth: 1,
-    },
-    filtersList: {
-      paddingHorizontal: 16,
-    },
-    filterButton: {
-      paddingHorizontal: 16,
-      paddingVertical: 6,
-      borderRadius: 16,
-      marginRight: 8,
-      backgroundColor: colors.background,
-      borderWidth: 1,
-      borderColor: colors.border,
-    },
-    filterButtonActive: {
-      backgroundColor: colors.primary,
-      borderColor: colors.primary,
-    },
-    filterText: {
-      color: colors.mutedForeground,
-    },
-    filterTextActive: {
-      color: colors.primaryForeground,
-    },
-    listContent: {
-      padding: 16,
-      flexGrow: 1,
-    },
-    callLogCard: {
-      borderRadius: 12,
-      padding: 16,
-      marginBottom: 12,
-      borderWidth: 1,
-    },
-    callLogHeader: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-    },
-    callLogLeft: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 8,
-      flex: 1,
-    },
-    statusDot: {
-      width: 8,
-      height: 8,
-      borderRadius: 4,
-    },
-    callLogName: {
-      fontWeight: '600',
-      flex: 1,
-    },
-    statusBadge: {
-      paddingHorizontal: 10,
-      paddingVertical: 4,
-      borderRadius: 12,
-    },
-    statusText: {
-      fontWeight: '600',
-      textTransform: 'capitalize',
-    },
-    entityContainer: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 6,
-      paddingHorizontal: 12,
-      paddingVertical: 6,
-      borderRadius: 8,
-      marginTop: 8,
-      marginLeft: 24,
-      borderWidth: 1,
-    },
-    entityText: {
-      fontWeight: '500',
-      flex: 1,
-    },
-    callLogNotes: {
-      marginTop: 8,
-      marginLeft: 24,
-    },
-    callLogFooter: {
-      flexDirection: 'row',
-      marginTop: 8,
-      marginLeft: 24,
-      gap: 12,
-    },
-    callLogMeta: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 4,
-    },
-    metaText: {
-      fontWeight: '400',
-    },
-    emptyContainer: {
-      flex: 1,
-      justifyContent: 'center',
-      alignItems: 'center',
-      paddingVertical: 60,
-    },
-    emptyTitle: {
-      marginTop: 12,
-    },
-    emptyText: {
-      textAlign: 'center',
-      marginTop: 8,
-      paddingHorizontal: 32,
-    },
-    emptyButton: {
-      paddingHorizontal: 24,
-      paddingVertical: 12,
-      borderRadius: 8,
-      marginTop: 16,
-    },
-    emptyButtonText: {
-      fontWeight: '600',
-    },
+    addButton: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
+    chips: { paddingHorizontal: 16, paddingVertical: 10, gap: 8 },
+    chip: { paddingHorizontal: 14, paddingVertical: 7, borderRadius: 16, borderWidth: 1 },
+    list: { padding: 16, paddingTop: 4, paddingBottom: 80, flexGrow: 1 },
+    card: { borderRadius: 12, borderWidth: 1, padding: 12, marginBottom: 10, gap: 6 },
+    cardHeader: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+    name: { flex: 1, fontWeight: '600' },
+    badge: { paddingHorizontal: 8, paddingVertical: 2, borderRadius: 10 },
+    meta: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+    empty: { alignItems: 'center', gap: 8, paddingVertical: 60 },
   });

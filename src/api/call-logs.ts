@@ -1,68 +1,37 @@
 // src/api/call-logs.ts
-import { CallLogFormData } from '@/types/models';
+import { ApiResponse, CallLog, CallLogFormData, CallStatus, Paginated } from '@/types/models';
 import apiClient from './client';
 
+export interface CallLogFilters {
+  status?: CallStatus;
+  lead_id?: number;
+  venue_id?: number;
+  from?: string;
+  to?: string;
+  page?: number;
+  per_page?: number;
+}
+
+export interface CallLogStats {
+  total: number;
+  completed: number;
+  scheduled: number;
+  missed: number;
+  this_month: number;
+}
+
 export const callLogApi = {
-  /**
-   * Get all call logs for the authenticated MR
-   */
-  getAll: (params?: {
-    status?: string;
-    lead_id?: number;
-    organization_id?: number;
-    start_date?: string;
-    end_date?: string;
-    per_page?: number;
-    page?: number;
-  }) => apiClient.get('/call-logs', { params }),
-
-  /**
-   * Get call logs for a specific lead
-   */
-  getByLead: (leadId: number) => 
-    apiClient.get(`/call-logs?lead_id=${leadId}`),
-
-  /**
-   * Get call logs for a specific organization
-   */
-  getByOrganization: (organizationId: number) => 
-    apiClient.get(`/call-logs?organization_id=${organizationId}`),
-
-  /**
-   * Get scheduled call logs
-   */
-  getScheduled: (params?: { per_page?: number; page?: number }) => 
-    apiClient.get('/call-logs/scheduled', { params }),
-
-  /**
-   * Get a specific call log by ID
-   */
-  getById: (id: number) => apiClient.get(`/call-logs/${id}`),
-
-  /**
-   * Create a new call log
-   */
-  create: (data: CallLogFormData) => apiClient.post('/call-logs', data),
-
-  /**
-   * Update an existing call log
-   */
-  update: (id: number, data: Partial<CallLogFormData>) => 
-    apiClient.put(`/call-logs/${id}`, data),
-
-  /**
-   * Delete a call log
-   */
+  getAll: (params?: CallLogFilters) => apiClient.get<ApiResponse<Paginated<CallLog>>>('/call-logs', { params }),
+  getByLead: (leadId: number) => apiClient.get<ApiResponse<Paginated<CallLog>>>('/call-logs', { params: { lead_id: leadId } }),
+  getByVenue: (venueId: number) => apiClient.get<ApiResponse<Paginated<CallLog>>>('/call-logs', { params: { venue_id: venueId } }),
+  // Upcoming scheduled calls, soonest first
+  getScheduled: (params?: { page?: number; per_page?: number }) =>
+    apiClient.get<ApiResponse<Paginated<CallLog>>>('/call-logs/scheduled', { params }),
+  getById: (id: number) => apiClient.get<ApiResponse<CallLog>>(`/call-logs/${id}`),
+  create: (data: CallLogFormData) => apiClient.post<ApiResponse<CallLog>>('/call-logs', data),
+  // Partial: only send what changed
+  update: (id: number, data: Partial<CallLogFormData>) => apiClient.put<ApiResponse<CallLog>>(`/call-logs/${id}`, data),
   delete: (id: number) => apiClient.delete(`/call-logs/${id}`),
-
-  /**
-   * Mark a call log as completed
-   */
-  complete: (id: number) => 
-    apiClient.patch(`/call-logs/${id}/complete`),
-
-  /**
-   * Get call log statistics
-   */
-  getStats: () => apiClient.get('/call-logs/stats'),
+  complete: (id: number) => apiClient.patch<ApiResponse<CallLog>>(`/call-logs/${id}/complete`),
+  getStats: () => apiClient.get<ApiResponse<CallLogStats>>('/call-logs/stats'),
 };

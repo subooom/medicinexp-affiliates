@@ -55,7 +55,7 @@ export default function AppLayout() {
         }} 
       />
       <Tabs.Screen 
-        name="organizations" 
+        name="venues" 
         options={{ 
           headerShown: false,
           href: null, // This hides it from the tab bar

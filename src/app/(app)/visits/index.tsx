@@ -1,9 +1,9 @@
-// app/(app)/visits/index.tsx - Card Grid Layout with Offline Sync
+// app/(app)/visits/index.tsx
 import { AppColors } from '@/constants/colors';
 import { useVisits } from '@/hooks/data/use-visits';
 import { useAppTheme } from '@/hooks/use-app-theme';
 import { typography } from '@/styles/typography';
-import { Visit, VisitFilters } from '@/types/models';
+import { Visit, VisitFilters, VisitStatus } from '@/types/models';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
@@ -24,7 +24,7 @@ export default function VisitsListScreen() {
   const styles = createStyles(colors);
   
   // State for filters (optional)
-  const [statusFilter, setStatusFilter] = useState<string | undefined>(undefined);
+  const [statusFilter, setStatusFilter] = useState<VisitStatus | undefined>(undefined);
   
   // Use the new hook
   const {
@@ -65,7 +65,7 @@ export default function VisitsListScreen() {
   const handleDeleteVisit = (visit: Visit) => {
     Alert.alert(
       'Delete Visit',
-      `Are you sure you want to delete this visit for ${visit.organization?.name || 'Unknown'}?`,
+      `Are you sure you want to delete this visit for ${visit.venue?.name || 'Unknown'}?`,
       [
         { text: 'Cancel', style: 'cancel' },
         {
@@ -280,34 +280,38 @@ export default function VisitsListScreen() {
             <View style={styles.cardCenter}>
               <View style={styles.cardHeader}>
                 <Text style={[typography.body1, styles.orgName, { color: colors.foreground }]}>
-                  {item.organization?.name || 'Unknown'}
+                  {item.venue?.name || 'Unknown'}
                 </Text>
                 {item.status === 'planned' && (
                   <View style={styles.syncBadge}>
-                    <Ionicons name="sync" size={12} color="#F57C00" />
+                    <Ionicons name="calendar" size={12} color="#F57C00" />
                     <Text style={[typography.caption, styles.syncBadgeText]}>Planned</Text>
                   </View>
                 )}
                 {item.status === 'cancelled' && (
                   <View style={[styles.syncBadge, { backgroundColor: '#FFEBEE' }]}>
-                    <Ionicons name="alert-circle" size={12} color="#D32F2F" />
-                    <Text style={[typography.caption, styles.syncBadgeTextFailed]}>Failed</Text>
+                    <Ionicons name="close-circle" size={12} color="#D32F2F" />
+                    <Text style={[typography.caption, styles.syncBadgeTextFailed]}>Cancelled</Text>
                   </View>
                 )}
               </View>
               <Text style={[typography.body2, styles.orgAddress, { color: colors.mutedForeground }]}>
-                {item.organization?.address || 'No address'}
+                {[item.venue?.address, item.venue?.city].filter(Boolean).join(', ') || 'No address'}
               </Text>
               <View style={styles.cardMeta}>
                 <Ionicons name="calendar-outline" size={12} color={colors.mutedForeground} />
                 <Text style={[typography.caption, styles.metaText, { color: colors.mutedForeground }]}>
-                  {new Date(item.visit_date).toLocaleDateString()}
+                  {new Date(item.visited_at).toLocaleDateString()}
                 </Text>
-                {item.visit_time && (
+                <Ionicons name="time-outline" size={12} color={colors.mutedForeground} style={styles.metaSpacer} />
+                <Text style={[typography.caption, styles.metaText, { color: colors.mutedForeground }]}>
+                  {new Date(item.visited_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                </Text>
+                {item.dropoffs && item.dropoffs.length > 0 && (
                   <>
-                    <Ionicons name="time-outline" size={12} color={colors.mutedForeground} style={styles.metaSpacer} />
+                    <Ionicons name="cube-outline" size={12} color={colors.mutedForeground} style={styles.metaSpacer} />
                     <Text style={[typography.caption, styles.metaText, { color: colors.mutedForeground }]}>
-                      {item.visit_time}
+                      {item.dropoffs.reduce((sum, d) => sum + d.quantity, 0)} left
                     </Text>
                   </>
                 )}
@@ -322,7 +326,7 @@ export default function VisitsListScreen() {
                 onPress={() => {
                   Alert.alert(
                     'Visit Options',
-                    `What would you like to do with ${item.organization?.name || 'this visit'}?`,
+                    `What would you like to do with ${item.venue?.name || 'this visit'}?`,
                     [
                       { text: 'Cancel', style: 'cancel' },
                       { text: 'Complete', onPress: () => handleUpdateStatus(item, 'completed') },

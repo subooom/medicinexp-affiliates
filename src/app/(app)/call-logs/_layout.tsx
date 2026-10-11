@@ -5,44 +5,22 @@ import { Stack } from 'expo-router';
 
 export default function CallLogsLayout() {
   const { colors } = useAppTheme();
-  // useResetNavigationOnUnmount('/(app)/call-logs')
 
   return (
     <Stack
       screenOptions={{
-        headerStyle: {
-          backgroundColor: colors.card,
-        },
-        headerTitleStyle: {
-          ...typography.h5,
-          color: colors.foreground,
-        },
+        headerStyle: { backgroundColor: colors.card },
+        headerTitleStyle: { ...typography.h5, color: colors.foreground },
         headerTintColor: colors.primary,
         headerShadowVisible: false,
         headerShown: false,
         headerBackTitle: 'Back',
       }}
     >
-      <Stack.Screen 
-        name="index" 
-        />
-      <Stack.Screen 
-        name="create" 
-        options={{ 
-          title: 'Log Call',
-          headerShown: true,
-          headerBackButtonMenuEnabled: true,
-          presentation: 'modal',
-        }} 
-      />
-      <Stack.Screen 
-        name="[id]" 
-        options={{ 
-          title: 'Call Details',
-          headerShown: true,
-          headerBackButtonMenuEnabled: true,
-        }} 
-      />
+      <Stack.Screen name="index" />
+      <Stack.Screen name="create" options={{ title: 'Log a call', headerShown: true, presentation: 'modal' }} />
+      <Stack.Screen name="[id]" options={{ title: 'Call', headerShown: true }} />
+      <Stack.Screen name="edit/[id]" options={{ title: 'Edit call', headerShown: true, presentation: 'modal' }} />
     </Stack>
   );
 }

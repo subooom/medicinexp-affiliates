@@ -1,14 +1,15 @@
 // src/api/visits.ts
-import { VisitFilters } from '@/types/models';
+import { ApiResponse, Paginated, Visit, VisitFilters, VisitInput, VisitStats } from '@/types/models';
 import apiClient from './client';
 
 export const visitApi = {
-  getAll: (params?: VisitFilters & { per_page?: number }) => apiClient.get('/visits', { params }),
-  getById: (id: number) => apiClient.get(`/visits/${id}`),
-  create: (data: any) => apiClient.post('/visits', data),
-  update: (id: number, data: any) => apiClient.put(`/visits/${id}`, data),
+  getAll: (params?: VisitFilters) => apiClient.get<ApiResponse<Paginated<Visit>>>('/visits', { params }),
+  getById: (id: number) => apiClient.get<ApiResponse<Visit>>(`/visits/${id}`),
+  // Check in (status completed, optional drop-offs) or plan a visit (status planned)
+  create: (data: VisitInput) => apiClient.post<ApiResponse<Visit>>('/visits', data),
+  update: (id: number, data: Partial<Pick<Visit, 'notes' | 'status' | 'visited_at'>>) =>
+    apiClient.put<ApiResponse<Visit>>(`/visits/${id}`, data),
   delete: (id: number) => apiClient.delete(`/visits/${id}`),
-  checkout: (id: number) => apiClient.patch(`/visits/${id}/checkout`),
-  getStats: () => apiClient.get('/visits/stats'),
-  getMonthly: (params?: any) => apiClient.get('/visits/monthly', { params }),
+  checkout: (id: number) => apiClient.patch<ApiResponse<Visit>>(`/visits/${id}/checkout`),
+  getStats: () => apiClient.get<ApiResponse<VisitStats>>('/visits/stats'),
 };
