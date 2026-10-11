@@ -35,7 +35,7 @@ Ticks are updated as work lands. Every item is built **program-aware** (see Deci
 - [x] Server: fix route order (`/stats`, `/monthly`, `/summary`, `/search` shadowed by `/{id}`)
 - [x] Server: fix dead routes — tier-by-program route repaired; coupon routes and organization DELETE removed until they're rebuilt (coupons: Phase 2, venue delete: Phase 1)
 - [x] Server: stop mass-assigning `$request->all()` on updates
-- [ ] Server: feature tests for the affiliate API *(needs a separate test database — the existing test wipes the main DB)*
+- [x] Server: feature tests for the affiliate API *(isolated `medicinexp_testing` DB with a guard; run `php vendor/bin/phpunit tests/Feature/Affiliates`)*
 
 ## 🧱 Phase 1 — Foundation (program-aware data model)
 
