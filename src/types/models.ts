@@ -274,7 +274,8 @@ export type LeadType = 'customer' | 'associate' | 'organization' | 'contact'
 
 export interface Lead {
   id: number;
-  call_logs: CallLog[],
+  call_logs?: CallLog[],
+  latest_call_log?: CallLog | null,
   lead_type: LeadType,
   associated_entity?: string | null;
   customer_name: string;

@@ -142,7 +142,7 @@ export default function LeadsListScreen() {
           const typeColor = getLeadTypeColor(leadType, colors);
           
           // Grab the most recent call log if available
-          const latestCallLog = item.call_logs && item.call_logs.length > 0 ? item.call_logs[0] : null;
+          const latestCallLog = item.latest_call_log ?? null;
           
           return (
             <TouchableOpacity 

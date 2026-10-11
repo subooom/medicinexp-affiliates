@@ -32,10 +32,10 @@ Ticks are updated as work lands. Every item is built **program-aware** (see Deci
 - [x] Server: new branch off latest production for the affiliate rebuild (`feat-affiliate-programs`)
 - [x] Fix `visitApi` import break (check-in, lead form, call-log form)
 - [x] Fix all TypeScript errors (`npx tsc --noEmit` passes)
-- [ ] Server: fix route order (`/stats`, `/monthly`, `/summary`, `/search` shadowed by `/{id}`)
-- [ ] Server: add missing handlers (organization `destroy`, `CouponController`, tier-by-program route)
-- [ ] Server: stop mass-assigning `$request->all()` on updates
-- [ ] Server: feature tests for the affiliate API
+- [x] Server: fix route order (`/stats`, `/monthly`, `/summary`, `/search` shadowed by `/{id}`)
+- [x] Server: fix dead routes — tier-by-program route repaired; coupon routes and organization DELETE removed until they're rebuilt (coupons: Phase 2, venue delete: Phase 1)
+- [x] Server: stop mass-assigning `$request->all()` on updates
+- [ ] Server: feature tests for the affiliate API *(needs a separate test database — the existing test wipes the main DB)*
 
 ## 🧱 Phase 1 — Foundation (program-aware data model)
 
@@ -76,15 +76,15 @@ Ticks are updated as work lands. Every item is built **program-aware** (see Deci
 - [ ] ⚠️ Affiliate can distribute a marketing material while creating/editing a visit — blocked by check-in crash; distributions not linked to the visit; stock taken from a global count
 - [ ] ⚠️ Affiliate can choose a lead_type while creating/editing a lead (`customer` | `associate` | `organization` | `contact`) — server never saves `lead_type`, `associated_entity` or chosen status
 - [x] Affiliate can search for an organization while creating/editing a lead
-- [ ] ⚠️ Affiliate can create a lead — email required by server but optional in form; visit link dropped; `affiliated_organization_id` NOT NULL never set
-- [ ] ⚠️ Affiliate can edit a lead — only notes/status, no edit form; server validates visit against wrong table
+- [ ] ⚠️ Affiliate can create a lead — visit link now saved; still: email required by server but optional in form, `affiliated_organization_id` NOT NULL never set (Phase 1)
+- [ ] ⚠️ Affiliate can edit a lead — server fixed (validated fields, right visit table); app still only edits notes/status, no edit form
 - [x] Affiliate can view a lead
 - [x] Affiliate can browse leads
 - [x] Affiliate can create a call log with a lead
-- [ ] ⚠️ Affiliate can edit a call log with a lead — time format rejected (`HH:mm:ss` vs `H:i`); saving wipes lead/organization links
+- [x] Affiliate can edit a call log with a lead *(fixed: partial update keeps links; HH:MM:SS accepted)*
 - [x] Affiliate can read a call log's detail page
 - [x] Affiliate can browse the call logs they created *(fixed: status filter lag)*
-- [ ] ⚠️ Affiliate can see last call log from the leads list page — Laravel 8 `limit(1)` in eager load: only one lead per page gets a call log
+- [x] Affiliate can see last call log from the leads list page *(fixed: `latestCallLog` relation)*
 - [x] Affiliate can click the last call log from the leads list page to go to call log read page
 - [x] Affiliate can schedule a call log with an organization or a lead
 - [x] Affiliates can see their total earnings *(fixed in app: amounts with commas parse correctly; commissions screen shows रू and no longer crashes on string amounts. Server should still send plain numbers — Phase 1)*
@@ -101,7 +101,7 @@ Ticks are updated as work lands. Every item is built **program-aware** (see Deci
 - [x] Affiliates can view a link to distributions list page in their profile
 - [ ] ⚠️ Affiliates can edit a call log from organizations edit modal — not built; organization detail never shows its call logs
 - [ ] ⚠️ Affiliates can browse/filter organizations in organizations list page — search only, no type/city filter
-- [ ] ⚠️ Affiliates can read organization details in organizations details page — works except call logs section is always empty
+- [x] Affiliates can read organization details in organizations details page *(fixed: call logs section)*
 
 ### Pending features & enhancements
 

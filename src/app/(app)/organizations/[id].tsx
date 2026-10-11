@@ -43,9 +43,11 @@ export default function OrganizationDetailScreen() {
       setDistributions(distResponse.data.data.data || []);
       
       const callLogsResponse = await callLogApi.getByOrganization(parseInt(id));
-      const callLogsData = callLogsResponse.data.data || [];
+      // Paginated: { success, data: { data: [...], total } }
+      const callLogsPage = callLogsResponse.data.data;
+      const callLogsData = callLogsPage?.data || [];
       setCallLogs(callLogsData);
-      setCallLogCount(callLogsData.length || 0);
+      setCallLogCount(callLogsPage?.total ?? callLogsData.length);
     } catch (error) {
       console.error('Error loading organization:', error);
     } finally {
