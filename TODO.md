@@ -39,14 +39,15 @@ Ticks are updated as work lands. Every item is built **program-aware** (see Deci
 
 ## 🧱 Phase 1 — Foundation (program-aware data model)
 
-- [ ] Rewrite affiliate migrations: `programs`, `venues`, `program_memberships`
-- [ ] Program scoping on every affiliate table, enforced server-side
-- [ ] Roles & permissions (platform admin / program admin / program staff / MR)
-- [ ] Stock ledger: locations (hub, MR bag, venue) + movements
-- [ ] Sales, commissions, payout runs, payout items, bonuses
-- [ ] Seed MedicineXP as program #1 with its tiers and materials
+- [x] Rewrite affiliate migrations: `aff_programs`, `aff_venues`, `aff_memberships` (+ all other `aff_*` tables; legacy tables dropped where they exist)
+- [x] Program scoping on every affiliate table, enforced server-side (`affiliate.program` middleware + `forProgram()`)
+- [ ] Roles & permissions (platform admin / program admin / program staff / MR) — `aff_portal_users` roles exist; enforcement comes with the web portal
+- [x] Stock ledger: locations (hub, MR bag) + movements; drop-offs checked against the MR's bag under a lock
+- [x] Sales, commissions, payout runs, payout items, bonuses (tables, models, MR earnings API; creating commissions from payments is Phase 2)
+- [x] Seed MedicineXP as program #1 with its tiers and materials *(renewal-year rates 3/4/6/7/9% are placeholders to confirm)*
 - [ ] App: active-program context + switcher (hidden with one program)
-- [ ] Server: offline-safe writes — every record accepts a phone-generated `client_uuid` (repeats are ignored) and the time recorded on the phone (`occurred_at`), so queued items keep their real time and don't trip the 10-minute rule
+- [ ] App: move every screen to the new API (`/venues` instead of `/organizations`, new lead/visit/earnings fields, money in paisa)
+- [x] Server: offline-safe writes — every record accepts a phone-generated `client_uuid` (repeats are ignored) and the time recorded on the phone, so queued items keep their real time and don't trip the 10-minute rule
 
 ## 📶 Offline mode (field reps work with bad signal all day)
 
