@@ -6,6 +6,7 @@ import { ProductShowcase } from '@/components/dashboard/visits/checkin/ProductSh
 import { AppColors } from '@/constants/colors';
 import { useAppTheme } from '@/hooks/use-app-theme';
 import { typography } from '@/styles/typography';
+import { toIconName } from '@/utils/icons';
 import { toLocalDateString } from '@/utils/time';
 import { MarketingMaterial, Organization, OrganizationType } from '@/types/models';
 import Ionicons from '@expo/vector-icons/Ionicons';
@@ -819,7 +820,7 @@ export default function CheckInScreen() {
                   {selectedOrgType ? (
                     <View style={styles.selectorContent}>
                       <View style={[styles.orgTypeSelectorIcon, { backgroundColor: selectedOrgType.color + '15' }]}>
-                        <Ionicons name={selectedOrgType.icon || 'business-outline'} size={18} color={selectedOrgType.color || colors.primary} />
+                        <Ionicons name={toIconName(selectedOrgType.icon, 'business-outline')} size={18} color={selectedOrgType.color || colors.primary} />
                       </View>
                       <Text style={[typography.body1, styles.selectorName, { color: colors.foreground, }]}>
                         {selectedOrgType.name}
@@ -1036,7 +1037,7 @@ export default function CheckInScreen() {
                 >
                   <View style={styles.typeOptionContent}>
                     <View style={[styles.typeOptionIcon, { backgroundColor: type.color + '15' }]}>
-                      <Ionicons name={type.icon || 'business-outline'} size={24} color={type.color || colors.primary} />
+                      <Ionicons name={toIconName(type.icon, 'business-outline')} size={24} color={type.color || colors.primary} />
                     </View>
                     <View style={{ flex: 1 }}>
                       <Text style={[typography.body1, styles.typeOptionName, { color: colors.foreground }]}>

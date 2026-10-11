@@ -4,6 +4,7 @@ import { leadApi } from '@/api/leads';
 import { AppColors } from '@/constants/colors';
 import { useAppTheme } from '@/hooks/use-app-theme';
 import { typography } from '@/styles/typography';
+import { IconName } from '@/utils/icons';
 import { toLocalDateString } from '@/utils/time';
 import { CallLog, Lead } from '@/types/models';
 import Ionicons from '@expo/vector-icons/Ionicons';
@@ -13,7 +14,7 @@ import { ActivityIndicator, Alert, FlatList, Modal, ScrollView, StyleSheet, Text
 
 type LeadType = 'customer' | 'associate' | 'organization' | 'contact';
 
-const getLeadTypeIcon = (type: LeadType): string => {
+const getLeadTypeIcon = (type: LeadType): IconName => {
   switch (type) {
     case 'customer': return 'person-outline';
     case 'associate': return 'people-outline';
@@ -216,7 +217,7 @@ export default function LeadDetailsScreen() {
     return status.charAt(0).toUpperCase() + status.slice(1);
   };
 
-  const getDirectionIcon = (direction: string) => {
+  const getDirectionIcon = (direction: string): IconName => {
     return direction === 'incoming' ? 'call-sharp' : 'call-outline';
   };
 
@@ -1067,6 +1068,9 @@ const createStyles = (colors: AppColors) =>
       borderRadius: 6,
       gap: 3,
       backgroundColor: colors.primary + '10',
+    },
+    callLogEditText: {
+      fontWeight: '600',
     },
     callLogCount: {
       paddingHorizontal: 8,

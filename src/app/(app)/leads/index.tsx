@@ -3,6 +3,7 @@ import { leadApi } from '@/api/leads';
 import { AppColors } from '@/constants/colors';
 import { useAppTheme } from '@/hooks/use-app-theme';
 import { typography } from '@/styles/typography';
+import { IconName } from '@/utils/icons';
 import { Lead } from '@/types/models';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useRouter } from 'expo-router';
@@ -11,7 +12,7 @@ import { ActivityIndicator, FlatList, RefreshControl, StyleSheet, Text, Touchabl
 
 type LeadType = 'customer' | 'associate' | 'organization' | 'contact';
 
-const getLeadTypeIcon = (type: LeadType): string => {
+const getLeadTypeIcon = (type: LeadType): IconName => {
   switch (type) {
     case 'customer': return 'person-outline';
     case 'associate': return 'people-outline';
@@ -210,7 +211,7 @@ export default function LeadsListScreen() {
                   <View style={styles.callLogHeader}>
                     <View style={styles.callLogMeta}>
                       <Ionicons 
-                        name={latestCallLog.direction === 'incoming' ? 'call-receive-outline' : 'call-outline'} 
+                        name={latestCallLog.direction === 'incoming' ? 'call-sharp' : 'call-outline'} 
                         size={12} 
                         color={latestCallLog.direction === 'incoming' ? '#22C55E' : '#3B82F6'} 
                       />

@@ -5,6 +5,7 @@ import { visitApi } from '@/api/visits';
 import { AppColors } from '@/constants/colors';
 import { useAppTheme } from '@/hooks/use-app-theme';
 import { typography } from '@/styles/typography';
+import { IconName } from '@/utils/icons';
 import { Organization, Visit } from '@/types/models';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useRouter } from 'expo-router';
@@ -24,7 +25,7 @@ import {
 type LeadType = 'customer' | 'associate' | 'organization' | 'contact';
 type LeadStatus = 'new' | 'contacted' | 'qualified' | 'converted' | 'lost';
 
-const getLeadTypeIcon = (type: LeadType): string => {
+const getLeadTypeIcon = (type: LeadType): IconName => {
   switch (type) {
     case 'customer': return 'person-outline';
     case 'associate': return 'people-outline';
@@ -91,7 +92,7 @@ export default function CreateLeadScreen() {
     associated_entity: '', // For associate type
   });
 
-  const leadTypes: { value: LeadType; label: string; icon: string; description: string }[] = [
+  const leadTypes: { value: LeadType; label: string; icon: IconName; description: string }[] = [
     { value: 'customer', label: 'Customer', icon: 'person-outline', description: 'A potential customer' },
     { value: 'associate', label: 'Associate', icon: 'people-outline', description: 'A business partner or associate' },
     { value: 'organization', label: 'Organization', icon: 'business-outline', description: 'A healthcare organization' },

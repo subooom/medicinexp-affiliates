@@ -3,6 +3,7 @@ import { commissionApi } from '@/api/commissions';
 import { AppColors } from '@/constants/colors';
 import { useAppTheme } from '@/hooks/use-app-theme';
 import { typography } from '@/styles/typography';
+import { formatRupees } from '@/utils/money';
 import { Commission } from '@/types/models';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useEffect, useState } from 'react';
@@ -82,16 +83,16 @@ export default function CommissionsListScreen() {
         <View style={styles.summaryContainer}>
           <View style={[styles.summaryCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
             <Text style={[typography.caption, styles.summaryLabel, { color: colors.mutedForeground }]}>Total Earned</Text>
-            <Text style={[typography.h3, styles.summaryValue, { color: colors.foreground }]}>${summary.this_year || 0}</Text>
+            <Text style={[typography.h3, styles.summaryValue, { color: colors.foreground }]}>{formatRupees(summary.this_year)}</Text>
           </View>
           <View style={[styles.summaryCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
             <Text style={[typography.caption, styles.summaryLabel, { color: colors.mutedForeground }]}>This Month</Text>
-            <Text style={[typography.h3, styles.summaryValue, { color: colors.foreground }]}>${summary.this_month || 0}</Text>
+            <Text style={[typography.h3, styles.summaryValue, { color: colors.foreground }]}>{formatRupees(summary.this_month)}</Text>
           </View>
           <View style={[styles.summaryCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
             <Text style={[typography.caption, styles.summaryLabel, { color: colors.mutedForeground }]}>Pending</Text>
             <Text style={[typography.h3, styles.summaryValue, styles.pendingValue, { color: colors.warning || '#F59E0B' }]}>
-              ${summary.pending || 0}
+              {formatRupees(summary.pending)}
             </Text>
           </View>
         </View>
@@ -116,7 +117,7 @@ export default function CommissionsListScreen() {
           >
             <View style={styles.cardHeader}>
               <Text style={[typography.h4, styles.amount, { color: colors.foreground }]}>
-                ${item.commission_amount.toFixed(2)}
+                {formatRupees(item.commission_amount)}
               </Text>
               <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item.status) }]}>
                 <Text style={[typography.caption, styles.statusText, { color: colors.primaryForeground }]}>

@@ -3,6 +3,7 @@ import { organizationApi } from '@/api/organizations';
 import { AppColors } from '@/constants/colors';
 import { useAppTheme } from '@/hooks/use-app-theme';
 import { typography } from '@/styles/typography';
+import { toIconName } from '@/utils/icons';
 import { Organization } from '@/types/models';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useRouter } from 'expo-router';
@@ -122,7 +123,7 @@ export default function OrganizationsListScreen() {
             <View style={styles.cardLeft}>
               <View style={[styles.cardIcon, { backgroundColor: getTypeColor(item.type) + '15' }]}>
                 <Ionicons 
-                  name={item.type?.icon || 'business-outline'} 
+                  name={toIconName(item.type?.icon, 'business-outline')} 
                   size={20} 
                   color={getTypeColor(item.type)} 
                 />

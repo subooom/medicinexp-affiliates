@@ -5,9 +5,10 @@ import { AppColors } from '@/constants/colors';
 import { useAuth } from '@/context/AuthContext';
 import { useAppTheme } from '@/hooks/use-app-theme';
 import { typography } from '@/styles/typography';
+import { parseAmount } from '@/utils/money';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import { useEffect, useMemo, useState } from 'react';
+import { ReactElement, useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Modal, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
@@ -177,9 +178,9 @@ export default function DashboardScreen() {
   const totalVisits = dashboardData?.recent_activity?.visits?.length || 0;
   const totalLeads = dashboardData?.summary?.leads || 0;
   const totalSales = dashboardData?.summary?.converted || 0;
-  const totalCommission = parseFloat(dashboardData?.summary?.total_commission || '0');
+  const totalCommission = parseAmount(dashboardData?.summary?.total_commission);
   const conversionRate = dashboardData?.summary?.conversion_rate || 0;
-  const pendingCommission = parseFloat(dashboardData?.summary?.pending_commission || '0');
+  const pendingCommission = parseAmount(dashboardData?.summary?.pending_commission);
 
   const hasAnyActivity = totalVisits > 0 || totalLeads > 0 || totalSales > 0;
   const isActive = totalVisits >= 3 || totalLeads >= 1 || totalSales >= 1;
@@ -470,7 +471,7 @@ export default function DashboardScreen() {
     emptyMessage: string,
     actionButtonText: string,
     actionRoute: string,
-    renderItem: (item: any) => JSX.Element
+    renderItem: (item: any) => ReactElement
   ) => {
     return (
     <Modal

@@ -30,8 +30,8 @@ Ticks are updated as work lands. Every item is built **program-aware** (see Deci
 
 - [x] Commit the app and push to GitHub
 - [x] Server: new branch off latest production for the affiliate rebuild (`feat-affiliate-programs`)
-- [ ] Fix `visitApi` import break (check-in, lead form, call-log form)
-- [ ] Fix all TypeScript errors (`npx tsc --noEmit` passes)
+- [x] Fix `visitApi` import break (check-in, lead form, call-log form)
+- [x] Fix all TypeScript errors (`npx tsc --noEmit` passes)
 - [ ] Server: fix route order (`/stats`, `/monthly`, `/summary`, `/search` shadowed by `/{id}`)
 - [ ] Server: add missing handlers (organization `destroy`, `CouponController`, tier-by-program route)
 - [ ] Server: stop mass-assigning `$request->all()` on updates
@@ -66,10 +66,10 @@ Ticks are updated as work lands. Every item is built **program-aware** (see Deci
 - [x] Affiliate can login
 - [x] Affiliate can create account
 - [x] Affiliate can see the hint modal
-- [ ] ⚠️ Affiliate can create a visit — check-in crashes: `visitApi` is no longer exported from `src/api/visits.ts`
-- [ ] ⚠️ Affiliate can edit a visit — only status can change, and the card shows "Unknown" after saving
-- [ ] ⚠️ Affiliate can browse visits — only first 20 load; "load more" is broken
-- [ ] ⚠️ Affiliate can view a visit — `visits/[id].tsx` is a copy of the list screen
+- [x] Affiliate can create a visit *(fixed 2026-10-11: `visitApi` restored; visit date now uses the local day, not UTC)*
+- [ ] ⚠️ Affiliate can edit a visit — notes and status now editable from the detail screen; date/time/venue still can't be changed
+- [x] Affiliate can browse visits *(fixed: load more)*
+- [x] Affiliate can view a visit *(fixed: real detail screen)*
 - [x] Affiliate can search for an organization while creating/editing a visit
 - [x] Affiliate can create an organization while creating/editing a visit
 - [x] Affiliate can search nearby organizations while creating/editing a visit
@@ -83,11 +83,11 @@ Ticks are updated as work lands. Every item is built **program-aware** (see Deci
 - [x] Affiliate can create a call log with a lead
 - [ ] ⚠️ Affiliate can edit a call log with a lead — time format rejected (`HH:mm:ss` vs `H:i`); saving wipes lead/organization links
 - [x] Affiliate can read a call log's detail page
-- [ ] ⚠️ Affiliate can browse the call logs they created — status filter is one tap behind
+- [x] Affiliate can browse the call logs they created *(fixed: status filter lag)*
 - [ ] ⚠️ Affiliate can see last call log from the leads list page — Laravel 8 `limit(1)` in eager load: only one lead per page gets a call log
 - [x] Affiliate can click the last call log from the leads list page to go to call log read page
 - [x] Affiliate can schedule a call log with an organization or a lead
-- [ ] ⚠️ Affiliates can see their total earnings — `"1,234.56"` parsed as `1`; wrong at रू1,000+
+- [x] Affiliates can see their total earnings *(fixed in app: amounts with commas parse correctly; commissions screen shows रू and no longer crashes on string amounts. Server should still send plain numbers — Phase 1)*
 - [ ] ⚠️ Affiliates can see how much they are getting paid that week — "Payout in 4 days" is hardcoded; no weekly amount
 - [x] Affiliate can, during check in, tap the select material option to select it and to open a material modal showing materials show page with basic detail, image, and their distribution history for that marketing material
 - [ ] ⚠️ Affiliate can, during check in, add selected material with help of +1, +2, etc. buttons — no such buttons; tap adds 1; per-venue cap only enforced in the app
@@ -97,7 +97,7 @@ Ticks are updated as work lands. Every item is built **program-aware** (see Deci
 - [ ] ⚠️ Affiliate can see the tier detail page — 403 unless tier's organization matches the MR's, which sign-up never sets
 - [x] Affiliates can view a link to organizations list page in their profile
 - [x] Affiliates can view a link to call logs list page in their profile
-- [ ] ⚠️ Affiliates can view a link to coupons list page in their profile — `/coupons` screen doesn't exist; server `CouponController` is empty
+- [ ] ⚠️ Affiliates can view a link to coupons list page in their profile — link now opens a "coming soon" screen; coupons feature and server `CouponController` still to build
 - [x] Affiliates can view a link to distributions list page in their profile
 - [ ] ⚠️ Affiliates can edit a call log from organizations edit modal — not built; organization detail never shows its call logs
 - [ ] ⚠️ Affiliates can browse/filter organizations in organizations list page — search only, no type/city filter

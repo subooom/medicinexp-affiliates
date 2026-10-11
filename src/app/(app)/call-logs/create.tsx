@@ -6,6 +6,7 @@ import { visitApi } from '@/api/visits';
 import { AppColors } from '@/constants/colors';
 import { useAppTheme } from '@/hooks/use-app-theme';
 import { typography } from '@/styles/typography';
+import { IconName } from '@/utils/icons';
 import { toLocalDateString } from '@/utils/time';
 import { Lead, Organization, Visit } from '@/types/models';
 import Ionicons from '@expo/vector-icons/Ionicons';
@@ -176,8 +177,8 @@ export default function CreateCallLogScreen() {
   ];
 
   const directionOptions = [
-    { value: 'outgoing', label: 'Outgoing', icon: 'call-outline' },
-    { value: 'incoming', label: 'Incoming', icon: 'call' },
+    { value: 'outgoing', label: 'Outgoing', icon: 'call-outline' as IconName },
+    { value: 'incoming', label: 'Incoming', icon: 'call' as IconName },
   ];
 
   // Get future date/time validation for scheduled calls

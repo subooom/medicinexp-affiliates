@@ -240,6 +240,18 @@ export interface MarketingMaterial {
   type: MarketingMaterialType;
   marketing_material_type_id: number;
   is_active: boolean;
+  // Only on /mr/materials: this MR's drop-offs of the material
+  distributions?: MaterialDistributionHistoryItem[];
+}
+
+export interface MaterialDistributionHistoryItem {
+  id: number;
+  quantity: number;
+  distribution_date: string;
+  organization: Pick<Organization, 'id' | 'name' | 'address' | 'city'> | null;
+  received_by?: string | null;
+  notes?: string | null;
+  visit_id?: number | null;
 }
 
 export interface Distribution {
@@ -264,6 +276,7 @@ export interface Lead {
   id: number;
   call_logs: CallLog[],
   lead_type: LeadType,
+  associated_entity?: string | null;
   customer_name: string;
   customer_email: string;
   customer_phone: string;
@@ -307,6 +320,7 @@ export interface MedicalRepresentative {
 }
 
 export interface CallLogFormData {
+  direction: 'incoming' | 'outgoing';
   lead_id?: number;
   organization_id?: number;
   call_date: string;

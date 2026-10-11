@@ -3,6 +3,7 @@ import { organizationApi } from '@/api/organizations';
 import { AppColors } from '@/constants/colors';
 import { useAppTheme } from '@/hooks/use-app-theme';
 import { typography } from '@/styles/typography';
+import { toIconName } from '@/utils/icons';
 import { OrganizationType } from '@/types/models';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -128,7 +129,7 @@ export default function EditOrganizationScreen() {
             {selectedType ? (
               <View style={styles.selectorContent}>
                 <View style={[styles.typeIcon, { backgroundColor: selectedType.color + '15' }]}>
-                  <Ionicons name={selectedType.icon || 'business-outline'} size={18} color={selectedType.color} />
+                  <Ionicons name={toIconName(selectedType.icon, 'business-outline')} size={18} color={selectedType.color} />
                 </View>
                 <Text style={[typography.body1, styles.selectorText, { color: colors.foreground }]}>
                   {selectedType.name}
@@ -320,7 +321,7 @@ export default function EditOrganizationScreen() {
                 >
                   <View style={styles.typeOptionContent}>
                     <View style={[styles.typeOptionIcon, { backgroundColor: type.color + '15' }]}>
-                      <Ionicons name={type.icon || 'business-outline'} size={24} color={type.color} />
+                      <Ionicons name={toIconName(type.icon, 'business-outline')} size={24} color={type.color} />
                     </View>
                     <View>
                       <Text style={[typography.body1, styles.typeOptionName, { color: colors.foreground }]}>

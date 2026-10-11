@@ -25,11 +25,12 @@ export default function CallLogsListScreen() {
     loadCallLogs();
   }, []);
 
-  const loadCallLogs = async () => {
+  // Takes the filter explicitly: right after setFilter() the state still holds the old value
+  const loadCallLogs = async (status: FilterType = filter) => {
     try {
       const params: any = {};
-      if (filter !== 'all') {
-        params.status = filter;
+      if (status !== 'all') {
+        params.status = status;
       }
       const response = await callLogApi.getAll(params);
       setCallLogs(response.data.data.data || []);
@@ -118,7 +119,7 @@ export default function CallLogsListScreen() {
     const entityType = getEntityType(item);
     const entityLabel = getEntityLabel(item);
     const entityIcon = entityType ? getEntityIcon(entityType) : null;
-    const entityColor = entityType ? getEntityColor(entityType) : null;
+    const entityColor = entityType ? getEntityColor(entityType) : colors.mutedForeground;
 
     return (
       <TouchableOpacity 
@@ -232,7 +233,7 @@ export default function CallLogsListScreen() {
               ]}
               onPress={() => {
                 setFilter(item.key as FilterType);
-                loadCallLogs();
+                loadCallLogs(item.key as FilterType);
               }}
             >
               <Text

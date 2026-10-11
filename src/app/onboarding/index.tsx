@@ -76,9 +76,8 @@ export default function OnboardingScreen() {
       
       if (Platform.OS === 'web' && flatListRef.current) {
         try {
-          // @ts-ignore
-          const flatList = flatListRef.current;
-          const scrollable = flatList.getNativeScrollRef?.() || flatList;
+          const flatList: any = flatListRef.current;
+          const scrollable: any = flatList.getNativeScrollRef?.() || flatList;
           if (scrollable && typeof scrollable.scrollTo === 'function') {
             scrollable.scrollTo({ x: nextIndex * windowWidth, animated: true });
           }

@@ -4,6 +4,7 @@ import { organizationApi } from '@/api/organizations';
 import { AppColors } from '@/constants/colors';
 import { useAppTheme } from '@/hooks/use-app-theme';
 import { typography } from '@/styles/typography';
+import { toIconName } from '@/utils/icons';
 import { CallLog, Distribution, Organization, Visit } from '@/types/models';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -93,7 +94,7 @@ export default function OrganizationDetailScreen() {
         <View style={styles.headerTop}>
           <View style={[styles.iconContainer, { backgroundColor: getTypeColor(organization.type) + '15' }]}>
             <Ionicons 
-              name={organization.type?.icon || 'business-outline'} 
+              name={toIconName(organization.type?.icon, 'business-outline')} 
               size={32} 
               color={getTypeColor(organization.type)} 
             />
