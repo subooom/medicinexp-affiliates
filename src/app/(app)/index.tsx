@@ -101,6 +101,9 @@ export default function DashboardScreen() {
         <LinearGradient colors={['#6C3CE1', '#8B5CF6']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.header}>
           <View style={styles.headerTop}>
             <Logo size="large" backdropColor="darker" />
+            <TouchableOpacity style={styles.qrButton} onPress={() => router.push('/(app)/referral')}>
+              <Ionicons name="qr-code-outline" size={20} color="#fff" />
+            </TouchableOpacity>
             <TouchableOpacity
               style={styles.programPill}
               onPress={() => setShowSwitcher(true)}
@@ -310,6 +313,7 @@ const createStyles = (colors: AppColors) =>
     centered: { flex: 1, justifyContent: 'center', alignItems: 'center', gap: 12, padding: 32 },
     header: { paddingTop: 48, paddingHorizontal: 16, paddingBottom: 20, borderBottomLeftRadius: 24, borderBottomRightRadius: 24 },
     headerTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
+    qrButton: { marginLeft: 'auto', width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(255,255,255,0.18)' },
     programPill: {
       flexDirection: 'row',
       alignItems: 'center',

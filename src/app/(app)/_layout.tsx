@@ -3,9 +3,22 @@ import { useAppTheme } from '@/hooks/use-app-theme';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { Tabs } from 'expo-router';
 
+// Routes reachable from screens but not shown in the tab bar. Every route in (app)
+// that isn't a tab must be listed here, or expo-router adds it as an extra tab.
+const HIDDEN_ROUTES = [
+  'tiers',
+  'venues',
+  'distributions',
+  'call-logs',
+  'materials',
+  'referral',
+  'coupons',
+  'meetups',
+  'inventory',
+];
+
 export default function AppLayout() {
   const { colors } = useAppTheme();
-  // useResetNavigationOnUnmount('./index');
 
   return (
     <Tabs
@@ -42,51 +55,13 @@ export default function AppLayout() {
     >
       <Tabs.Screen name="index" options={{ title: 'Dashboard' }} />
       <Tabs.Screen name="visits" options={{ title: 'Visits' }} />
-      <Tabs.Screen name="leads"  options={{ title: 'Leads', freezeOnBlur: true, }} />
-      <Tabs.Screen name="commissions" options={{ title: 'Commissions' }} />
+      <Tabs.Screen name="leads" options={{ title: 'Leads', freezeOnBlur: true }} />
+      <Tabs.Screen name="commissions" options={{ title: 'Earnings' }} />
       <Tabs.Screen name="profile" options={{ title: 'Profile' }} />
-      
-      {/* ⚠️ IMPORTANT: These screens exist but are NOT in the tab bar */}
-      {/* They can still be accessed via navigation */}
-      <Tabs.Screen 
-        name="tiers" 
-        options={{ 
-          href: null, // This hides it from the tab bar
-        }} 
-      />
-      <Tabs.Screen 
-        name="venues" 
-        options={{ 
-          headerShown: false,
-          href: null, // This hides it from the tab bar
-        }} 
-      />
-      <Tabs.Screen 
-        name="distributions" 
-        options={{ 
-          headerShown: false,
-          href: null, // This hides it from the tab bar
-        }} 
-      />
-      <Tabs.Screen 
-        name="call-logs" 
-        options={{ 
-          headerShown: false,
-          href: null, // This hides it from the tab bar
-        }} 
-      />
-      <Tabs.Screen 
-        name="meetups" 
-        options={{ 
-          href: null, // ✅ Hides meetups from tab bar
-        }} 
-      />
-      <Tabs.Screen 
-        name="inventory" 
-        options={{ 
-          href: null, // This hides it from the tab bar
-        }} 
-      />
+
+      {HIDDEN_ROUTES.map((name) => (
+        <Tabs.Screen key={name} name={name} options={{ href: null }} />
+      ))}
     </Tabs>
   );
 }

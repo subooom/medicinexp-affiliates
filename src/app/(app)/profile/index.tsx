@@ -47,7 +47,7 @@ export default function ProfileScreen() {
   const shareCode = () => {
     if (!activeMembership) return;
     Share.share({
-      message: `Sign up for ${activeMembership.program?.name ?? 'MedicineXP'} with my code ${activeMembership.referral_code}`,
+      message: `Sign up for ${activeMembership.program?.name ?? 'MedicineXP'} here: ${activeMembership.referral_url} (my code ${activeMembership.referral_code} is filled in)`,
     });
   };
 
@@ -108,13 +108,19 @@ export default function ProfileScreen() {
       </TouchableOpacity>
 
       {activeMembership && (
-        <TouchableOpacity style={[styles.codeCard, { backgroundColor: colors.card, borderColor: colors.border }]} onPress={shareCode}>
-          <View style={{ flex: 1 }}>
+        <View style={[styles.codeCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+          <TouchableOpacity style={{ flex: 1 }} onPress={() => router.push('/(app)/referral')}>
             <Text style={[typography.caption, { color: colors.mutedForeground }]}>Your referral code</Text>
             <Text style={[styles.code, { color: colors.foreground }]}>{activeMembership.referral_code}</Text>
-          </View>
-          <Ionicons name="share-social-outline" size={22} color={colors.primary} />
-        </TouchableOpacity>
+            <Text style={[typography.caption, { color: colors.primary }]}>Show sign-up QR</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => router.push('/(app)/referral')} style={{ marginRight: 16 }}>
+            <Ionicons name="qr-code-outline" size={26} color={colors.primary} />
+          </TouchableOpacity>
+          <TouchableOpacity onPress={shareCode}>
+            <Ionicons name="share-social-outline" size={22} color={colors.primary} />
+          </TouchableOpacity>
+        </View>
       )}
 
       <View style={[styles.stats, { backgroundColor: colors.card, borderColor: colors.border }]}>

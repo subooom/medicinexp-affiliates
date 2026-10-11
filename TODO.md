@@ -125,13 +125,13 @@ Ticks are updated as work lands. Every item is built **program-aware** (see Deci
 - [ ] Affiliate can manage an inventory bucket/cart (add and remove products/materials)
 - [ ] Affiliate can see their new coupon codes when they level up
 - [ ] Affiliates can see a list of coupon codes assigned to them, all with different perks
-- [ ] Affiliates should be encouraged to use their coupon code to sign up pharmacies/medical organizations
+- [x] Affiliates should be encouraged to use their coupon code to sign up pharmacies/medical organizations *(referral code is their sign-up coupon; QR on dashboard and profile)*
 - [ ] Affiliates can see the coupons assigned to them in the coupons list page
-- [ ] Affiliate can register a sale
+- [x] Affiliate can register a sale *(automatic from paid subscriptions)*
 - [x] Affiliate can see how much they earned
 - [x] Affiliates can see when they will be getting the withdrawal *(next payout date, delay reason)*
 - [ ] Affiliates can verify the payment cycle
-- [ ] Affiliates can get sign-up bonus of 100 rupees which they can withdraw on their first sale, along with the commission
+- [x] Affiliates can get sign-up bonus of 100 rupees which they can withdraw on their first sale, along with the commission *(held on approval, released with the first sale)*
 - [x] Affiliates can see paid status when the payment has been made
 - [x] Affiliates can see their payment history
 - [x] Affiliate can view the marketing materials assigned to them
@@ -147,8 +147,8 @@ Ticks are updated as work lands. Every item is built **program-aware** (see Deci
 ### 🆕 Field & selling features (added 2026-10-11)
 
 - [x] Affiliate can switch between their programs (e.g. MedicineXP ↔ a pharma company)
-- [ ] **Referral QR code / link** — pharmacy signs up on its own phone with the MR's code pre-filled; sale is credited automatically
-- [ ] Pharmacy subscription payment automatically creates the MR's commission (no manual "convert lead")
+- [x] **Referral QR code / link** — pharmacy signs up on its own phone with the MR's code pre-filled; sale is credited automatically *(QR + share link; landing pre-fills ?coupon=)*
+- [x] Pharmacy subscription payment automatically creates the MR's commission (no manual "convert lead") *(when an admin marks the subscription paid; reversals void or claw back)*
 - [ ] **Offline demo video** of MedicineXP, downloaded to the phone and playable without internet
 - [x] **Live earnings** — "You earned रू X this week, paid Friday", each commission named after the pharmacy that paid *(commissions appear once Phase 2 creates them from payments)*
 - [ ] **Voice memos** — hold to record after a visit; transcribed (mixed Nepali/English) into summary, objections, interest level and follow-up date

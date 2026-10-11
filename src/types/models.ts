@@ -33,6 +33,7 @@ export interface Program {
   contact_email: string | null;
   payout_weekday: number; // ISO: 1 = Monday ... 5 = Friday
   signup_bonus_paisa: number;
+  referral_discount_percentage: number;
 }
 
 export interface CommissionScheduleEntry {
@@ -60,6 +61,8 @@ export interface Membership {
   id: number;
   status: MembershipStatus;
   referral_code: string;
+  // Pharmacy sign-up page with this code filled in (shown as a QR code)
+  referral_url: string;
   joined_at: string | null;
   program?: Program;
   tier?: Tier | null;
