@@ -1,12 +1,12 @@
 {
   "fill" : {
-    "automatic-gradient" : "extended-srgb:0.00000,0.47843,1.00000,1.00000"
+    "background":"#ff00ee"
   },
   "groups" : [
     {
       "layers" : [
         {
-          "image-name" : "expo-symbol 2.svg",
+          "image-name" : "splash-icon.png",
           "name" : "expo-symbol 2",
           "position" : {
             "scale" : 1,

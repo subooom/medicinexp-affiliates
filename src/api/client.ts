@@ -1,10 +1,11 @@
 // src/api/client.ts
-import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Config } from '../config';
+import axios from 'axios';
+
+const API_URL = 'https://medicinexp-staging.com/api/affiliates'; // Android emulator
 
 const apiClient = axios.create({
-  baseURL: Config.API_URL,
+  baseURL: API_URL,
   headers: {
     'Content-Type': 'application/json',
     Accept: 'application/json',
@@ -26,23 +27,25 @@ apiClient.interceptors.request.use(
   }
 );
 
-// Response interceptor
+// Response interceptor - EXTRACT DATA
 apiClient.interceptors.response.use(
-  (response) => response.data,
+  (response) => {
+    // Return response.data directly
+    return response;
+  },
   async (error) => {
     const originalRequest = error.config;
 
     // Handle 401 Unauthorized
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
-      
-      // Clear token and redirect to login
-      await AsyncStorage.removeItem('auth_token');
-      await AsyncStorage.removeItem('user_data');
-      
-      // You can emit an event here to navigate to login
-      // For now, we'll just reject
-      return Promise.reject(error);
+      await AsyncStorage.multiRemove(['auth_token', 'user_data']);
+      const errorMessage = error.response?.data?.message || error.message || 'Unauthorized';
+      return Promise.reject({
+        message: errorMessage,
+        status: error.response?.status,
+        data: error.response?.data,
+      });
     }
 
     // Handle other errors

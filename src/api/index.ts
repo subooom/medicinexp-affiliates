@@ -1,13 +1,15 @@
 // src/api/index.ts
 import { authApi } from './auth';
-import { visitApi } from './visits';
-import { leadApi } from './leads';
-import { dashboardApi } from './dashboard';
-import { distributionApi } from './distributions';
+import { callLogApi } from './call-logs';
 import { commissionApi } from './commissions';
 import { couponApi } from './coupons';
+import { dashboardApi } from './dashboard';
+import { distributionApi } from './distributions';
+import { leadApi } from './leads';
+import { marketingMaterialApi } from './marketing-materials';
 import { organizationApi } from './organizations';
 import { progressApi } from './progress';
+import { visitApi } from './visits';
 
 // Combine all APIs into a single object
 export const api = {
@@ -20,17 +22,15 @@ export const api = {
   coupons: couponApi,
   organizations: organizationApi,
   progress: progressApi,
+  marketingMaterial: marketingMaterialApi,
+  callLog: callLogApi
 };
 
 // Also export individual APIs if needed
 export {
-  authApi,
-  visitApi,
-  leadApi,
-  dashboardApi,
-  distributionApi,
-  commissionApi,
-  couponApi,
-  organizationApi,
-  progressApi,
+  authApi, callLogApi, commissionApi,
+  couponApi, dashboardApi,
+  distributionApi, leadApi, marketingMaterialApi, organizationApi,
+  progressApi, visitApi
 };
+

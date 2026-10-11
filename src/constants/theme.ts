@@ -1,26 +1,32 @@
 /**
- * Below are the colors that are used in the app. The colors are defined in the light and dark mode.
- * There are many other ways to style your app. For example, [Nativewind](https://www.nativewind.dev/), [Tamagui](https://tamagui.dev/), [unistyles](https://reactnativeunistyles.vercel.app), etc.
+ * Medicinexp theme tokens — shared between web (CSS vars) and native (TS).
  */
 
 import '@/global.css';
 
+import { AppColors, colors, radius } from '@/constants/colors';
 import { Platform } from 'react-native';
 
+export { AppColors, colors, radius, lightColors, darkColors } from '@/constants/colors';
+export type { ColorScheme } from '@/constants/colors';
+
+/** @deprecated Use useAppTheme() for full token access */
 export const Colors = {
   light: {
-    text: '#000000',
-    background: '#ffffff',
-    backgroundElement: '#F0F0F3',
-    backgroundSelected: '#E0E1E6',
-    textSecondary: '#60646C',
+    text: colors.light.foreground,
+    background: colors.light.background,
+    backgroundElement: colors.light.muted,
+    backgroundSelected: colors.light.primary100,
+    textSecondary: colors.light.mutedForeground,
+    primary: colors.light.primary,
   },
   dark: {
-    text: '#ffffff',
-    background: '#000000',
-    backgroundElement: '#212225',
-    backgroundSelected: '#2E3135',
-    textSecondary: '#B0B4BA',
+    text: colors.dark.foreground,
+    background: colors.dark.background,
+    backgroundElement: colors.dark.muted,
+    backgroundSelected: colors.dark.primary200,
+    textSecondary: colors.dark.mutedForeground,
+    primary: colors.dark.primary,
   },
 } as const;
 
@@ -28,17 +34,13 @@ export type ThemeColor = keyof typeof Colors.light & keyof typeof Colors.dark;
 
 export const Fonts = Platform.select({
   ios: {
-    /** iOS `UIFontDescriptorSystemDesignDefault` */
-    sans: 'system-ui',
-    /** iOS `UIFontDescriptorSystemDesignSerif` */
+    sans: 'JosefinSans-Regular',
     serif: 'ui-serif',
-    /** iOS `UIFontDescriptorSystemDesignRounded` */
     rounded: 'ui-rounded',
-    /** iOS `UIFontDescriptorSystemDesignMonospaced` */
     mono: 'ui-monospace',
   },
   default: {
-    sans: 'normal',
+    sans: 'JosefinSans-Regular',
     serif: 'serif',
     rounded: 'normal',
     mono: 'monospace',
@@ -63,3 +65,7 @@ export const Spacing = {
 
 export const BottomTabInset = Platform.select({ ios: 50, android: 80 }) ?? 0;
 export const MaxContentWidth = 800;
+
+export function getColors(scheme: 'light' | 'dark'): AppColors {
+  return colors[scheme];
+}

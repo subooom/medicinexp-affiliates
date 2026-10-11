@@ -1,16 +1,16 @@
 // src/screens/Dashboard/DashboardScreen.tsx
-import React, { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import {
-  View,
-  Text,
-  ScrollView,
-  RefreshControl,
-  TouchableOpacity,
   ActivityIndicator,
+  RefreshControl,
+  ScrollView,
   StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
-import { useAuth } from '../../context/AuthContext';
 import { api } from '../../api';
+import { useAuth } from '../../context/AuthContext';
 
 export function DashboardScreen({ navigation }: any) {
   const { user } = useAuth();

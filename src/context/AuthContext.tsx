@@ -1,8 +1,10 @@
-// src/context/AuthContext.tsx (with response.data access)
-import React, { createContext, useState, useContext, useEffect } from 'react';
+// src/context/AuthContext.tsx
+import { authApi } from '@/api/auth';
+import { User } from '@/types/models';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { authApi } from '../api/auth';
-import { User } from '../types/models';
+import { useRouter } from 'expo-router';
+import React, { createContext, useContext, useEffect, useState } from 'react';
+import { Alert } from 'react-native';
 
 interface AuthContextType {
   user: User | null;
@@ -18,6 +20,8 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const router = useRouter()
+
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -30,16 +34,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const token = await AsyncStorage.getItem('auth_token');
       if (token) {
         const response = await authApi.me();
-        // Access data from response.data if your API client returns full response
+        // Access response.data since API returns full response
         if (response.data.success) {
           setUser(response.data.data);
         } else {
           await AsyncStorage.removeItem('auth_token');
+          router.push('/auth/login')
         }
       }
-    } catch (error) {
-      console.error('Auth check error:', error);
+    } catch (error: any) {
+      Alert.alert('Auth check error:', error.response?.data.message || error.message);
       await AsyncStorage.removeItem('auth_token');
+        router.push('/auth/login')
     } finally {
       setIsLoading(false);
     }
@@ -49,10 +55,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const response = await authApi.login({ email, password });
       
-      // Access data from response.data if your API client returns full response
+      // Access response.data
       if (response.data.success) {
         await AsyncStorage.setItem('auth_token', response.data.data.token);
         await AsyncStorage.setItem('user_data', JSON.stringify(response.data.data.user));
+        
+        setTimeout(checkAuthStatus, 500);
+         
         setUser(response.data.data.user);
         return response.data;
       }
@@ -66,8 +75,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const register = async (data: any) => {
     try {
       const response = await authApi.register(data);
-      
-      // Access data from response.data if your API client returns full response
+      // Access response.data
       if (response.data.success) {
         return response.data;
       }
@@ -81,17 +89,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const logout = async () => {
     try {
       await authApi.logout();
-    } catch (error) {
-      console.error('Logout error:', error);
+    } catch (error:any) {
+      Alert.alert('Logout error:', error.response?.data?.message || error.message || 'Something Happened');
     } finally {
-      await AsyncStorage.removeMany(['auth_token', 'user_data']);
+      await AsyncStorage.multiRemove(['auth_token', 'user_data']);
       setUser(null);
+      router.push('/auth/login')
     }
   };
 
-  const updateUser = (updatedUser: User) => {
+  const updateUser = async (updatedUser: User) => {
     setUser(updatedUser);
-    AsyncStorage.setItem('user_data', JSON.stringify(updatedUser));
+    await AsyncStorage.setItem('user_data', JSON.stringify(updatedUser));
   };
 
   const value = {

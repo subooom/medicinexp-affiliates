@@ -2,13 +2,13 @@
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
-import { useAuth } from '../context/AuthContext';
-import { AuthNavigator } from './AuthNavigator';
-import { MainNavigator } from './MainNavigator';
-import { VisitDetailsScreen } from '../screens/Visits/VisitDetailScreen';
-import { CheckInScreen } from '../screens/Visits/CheckInScreen';
-import { LeadDetailsScreen } from '../screens/Leads/LeadsDetailsScreen';
-import { CreateLeadScreen } from '../screens/Leads/CreateLeadScreen';
+import { useAuth } from '@/context/AuthContext';
+import { AuthNavigator } from '@/navigation/AuthNavigator';
+import { MainNavigator } from '@/navigation/MainNavigator';
+import { VisitDetailsScreen } from '@/screens/Visits/VisitDetailScreen';
+import { CheckInScreen } from '@/screens/Visits/CheckInScreen';
+import { LeadDetailsScreen } from '@/screens/Leads/LeadsDetailsScreen';
+import { CreateLeadScreen } from '@/screens/Leads/CreateLeadScreen';
 
 const Stack = createStackNavigator();
 
