@@ -48,8 +48,9 @@ export default function TierDetailScreen() {
         {tier.description ? <Text style={[typography.body2, { color: colors.mutedForeground, textAlign: 'center' }]}>{tier.description}</Text> : null}
       </View>
 
+      {schedule.length > 0 && (
       <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
-        <Text style={[typography.body1, styles.title, { color: colors.foreground }]}>What you earn</Text>
+        <Text style={[typography.body1, styles.title, { color: colors.foreground }]}>What this tier earns</Text>
         <Text style={[typography.caption, { color: colors.mutedForeground }]}>
           A share of each yearly subscription a pharmacy you signed up pays.
         </Text>
@@ -68,6 +69,7 @@ export default function TierDetailScreen() {
           );
         })}
       </View>
+      )}
 
       <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
         <Text style={[typography.body1, styles.title, { color: colors.foreground }]}>How to reach it</Text>

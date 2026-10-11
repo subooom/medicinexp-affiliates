@@ -61,11 +61,11 @@ export default function TiersScreen() {
       <View style={[styles.card, { backgroundColor: colors.card, borderColor: myTier?.color || colors.primary }]}>
         <Text style={[typography.caption, { color: colors.mutedForeground }]}>Your tier</Text>
         <Text style={[typography.h3, { color: colors.foreground, fontWeight: '700' }]}>{myTier?.name ?? 'Not assigned yet'}</Text>
-        {myTier && (
-          <Text style={[typography.body2, { color: colors.foreground }]}>
-            {current?.has_custom_commission ? 'You have a custom commission rate set by your program.' : describeSchedule(myTier.commission_schedule)}
-          </Text>
-        )}
+        <Text style={[typography.body2, { color: colors.foreground }]}>
+          {current && current.commission_schedule.length > 0
+            ? `Your commission: ${describeSchedule(current.commission_schedule)}`
+            : 'No commission set yet. Your program adds it for you.'}
+        </Text>
 
         {progress ? (
           <View style={{ gap: 6, marginTop: 8 }}>
@@ -112,7 +112,7 @@ export default function TiersScreen() {
                 <Text style={[typography.body1, { color: colors.foreground, fontWeight: '600' }]}>{tier.name}</Text>
                 {isMine && <Text style={[typography.caption, { color: tierColor, fontWeight: '700' }]}>YOU</Text>}
               </View>
-              <Text style={[typography.caption, { color: colors.mutedForeground }]}>{describeSchedule(tier.commission_schedule)}</Text>
+              {tier.description ? <Text style={[typography.caption, { color: colors.mutedForeground }]}>{tier.description}</Text> : null}
             </View>
             <Ionicons name="chevron-forward" size={18} color={colors.mutedForeground} />
           </TouchableOpacity>

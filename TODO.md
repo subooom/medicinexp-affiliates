@@ -24,6 +24,14 @@ Ticks are updated as work lands. Every item is built **program-aware** (see Deci
 - **Offline demo = recorded video.**
 - Staging affiliate tables may be wiped; migrations get rewritten cleanly.
 
+### Decisions (2026-10-12)
+
+- **Commission is opt-in per MR, default none.** Tiers carry requirements and perks only; an admin adds a commission rate (by subscription year) to the MRs who should earn.
+- **Subscription amounts are NPR** (`tenant_subscriptions.amount`, rupees).
+- **No Gemini / server-side AI in the MR app.** Anyone with the app could run up the bill (e.g. 1,000 signboard photos). Voice memos are audio + optional **on-device** speech-to-text; signboard capture uses **on-device** text recognition. Nothing costs per use.
+- **Nothing is deployed until tested.** One week of testing in dev first.
+- **Portals are web, responsive (phone first).** Voyager admins log in as platform admins; programs get their own role. *(Design proposed 2026-10-12, waiting for approval.)*
+
 ---
 
 ## 🛠️ Phase 0 — Stabilize
@@ -151,11 +159,11 @@ Ticks are updated as work lands. Every item is built **program-aware** (see Deci
 - [x] Pharmacy subscription payment automatically creates the MR's commission (no manual "convert lead") *(when an admin marks the subscription paid; reversals void or claw back)*
 - [ ] **Offline demo video** of MedicineXP, downloaded to the phone and playable without internet
 - [x] **Live earnings** — "You earned रू X this week, paid Friday", each commission named after the pharmacy that paid *(commissions appear once Phase 2 creates them from payments)*
-- [ ] **Voice memos** — hold to record after a visit; transcribed (mixed Nepali/English) into summary, objections, interest level and follow-up date
+- [ ] **Voice memos** — hold to record after a visit; audio attached to the visit/lead, optional on-device speech-to-text into the notes (no server AI)
 - [ ] **One-tap check-in with GPS and a shop photo** as proof of visit
 - [ ] **Follow-up reminders** — push notifications from scheduled call logs
 - [ ] **Map of nearby pharmacies** — visited / interested / signed-up / not-yet-visited pins for route planning
-- [ ] **Add a pharmacy by photographing its signboard or license** — name, address and phone filled in automatically
+- [ ] **Add a pharmacy by photographing its signboard or license** — on-device text recognition suggests name, address and phone (no server AI)
 - [ ] **Objection notes & pricing cheat sheet** — per program: "they already use X, so say Y", current plans and discounts
 - [ ] **Tap to call or WhatsApp a lead**, logging the call automatically *(call and WhatsApp buttons done on the lead page; automatic logging still to do)*
 
@@ -205,6 +213,7 @@ Ticks are updated as work lands. Every item is built **program-aware** (see Deci
 - [ ] Admin can change an Affiliate or Organization password
 - [ ] Admin can level up an affiliate
 - [ ] Admin can give custom bonus to an affiliate
+- [ ] Admin can set which MRs earn commission and at what rate per subscription year (default: none)
 
 ### 📅 Meetups & Direct Coordination
 - [ ] Admin can schedule high-level meetups with Organizations / Affiliates

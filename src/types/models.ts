@@ -67,6 +67,7 @@ export interface Membership {
   program?: Program;
   tier?: Tier | null;
   has_custom_commission: boolean;
+  commission_schedule: CommissionScheduleEntry[];
 }
 
 export interface User {
@@ -95,6 +96,8 @@ export interface TierProgress {
 export interface CurrentTier {
   current_tier: Tier | null;
   has_custom_commission: boolean;
+  // What this MR earns per subscription year; empty = no commission (the default)
+  commission_schedule: CommissionScheduleEntry[];
   counts: ActivityCounts;
   progress: TierProgress | null;
 }
