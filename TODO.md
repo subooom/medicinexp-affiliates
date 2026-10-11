@@ -46,6 +46,16 @@ Ticks are updated as work lands. Every item is built **program-aware** (see Deci
 - [ ] Sales, commissions, payout runs, payout items, bonuses
 - [ ] Seed MedicineXP as program #1 with its tiers and materials
 - [ ] App: active-program context + switcher (hidden with one program)
+- [ ] Server: offline-safe writes — every record accepts a phone-generated `client_uuid` (repeats are ignored) and the time recorded on the phone (`occurred_at`), so queued items keep their real time and don't trip the 10-minute rule
+
+## 📶 Offline mode (field reps work with bad signal all day)
+
+- [ ] Outbox queue on the phone that survives app restarts; sends in order when back online
+- [ ] Visits, check-ins, drop-offs, leads and call logs can all be created offline
+- [ ] Photos and voice memos queue and upload separately
+- [ ] Venues, leads, materials, rep stock and earnings stored on the phone and refreshed when online
+- [ ] "N waiting to sync" indicator and a way to retry failed items
+- [ ] Demo video downloaded once and stored on the phone
 
 ---
 

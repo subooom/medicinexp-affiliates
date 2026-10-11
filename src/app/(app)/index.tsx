@@ -1,7 +1,6 @@
 // app/(app)/index.tsx (Dashboard) - Clean Professional Edition
 import { api } from '@/api';
 import { Logo } from '@/components/common/logo';
-import { SyncStatusIndicator } from '@/components/common/sync-status';
 import { AppColors } from '@/constants/colors';
 import { useAuth } from '@/context/AuthContext';
 import { useAppTheme } from '@/hooks/use-app-theme';
@@ -679,7 +678,6 @@ export default function DashboardScreen() {
         style={styles.header}
       >
         <View style={styles.headerTopBar}>
-        <SyncStatusIndicator />
           <Logo size="large" backdropColor="darker" />
           <TouchableOpacity style={styles.tierBadge} onPress={() => router.push('/profile')}>
             <Ionicons name="medal" size={14} color="#FBBF24" />

@@ -2,7 +2,6 @@
 import { AuthProvider } from '@/context/AuthContext';
 import { useAppTheme } from '@/hooks/use-app-theme';
 import { useCustomFonts } from '@/hooks/use-fonts';
-import { syncService } from '@/service/BackgroundSyncService';
 import { typography } from '@/styles/typography';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
@@ -31,22 +30,6 @@ export default function RootLayout() {
     }
   }, [fontsLoaded]);
 
-  
-  useEffect(() => {
-    // Initialize sync service when app starts
-    const initSync = async () => {
-      try {
-        await syncService.initialize();
-        const status = await syncService.getSyncStatus();
-        console.log('Sync status:', status);
-      } catch (error) {
-        console.error('Failed to initialize sync:', error);
-      }
-    };
-
-    initSync();
-  }, []);
-  
   if (!fontsLoaded) {
     return <LoadingScreen />;
   }

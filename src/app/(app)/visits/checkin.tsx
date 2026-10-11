@@ -6,6 +6,7 @@ import { ProductShowcase } from '@/components/dashboard/visits/checkin/ProductSh
 import { AppColors } from '@/constants/colors';
 import { useAppTheme } from '@/hooks/use-app-theme';
 import { typography } from '@/styles/typography';
+import { toLocalDateString } from '@/utils/time';
 import { MarketingMaterial, Organization, OrganizationType } from '@/types/models';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import * as Location from 'expo-location';
@@ -298,7 +299,7 @@ export default function CheckInScreen() {
 
     setSubmitting(true);
     try {
-      const formattedDate = visitDate.toISOString().split('T')[0];
+      const formattedDate = toLocalDateString(visitDate);
       const formattedTime = visitTime.toTimeString().split(' ')[0];
 
       const visitPayload: any = {
@@ -314,7 +315,7 @@ export default function CheckInScreen() {
       }
 
       const visitResponse = await visitApi.create(visitPayload);
-      const visitId = visitResponse.data?.id;
+      const visitId = visitResponse.data?.data?.id;
 
       // Distribute materials if any
       for (const item of droppedMaterials) {

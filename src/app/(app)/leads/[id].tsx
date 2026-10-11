@@ -4,6 +4,7 @@ import { leadApi } from '@/api/leads';
 import { AppColors } from '@/constants/colors';
 import { useAppTheme } from '@/hooks/use-app-theme';
 import { typography } from '@/styles/typography';
+import { toLocalDateString } from '@/utils/time';
 import { CallLog, Lead } from '@/types/models';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -59,7 +60,7 @@ export default function LeadDetailsScreen() {
   const [editingCallLog, setEditingCallLog] = useState<CallLog | null>(null);
   const [callLogForm, setCallLogForm] = useState({
     notes: '',
-    call_date: new Date().toISOString().split('T')[0],
+    call_date: toLocalDateString(new Date()),
     call_time: new Date().toTimeString().split(' ')[0].slice(0, 5),
     duration: '',
     status: 'completed' as 'scheduled' | 'completed' | 'missed' | 'cancelled',
@@ -162,7 +163,7 @@ export default function LeadDetailsScreen() {
       setEditingCallLog(null);
       setCallLogForm({
         notes: '',
-        call_date: new Date().toISOString().split('T')[0],
+        call_date: toLocalDateString(new Date()),
         call_time: new Date().toTimeString().split(' ')[0].slice(0, 5),
         duration: '',
         status: 'completed',
@@ -229,7 +230,7 @@ export default function LeadDetailsScreen() {
 
   // Helper functions to set today/now
   const setToday = () => {
-    const today = new Date().toISOString().split('T')[0];
+    const today = toLocalDateString(new Date());
     setCallLogForm({ ...callLogForm, call_date: today });
   };
 
@@ -267,7 +268,7 @@ export default function LeadDetailsScreen() {
               setEditingCallLog(item);
               setCallLogForm({
                 notes: item.notes || '',
-                call_date: item.call_date || new Date().toISOString().split('T')[0],
+                call_date: item.call_date || toLocalDateString(new Date()),
                 call_time: item.call_time || new Date().toTimeString().split(' ')[0].slice(0, 5),
                 duration: item.duration?.toString() || '',
                 status: item.status || 'completed',
@@ -462,7 +463,7 @@ export default function LeadDetailsScreen() {
               setEditingCallLog(null);
               setCallLogForm({
                 notes: '',
-                call_date: new Date().toISOString().split('T')[0],
+                call_date: toLocalDateString(new Date()),
                 call_time: new Date().toTimeString().split(' ')[0].slice(0, 5),
                 duration: '',
                 status: 'completed',
@@ -498,7 +499,7 @@ export default function LeadDetailsScreen() {
                 setEditingCallLog(null);
                 setCallLogForm({
                   notes: '',
-                  call_date: new Date().toISOString().split('T')[0],
+                  call_date: toLocalDateString(new Date()),
                   call_time: new Date().toTimeString().split(' ')[0].slice(0, 5),
                   duration: '',
                   status: 'completed',

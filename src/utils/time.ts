@@ -41,6 +41,13 @@ const getTimeAgo = (date: string | null | undefined): string => {
   return formatDate(date);
 };
 
+// YYYY-MM-DD in the device's local timezone. Don't use toISOString() for this:
+// it converts to UTC, which is the previous day before 05:45 in Nepal.
+const toLocalDateString = (date: Date): string => {
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+};
+
 export {
-  formatDate, formatDuration, formatTime, getTimeAgo
+  formatDate, formatDuration, formatTime, getTimeAgo, toLocalDateString
 };

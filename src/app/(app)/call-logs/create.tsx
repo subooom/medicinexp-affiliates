@@ -6,6 +6,7 @@ import { visitApi } from '@/api/visits';
 import { AppColors } from '@/constants/colors';
 import { useAppTheme } from '@/hooks/use-app-theme';
 import { typography } from '@/styles/typography';
+import { toLocalDateString } from '@/utils/time';
 import { Lead, Organization, Visit } from '@/types/models';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useRouter } from 'expo-router';
@@ -22,7 +23,7 @@ export default function CreateCallLogScreen() {
 
   const [submitting, setSubmitting] = useState(false);
   const [formData, setFormData] = useState({
-    call_date: new Date().toISOString().split('T')[0],
+    call_date: toLocalDateString(new Date()),
     call_time: new Date().toTimeString().split(' ')[0].slice(0, 5),
     duration: '',
     notes: '',
@@ -160,7 +161,7 @@ export default function CreateCallLogScreen() {
   };
 
   const setToday = () => {
-    setFormData({ ...formData, call_date: new Date().toISOString().split('T')[0] });
+    setFormData({ ...formData, call_date: toLocalDateString(new Date()) });
   };
 
   const setNow = () => {
@@ -181,7 +182,7 @@ export default function CreateCallLogScreen() {
 
   // Get future date/time validation for scheduled calls
   const isScheduled = formData.status === 'scheduled';
-  const minDate = new Date().toISOString().split('T')[0];
+  const minDate = toLocalDateString(new Date());
 
   return (
     <ScrollView style={[styles.container, { backgroundColor: colors.background }]}>

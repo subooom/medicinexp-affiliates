@@ -34,11 +34,9 @@ export default function VisitsListScreen() {
     refreshing,
     refresh,
     loadMore,
-    createVisit,
     updateVisit,
     deleteVisit,
     hasMore,
-    syncStatus,
     clearError,
   } = useVisits(statusFilter ? { status: statusFilter } as VisitFilters : undefined);
 
@@ -154,28 +152,6 @@ export default function VisitsListScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      {/* Sync Status Banner */}
-      {(syncStatus.isSyncing || syncStatus.queueLength > 0) && (
-        <View style={[styles.syncBanner, { backgroundColor: syncStatus.isSyncing ? '#FFF3E0' : '#E3F2FD' }]}>
-          <Ionicons 
-            name={syncStatus.isSyncing ? 'sync-circle' : 'cloud-upload'} 
-            size={20} 
-            color={syncStatus.isSyncing ? '#F57C00' : '#1976D2'} 
-          />
-          <Text style={[styles.syncBannerText, { color: syncStatus.isSyncing ? '#F57C00' : '#1976D2' }]}>
-            {syncStatus.isSyncing 
-              ? 'Syncing...' 
-              : `${syncStatus.queueLength} pending sync${syncStatus.queueLength > 1 ? 's' : ''}`
-            }
-          </Text>
-          {syncStatus.lastSyncTime && !syncStatus.isSyncing && (
-            <Text style={[styles.syncTimeText, { color: colors.mutedForeground }]}>
-              Last sync: {new Date(syncStatus.lastSyncTime).toLocaleTimeString()}
-            </Text>
-          )}
-        </View>
-      )}
-
       {/* Header */}
       <View style={[styles.header, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
@@ -419,24 +395,6 @@ const createStyles = (colors: AppColors) =>
       marginTop: 16,
     },
     
-    // Sync Banner
-    syncBanner: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      paddingHorizontal: 16,
-      paddingVertical: 8,
-      gap: 8,
-      borderBottomWidth: 1,
-      borderBottomColor: 'rgba(0,0,0,0.05)',
-    },
-    syncBannerText: {
-      fontSize: 13,
-      fontWeight: '500',
-      flex: 1,
-    },
-    syncTimeText: {
-      fontSize: 11,
-    },
 
     // Header
     header: {
