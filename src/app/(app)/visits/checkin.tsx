@@ -1,13 +1,16 @@
 // app/(app)/visits/checkin.tsx
 import { materialApi } from '@/api/materials';
 import { venueApi } from '@/api/venues';
-import { visitApi } from '@/api/visits';
+import { PhotoCapture } from '@/components/field/photo-capture';
+import { VoiceMemo } from '@/components/field/voice-memo';
 import { VenueForm } from '@/components/venues/venue-form';
+import { CapturedFile, uploadAttachment } from '@/offline/attachments';
+import { queuedMessage, sendOrQueue } from '@/offline/send';
 import { MaterialPicker } from '@/components/visits/material-picker';
 import { AppColors } from '@/constants/colors';
 import { useAppTheme } from '@/hooks/use-app-theme';
 import { typography } from '@/styles/typography';
-import { MaterialWithStock, Venue, VisitInput } from '@/types/models';
+import { MaterialWithStock, Venue, Visit, VisitInput } from '@/types/models';
 import { toIconName } from '@/utils/icons';
 import { uuidv4 } from '@/utils/uuid';
 import Ionicons from '@expo/vector-icons/Ionicons';
@@ -61,6 +64,8 @@ export default function CheckInScreen() {
   const [quantities, setQuantities] = useState<Record<number, number>>({});
   const [receivedBy, setReceivedBy] = useState('');
   const [notes, setNotes] = useState('');
+  const [photo, setPhoto] = useState<CapturedFile | null>(null);
+  const [memo, setMemo] = useState<CapturedFile | null>(null);
 
   const [planLater, setPlanLater] = useState(false);
   const [plannedFor, setPlannedFor] = useState<Date>(() => {
@@ -173,8 +178,20 @@ export default function CheckInScreen() {
 
     setSubmitting(true);
     try {
-      const response = await visitApi.create(payload);
-      router.replace({ pathname: '/(app)/visits/[id]', params: { id: response.data.data.id } });
+      const label = `${planLater ? 'Planned visit' : 'Visit'} at ${venue.name}`;
+      const result = await sendOrQueue<Visit>({ method: 'post', url: '/visits', data: payload, label });
+
+      // Photo and voice memo go up on their own, attached by the visit's client_uuid
+      const target = { type: 'visit' as const, id: result.queued ? undefined : result.data.id, clientUuid: clientUuid.current };
+      if (photo) await uploadAttachment('photo', photo, target, `Shop photo: ${venue.name}`).catch(() => undefined);
+      if (memo) await uploadAttachment('voice_memo', memo, target, `Voice memo: ${venue.name}`).catch(() => undefined);
+
+      if (result.queued) {
+        Alert.alert(planLater ? 'Visit planned' : 'Checked in', queuedMessage);
+        router.back();
+      } else {
+        router.replace({ pathname: '/(app)/visits/[id]', params: { id: result.data.id } });
+      }
     } catch (error: any) {
       if (error.data?.code === 'visit_too_soon') {
         const availableAt = error.data?.data?.available_at ? new Date(error.data.data.available_at) : null;
@@ -322,6 +339,15 @@ export default function CheckInScreen() {
           </>
         )}
 
+        {!planLater && (
+          <>
+            <Text style={[typography.body1, styles.sectionTitle, { color: colors.foreground }]}>Proof of visit</Text>
+            <PhotoCapture photo={photo} onChange={setPhoto} />
+            <Text style={[typography.body1, styles.sectionTitle, { color: colors.foreground }]}>Voice memo</Text>
+            <VoiceMemo memo={memo} onChange={setMemo} />
+          </>
+        )}
+
         {/* Notes */}
         <Text style={[typography.body1, styles.sectionTitle, { color: colors.foreground }]}>Notes</Text>
         <TextInput
@@ -373,8 +399,9 @@ export default function CheckInScreen() {
           </View>
           <VenueForm
             submitLabel="Add and check in here"
-            onSaved={(created) => {
-              setVenue(created);
+            onSaved={(created, pending) => {
+              // Offline: the new place is usable right away with a temporary id
+              setVenue(created ?? pending ?? null);
               setShowCreate(false);
             }}
           />

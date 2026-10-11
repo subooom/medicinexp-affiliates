@@ -2,6 +2,7 @@
 import { visitApi } from '@/api/visits';
 import { Visit, VisitFilters } from '@/types/models';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { sendOrQueue } from '@/offline/send';
 
 const PER_PAGE = 20;
 
@@ -159,12 +160,13 @@ export function useVisit(id: number) {
 
   const updateVisit = useCallback(
     async (updateData: Partial<Pick<Visit, 'notes' | 'status' | 'visited_at'>>) => {
-      const response = await visitApi.update(id, updateData);
-      const updated: Visit = response.data.data;
+      const result = await sendOrQueue<Visit>({ method: 'put', url: `/visits/${id}`, data: updateData, label: 'Visit change' });
+      // Offline: show the change now; the queue sends it later
+      const updated = result.queued ? ({ ...(data as Visit), ...updateData } as Visit) : result.data;
       setData((prev) => (prev ? { ...prev, ...updated, venue: updated.venue ?? prev.venue } : updated));
       return updated;
     },
-    [id]
+    [id, data]
   );
 
   const deleteVisit = useCallback(async () => {

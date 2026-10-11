@@ -1,5 +1,8 @@
 // app/_layout.tsx
 import { AuthProvider } from '@/context/AuthContext';
+import { SyncProvider } from '@/offline/sync-provider';
+// Defines the background sync task; must load before the app renders
+import '@/offline/sync';
 import { useAppTheme } from '@/hooks/use-app-theme';
 import { useCustomFonts } from '@/hooks/use-fonts';
 import { typography } from '@/styles/typography';
@@ -36,12 +39,14 @@ export default function RootLayout() {
 
   return (
     <AuthProvider>
+      <SyncProvider>
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="onboarding" />
         <Stack.Screen name="auth" />
         <Stack.Screen name="(app)" />
         <Stack.Screen name="index" />
       </Stack>
+      </SyncProvider>
     </AuthProvider>
   );
 }

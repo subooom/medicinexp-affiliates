@@ -1,6 +1,6 @@
 // src/components/leads/lead-form.tsx
-import { leadApi } from '@/api/leads';
 import { venueApi } from '@/api/venues';
+import { queuedMessage, sendOrQueue } from '@/offline/send';
 import { AppColors } from '@/constants/colors';
 import { useAppTheme } from '@/hooks/use-app-theme';
 import { typography } from '@/styles/typography';
@@ -18,7 +18,8 @@ interface LeadFormProps {
   // Pre-selected when coming from a venue or a visit
   venueId?: number;
   visitId?: number;
-  onSaved: (lead: Lead) => void;
+  // null: saved on the phone, waiting to sync (no server id yet)
+  onSaved: (lead: Lead | null) => void;
 }
 
 const CREATE_STATUSES: { value: 'new' | 'contacted' | 'qualified'; label: string }[] = [
@@ -110,10 +111,21 @@ export function LeadForm({ lead, venueId, visitId, onSaved }: LeadFormProps) {
 
     setSaving(true);
     try {
-      const response = lead
-        ? await leadApi.update(lead.id, payload)
-        : await leadApi.create({ ...payload, status, visit_id: visitId ?? null, client_uuid: clientUuid.current });
-      onSaved(response.data.data);
+      const who = payload.contact_name || venue?.name || 'lead';
+      const result = lead
+        ? await sendOrQueue<Lead>({ method: 'put', url: `/leads/${lead.id}`, data: payload, label: `Edit lead: ${who}` })
+        : await sendOrQueue<Lead>({
+            method: 'post',
+            url: '/leads',
+            data: { ...payload, status, visit_id: visitId ?? null, client_uuid: clientUuid.current },
+            label: `New lead: ${who}`,
+          });
+      if (result.queued) {
+        Alert.alert('Saved on your phone', queuedMessage);
+        onSaved(null);
+      } else {
+        onSaved(result.data);
+      }
     } catch (error: any) {
       if (error.status === 409 && error.data?.lead_id) {
         Alert.alert('Already a lead', 'You already have an open lead for this contact.');

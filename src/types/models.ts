@@ -233,6 +233,8 @@ export interface Visit {
   notes: string | null;
   checked_out_at: string | null;
   dropoffs?: Dropoff[];
+  // Shop photos and voice memos (detail endpoint only)
+  attachments?: Attachment[];
   created_at: string;
 }
 
@@ -296,6 +298,8 @@ export interface Lead {
   lost_at: string | null;
   lost_reason: string | null;
   latest_call_log?: CallLog | null;
+  // Voice memos and photos (detail endpoint only)
+  attachments?: Attachment[];
   created_at: string;
   updated_at: string;
 }
@@ -410,4 +414,117 @@ export interface DashboardData {
   scheduled_calls_today: CallLog[];
   recent_visits: Visit[];
   recent_leads: Lead[];
+}
+
+// ---------------------------------------------------------------------------
+// Field kit, coupons, pickups, meetups, attachments, map
+// ---------------------------------------------------------------------------
+
+export interface CheatSheetCard {
+  title: string;
+  body: string;
+}
+
+export interface FieldKit {
+  program_id: number;
+  program_name: string;
+  cheat_sheet: CheatSheetCard[];
+  demo_video: { url: string; bytes: number; updated_at: string | null } | null;
+  contact: { name: string | null; phone: string | null; email: string | null; address: string | null };
+}
+
+export interface Coupon {
+  id: number;
+  code: string;
+  kind: 'referral' | 'tier';
+  tier: { id: number; name: string; color: string | null } | null;
+  discount_percentage: number;
+  usage_limit: number | null;
+  usage_count: number;
+  status: 'active' | 'used' | 'inactive';
+  share_url: string;
+  created_at: string | null;
+}
+
+export interface Hub {
+  id: number;
+  name: string;
+  address: string | null;
+  latitude: number | null;
+  longitude: number | null;
+}
+
+export type PickupStatus = 'requested' | 'approved' | 'rejected' | 'collected' | 'cancelled';
+
+export interface PickupItem {
+  material_id: number;
+  material_name: string | null;
+  unit: string | null;
+  quantity_requested: number;
+  quantity_approved: number | null;
+  quantity_handed_over: number | null;
+}
+
+export interface Pickup {
+  id: number;
+  client_uuid: string | null;
+  status: PickupStatus;
+  notes: string | null;
+  rejection_reason: string | null;
+  pickup_at: string | null;
+  pickup_location_note: string | null;
+  hub: Hub | null;
+  mr_arrived_at: string | null;
+  handed_over_at: string | null;
+  items: PickupItem[];
+  created_at: string | null;
+}
+
+export type MeetupStatus = 'requested' | 'scheduled' | 'done' | 'cancelled';
+
+export interface Meetup {
+  id: number;
+  client_uuid: string | null;
+  title: string;
+  purpose: string | null;
+  status: MeetupStatus;
+  starts_at: string | null;
+  ends_at: string | null;
+  location_name: string | null;
+  address: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  cancellation_reason: string | null;
+  requested_by_me: boolean;
+  organizer: string | null;
+  my_response: 'pending' | 'accepted' | 'declined' | null;
+  my_arrived_at: string | null;
+  participant_count: number;
+}
+
+export interface Attachment {
+  id: number;
+  client_uuid: string | null;
+  kind: 'photo' | 'voice_memo';
+  mime_type: string | null;
+  size_bytes: number | null;
+  duration_seconds: number | null;
+  transcript: string | null;
+  url: string;
+  recorded_at: string | null;
+  created_at: string | null;
+}
+
+export type MapPinStatus = 'signed_up' | 'interested' | 'visited' | 'not_visited';
+
+export interface MapPin {
+  id: number;
+  name: string;
+  address: string;
+  latitude: number;
+  longitude: number;
+  type: string | null;
+  distance_km: number;
+  my_status: MapPinStatus;
+  last_visit_at: string | null;
 }

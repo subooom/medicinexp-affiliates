@@ -3,22 +3,19 @@
     "name": "MedicineXP Affiliates",
     "slug": "medicinexp-affiliates",
     "version": "1.0.0",
-
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "medicinexp",
     "userInterfaceStyle": "automatic",
-
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.medicinexp.affiliates",
       "infoPlist": {
         "UIBackgroundModes": [
-          "fetch"
+          "processing"
         ]
       }
     },
-
     "android": {
       "package": "com.medicinexp.affiliates",
       "adaptiveIcon": {
@@ -33,12 +30,10 @@
         "android.permission.WAKE_LOCK"
       ]
     },
-
     "web": {
       "output": "static",
       "favicon": "./assets/images/favicon.ico"
     },
-
     "plugins": [
       "expo-router",
       [
@@ -50,21 +45,44 @@
           "resizeMode": "contain"
         }
       ],
+      "expo-status-bar",
+      "expo-font",
       [
-        "expo-background-fetch",
+        "expo-audio",
         {
-          "minimumInterval": 900
+          "microphonePermission": "Allow $(PRODUCT_NAME) to record voice memos after visits."
         }
       ],
-      "expo-status-bar",
-      "expo-font"
+      "expo-video",
+      [
+        "expo-notifications",
+        {
+          "color": "#5A3DA8"
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "cameraPermission": "Allow $(PRODUCT_NAME) to take shop photos as proof of visit and to read signboards.",
+          "photosPermission": false
+        }
+      ],
+      [
+        "expo-speech-recognition",
+        {
+          "microphonePermission": "Allow $(PRODUCT_NAME) to record voice memos after visits.",
+          "speechRecognitionPermission": "Allow $(PRODUCT_NAME) to turn your voice memos into text on your phone.",
+          "androidSpeechServicePackages": [
+            "com.google.android.googlequicksearchbox",
+            "com.google.android.as"
+          ]
+        }
+      ]
     ],
-
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
     },
-
     "extra": {
       "router": {},
       "eas": {

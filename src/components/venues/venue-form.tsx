@@ -1,5 +1,7 @@
 // src/components/venues/venue-form.tsx
 import { venueApi } from '@/api/venues';
+import { queuedMessage, sendOrQueue } from '@/offline/send';
+import { venueIndex } from '@/offline/venue-index';
 import { AppColors } from '@/constants/colors';
 import { useAppTheme } from '@/hooks/use-app-theme';
 import { typography } from '@/styles/typography';
@@ -15,7 +17,8 @@ interface VenueFormProps {
   // Editing an existing venue; omit to create one
   venue?: Venue | null;
   submitLabel?: string;
-  onSaved: (venue: Venue) => void;
+  // null: saved on the phone, waiting to sync (no server id yet)
+  onSaved: (venue: Venue | null, pending?: Venue) => void;
 }
 
 type FieldKey = 'name' | 'address' | 'city' | 'district' | 'phone' | 'email' | 'pan_number';
@@ -111,10 +114,20 @@ export function VenueForm({ venue, submitLabel, onSaved }: VenueFormProps) {
 
     setSaving(true);
     try {
-      const response = venue
-        ? await venueApi.update(venue.id, payload)
-        : await venueApi.create({ ...payload, client_uuid: clientUuid.current });
-      onSaved(response.data.data);
+      const result = venue
+        ? await sendOrQueue<Venue>({ method: 'put', url: `/venues/${venue.id}`, data: payload, label: `Edit ${payload.name}` })
+        : await sendOrQueue<Venue>({ method: 'post', url: '/venues', data: { ...payload, client_uuid: clientUuid.current }, label: `New place: ${payload.name}` });
+      if (result.queued) {
+        // Usable right away offline (check in, add a lead) with a temporary id
+        let pending: Venue | undefined;
+        if (!venue) {
+          pending = await venueIndex.addPending({ ...(payload as any), client_uuid: clientUuid.current, is_active: true, is_customer: false, can_edit: true, distance: null, province: null, type: null, created_at: new Date().toISOString(), updated_at: new Date().toISOString() });
+        }
+        Alert.alert('Saved on your phone', queuedMessage);
+        onSaved(null, pending);
+      } else {
+        onSaved(result.data);
+      }
     } catch (error: any) {
       if (error.status === 409 && error.data?.venue_id) {
         Alert.alert('Already added', 'This pharmacy is already in the list. Search for it instead.');

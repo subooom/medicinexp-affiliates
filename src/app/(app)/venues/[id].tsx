@@ -1,4 +1,5 @@
 // app/(app)/venues/[id].tsx
+import { useCallLogger } from '@/hooks/use-call-logger';
 import { venueApi } from '@/api/venues';
 import { AppColors } from '@/constants/colors';
 import { useAppTheme } from '@/hooks/use-app-theme';
@@ -52,6 +53,9 @@ export default function VenueDetailScreen() {
       load();
     }, [load])
   );
+
+  // Tap to call, then one tap to log it when back in the app
+  const logger = useCallLogger(load);
 
   const handleDelete = () => {
     Alert.alert('Delete this place?', 'You can only delete places with no visits, leads, calls or drop-offs.', [
@@ -153,7 +157,7 @@ export default function VenueDetailScreen() {
         </Text>
 
         {venue.phone && (
-          <TouchableOpacity style={styles.phoneRow} onPress={() => Linking.openURL(`tel:${venue.phone}`)}>
+          <TouchableOpacity style={styles.phoneRow} onPress={() => logger.call({ phone: venue.phone!, name: venue.name, venueId: venue.id })}>
             <Ionicons name="call" size={16} color={colors.primary} />
             <Text style={[typography.body2, { color: colors.primary }]}>{venue.phone}</Text>
           </TouchableOpacity>
