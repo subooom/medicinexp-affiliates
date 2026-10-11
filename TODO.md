@@ -30,7 +30,14 @@ Ticks are updated as work lands. Every item is built **program-aware** (see Deci
 - **Subscription amounts are NPR** (`tenant_subscriptions.amount`, rupees).
 - **No Gemini / server-side AI in the MR app.** Anyone with the app could run up the bill (e.g. 1,000 signboard photos). Voice memos are audio + optional **on-device** speech-to-text; signboard capture uses **on-device** text recognition. Nothing costs per use.
 - **Nothing is deployed until tested.** One week of testing in dev first.
-- **Portals are web, responsive (phone first).** Voyager admins log in as platform admins; programs get their own role. *(Design proposed 2026-10-12, waiting for approval.)*
+- **Portals are web, responsive (phone first)** at `/portal`, Tailwind with the MedicineXP tokens and Josefin Sans. Logins live in `aff_portal_users` with the existing role enum (platform admin / program admin / program staff), not the `users` table. First login: `php artisan affiliates:portal-user you@example.com`.
+
+### Decisions (2026-10-13)
+
+- **Maps use OpenStreetMap** (Leaflet in a WebView), not Google Maps: no key, no per-use cost. The tile server is configurable (`EXPO_PUBLIC_MAP_TILE_URL`) if usage outgrows the public OSM servers.
+- **One check-in, many programs.** The check-in screen shows every program's materials in the rep's bag; the server stores one visit per program (same place and time), so each program only sees its own.
+- **Push notifications go through Expo's push service** (no server credentials). Reminders are also scheduled on the phone so they fire offline.
+- **Tier `coupon_count` = extra single-use coupons** on top of the referral code, issued when the rep reaches the tier (7-character codes, the sign-up form's format).
 
 ---
 
@@ -49,7 +56,7 @@ Ticks are updated as work lands. Every item is built **program-aware** (see Deci
 
 - [x] Rewrite affiliate migrations: `aff_programs`, `aff_venues`, `aff_memberships` (+ all other `aff_*` tables; legacy tables dropped where they exist)
 - [x] Program scoping on every affiliate table, enforced server-side (`affiliate.program` middleware + `forProgram()`)
-- [ ] Roles & permissions (platform admin / program admin / program staff / MR) — `aff_portal_users` roles exist; enforcement comes with the web portal
+- [x] Roles & permissions (platform admin / program admin / program staff / MR) *(portal: staff can look and run pickups/meetups; admins change reps, money, tiers, settings; platform admins see every program)*
 - [x] Stock ledger: locations (hub, MR bag) + movements; drop-offs checked against the MR's bag under a lock
 - [x] Sales, commissions, payout runs, payout items, bonuses (tables, models, MR earnings API; creating commissions from payments is Phase 2)
 - [x] Seed MedicineXP as program #1 with its tiers and materials *(renewal-year rates 3/4/6/7/9% are placeholders to confirm)*
@@ -59,12 +66,12 @@ Ticks are updated as work lands. Every item is built **program-aware** (see Deci
 
 ## 📶 Offline mode (field reps work with bad signal all day)
 
-- [ ] Outbox queue on the phone that survives app restarts; sends in order when back online
-- [ ] Visits, check-ins, drop-offs, leads and call logs can all be created offline
-- [ ] Photos and voice memos queue and upload separately
-- [ ] Venues, leads, materials, rep stock and earnings stored on the phone and refreshed when online
-- [ ] "N waiting to sync" indicator and a way to retry failed items
-- [ ] Demo video downloaded once and stored on the phone
+- [x] Outbox queue on the phone that survives app restarts; sends in order when back online *(reconnect, app foreground, every minute, and in the background)*
+- [x] Visits, check-ins, drop-offs, leads and call logs can all be created offline *(also places, pickups, meetup requests; items made offline link up by client_uuid)*
+- [x] Photos and voice memos queue and upload separately
+- [x] Venues, leads, materials, rep stock and earnings stored on the phone and refreshed when online *(every GET cached per program; venues indexed for offline search and nearby)*
+- [x] "N waiting to sync" indicator and a way to retry failed items *(banner + Sync screen)*
+- [x] Demo video downloaded once and stored on the phone *(automatically on Wi-Fi, or on demand)*
 
 ---
 
@@ -76,7 +83,7 @@ Ticks are updated as work lands. Every item is built **program-aware** (see Deci
 - [x] Affiliate can create account
 - [x] Affiliate can see the hint modal
 - [x] Affiliate can create a visit *(fixed 2026-10-11: `visitApi` restored; visit date now uses the local day, not UTC)*
-- [ ] ⚠️ Affiliate can edit a visit — notes and status editable; rescheduling a planned visit is supported by the API but not in the app yet
+- [x] Affiliate can edit a visit *(notes, status, reschedule a planned visit; works offline)*
 - [x] Affiliate can browse visits *(fixed: load more)*
 - [x] Affiliate can view a visit *(fixed: real detail screen)*
 - [x] Affiliate can search for an organization while creating/editing a visit
@@ -106,7 +113,7 @@ Ticks are updated as work lands. Every item is built **program-aware** (see Deci
 - [x] Affiliate can see the tier detail page
 - [x] Affiliates can view a link to organizations list page in their profile
 - [x] Affiliates can view a link to call logs list page in their profile
-- [ ] ⚠️ Affiliates can view a link to coupons list page in their profile — link now opens a "coming soon" screen; coupons feature and server `CouponController` still to build
+- [x] Affiliates can view a link to coupons list page in their profile
 - [x] Affiliates can view a link to distributions list page in their profile
 - [x] Affiliates can edit a call log from organizations edit modal *(venue page → call → edit)*
 - [x] Affiliates can browse/filter organizations in organizations list page *(type and "added by me" filters, search, paging)*
@@ -114,13 +121,13 @@ Ticks are updated as work lands. Every item is built **program-aware** (see Deci
 
 ### Pending features & enhancements
 
-- [ ] Affiliate can view a video of the sign-up process
+- [x] Affiliate can view a video of the sign-up process *(Pitch kit: the program uploads its demo / sign-up walkthrough video in the portal; plays offline)*
 - [x] Affiliates can create a call log from call logs list page
 - [x] Affiliates can edit a call log from call logs edit modal *(edit screen)*
 - [x] Affiliates can delete a call log from call logs list page *(long-press)*
 - [x] Affiliates can browse/filter call logs in call logs list page
 - [x] Affiliates can read call log details in call logs details page
-- [ ] Affiliates can create an organization from call logs list page
+- [x] Affiliates can create an organization from call logs list page
 - [x] Affiliates can delete an organization from organizations list page *(from the venue page; only venues you added, with no activity)*
 - [x] Affiliates can edit organizations they have created
 - [x] ~~Affiliates can create a distribution from distributions list page~~ *(replaced: drop-offs are recorded at check-in, from the MR's bag)*
@@ -128,104 +135,116 @@ Ticks are updated as work lands. Every item is built **program-aware** (see Deci
 - [x] ~~Affiliates can delete a distribution from distributions list page~~ *(replaced: same as above)*
 - [x] Affiliates can browse/filter distributions in distributions list page *(Drop-offs list)*
 - [x] Affiliates can read distributions details in distributions details page *(opens the visit it was left on)*
-- [ ] Affiliates can view a link to meetups list page in their profile
-- [x] Affiliates can view an inventory list page in their profile *(My materials)*
-- [ ] Affiliate can manage an inventory bucket/cart (add and remove products/materials)
-- [ ] Affiliate can see their new coupon codes when they level up
-- [ ] Affiliates can see a list of coupon codes assigned to them, all with different perks
+- [x] Affiliates can view a link to meetups list page in their profile
+- [x] Affiliates can view an inventory list page in their profile *(My stock)*
+- [x] Affiliate can manage an inventory bucket/cart (add and remove products/materials) *(materials request: pick quantities, send to the program)*
+- [x] Affiliate can see their new coupon codes when they level up
+- [x] Affiliates can see a list of coupon codes assigned to them, all with different perks *(referral code + tier coupons with their discount; QR and share)*
 - [x] Affiliates should be encouraged to use their coupon code to sign up pharmacies/medical organizations *(referral code is their sign-up coupon; QR on dashboard and profile)*
-- [ ] Affiliates can see the coupons assigned to them in the coupons list page
+- [x] Affiliates can see the coupons assigned to them in the coupons list page
 - [x] Affiliate can register a sale *(automatic from paid subscriptions)*
 - [x] Affiliate can see how much they earned
 - [x] Affiliates can see when they will be getting the withdrawal *(next payout date, delay reason)*
-- [ ] Affiliates can verify the payment cycle
+- [x] Affiliates can verify the payment cycle *(payout day, next date, delay and reason, payout history, push when paid)*
 - [x] Affiliates can get sign-up bonus of 100 rupees which they can withdraw on their first sale, along with the commission *(held on approval, released with the first sale)*
 - [x] Affiliates can see paid status when the payment has been made
 - [x] Affiliates can see their payment history
 - [x] Affiliate can view the marketing materials assigned to them
-- [ ] Affiliate can request marketing material / supplies from an Organization
-- [ ] Affiliate can view marketing material pickup request status
-- [ ] Affiliate can pick up marketing material and supplies from an Organization hub
+- [x] Affiliate can request marketing material / supplies from an Organization
+- [x] Affiliate can view marketing material pickup request status *(push when approved or declined)*
+- [x] Affiliate can pick up marketing material and supplies from an Organization hub *(hand-over moves stock hub → bag)*
 - [x] Affiliate can correctly view their stock/bucket of marketing materials during check-in
 - [x] Affiliate can see scheduled call logs *(Upcoming tab + dashboard)*
-- [ ] Affiliate can see a meetup if it's been scheduled with an Organization or MedicineXP
-- [ ] Affiliate can request a meeting with MedicineXP / Organization
-- [ ] Affiliate can mark as being in the location when they arrive for pickup/meetup
+- [x] Affiliate can see a meetup if it's been scheduled with an Organization or MedicineXP
+- [x] Affiliate can request a meeting with MedicineXP / Organization
+- [x] Affiliate can mark as being in the location when they arrive for pickup/meetup
 
 ### 🆕 Field & selling features (added 2026-10-11)
 
 - [x] Affiliate can switch between their programs (e.g. MedicineXP ↔ a pharma company)
 - [x] **Referral QR code / link** — pharmacy signs up on its own phone with the MR's code pre-filled; sale is credited automatically *(QR + share link; landing pre-fills ?coupon=)*
 - [x] Pharmacy subscription payment automatically creates the MR's commission (no manual "convert lead") *(when an admin marks the subscription paid; reversals void or claw back)*
-- [ ] **Offline demo video** of MedicineXP, downloaded to the phone and playable without internet
+- [x] **Offline demo video** of MedicineXP, downloaded to the phone and playable without internet
 - [x] **Live earnings** — "You earned रू X this week, paid Friday", each commission named after the pharmacy that paid *(commissions appear once Phase 2 creates them from payments)*
-- [ ] **Voice memos** — hold to record after a visit; audio attached to the visit/lead, optional on-device speech-to-text into the notes (no server AI)
-- [ ] **One-tap check-in with GPS and a shop photo** as proof of visit
-- [ ] **Follow-up reminders** — push notifications from scheduled call logs
-- [ ] **Map of nearby pharmacies** — visited / interested / signed-up / not-yet-visited pins for route planning
-- [ ] **Add a pharmacy by photographing its signboard or license** — on-device text recognition suggests name, address and phone (no server AI)
-- [ ] **Objection notes & pricing cheat sheet** — per program: "they already use X, so say Y", current plans and discounts
-- [ ] **Tap to call or WhatsApp a lead**, logging the call automatically *(call and WhatsApp buttons done on the lead page; automatic logging still to do)*
+- [x] **Voice memos** — tap to record after a visit; audio attached to the visit/lead, on-device speech-to-text (English/नेपाली) where the phone supports it (no server AI)
+- [x] **One-tap check-in with GPS and a shop photo** as proof of visit *(portal shows photos and distance from the shop)*
+- [x] **Follow-up reminders** — push notifications from scheduled call logs *(server push every 5 min + local reminders that work offline; also lead follow-up dates)*
+- [x] **Map of nearby pharmacies** — visited / interested / signed-up / not-yet-visited pins for route planning *(OpenStreetMap)*
+- [x] **Add a pharmacy by photographing its signboard or license** — on-device text recognition suggests name, address, phone and PAN (no server AI)
+- [x] **Objection notes & pricing cheat sheet** — per program: "they already use X, so say Y", current plans and discounts *(Pitch kit, offline)*
+- [x] **Tap to call or WhatsApp a lead**, logging the call automatically *(back in the app: "We talked / No answer", duration estimated)*
+- [x] **One check-in for several programs** — hand out MedicineXP and pharma materials in one visit; the server files each program's part separately
+- [x] Join another program with an invite code, accept/decline invitations, sign up with an invite code
 
 ---
 
 ## 🏢 2. Organization (Program) Portal — web
 
 ### 📦 Materials & Inventory Management
-- [ ] Organization can add, edit, and delete marketing materials and products
-- [ ] Organization can browse all marketing materials and view detail pages
-- [ ] Organization can manage its local stock/inventory of marketing materials and supplies
+- [x] Organization can add, edit, and delete marketing materials and products *(with photos; used materials are hidden, not deleted)*
+- [x] Organization can browse all marketing materials and view detail pages
+- [x] Organization can manage its local stock/inventory of marketing materials and supplies *(hubs, stock arriving, write-offs, where each item is)*
 
 ### 🏆 Tier Management
-- [ ] Organization can add a tier list
-- [ ] Organization can edit a tier list
-- [ ] Organization can remove a tier list
-- [ ] Organization can read a tier detail page
-- [ ] Organization can browse a list of tiers
+- [x] Organization can add a tier list
+- [x] Organization can edit a tier list
+- [x] Organization can remove a tier list *(tiers with reps are switched off instead)*
+- [x] Organization can read a tier detail page
+- [x] Organization can browse a list of tiers
 
 ### 🤝 MR Collaboration & Pickup Requests
-- [ ] Organization can login & manage profile
-- [ ] Organization can invite MRs / Affiliates (via email, link, or code)
-- [ ] Organization can view and manage list of invited/linked MRs
-- [ ] Organization can view marketing material/supply pickup requests or inventory bucket submissions from MRs
-- [ ] Organization can approve/reject MR material pickup requests
-- [ ] Organization can set pickup date, time, and location for MRs
-- [ ] Organization can hand off marketing materials/supplies to MRs upon arrival
-- [ ] Organization can schedule meetups with linked MRs by picking time, date, and location
-- [ ] Organization can mark arrival at pickup/meetup location
-- [ ] Organization can view material distribution analytics across its linked MRs (e.g., pie chart / reports)
+- [x] Organization can login & manage profile *(Program page: profile, payout day, sign-up bonus, referral discount)*
+- [x] Organization can invite MRs / Affiliates (via email, link, or code) *(email invite, or the program invite code)*
+- [x] Organization can view and manage list of invited/linked MRs
+- [x] Organization can view marketing material/supply pickup requests or inventory bucket submissions from MRs
+- [x] Organization can approve/reject MR material pickup requests
+- [x] Organization can set pickup date, time, and location for MRs
+- [x] Organization can hand off marketing materials/supplies to MRs upon arrival
+- [x] Organization can schedule meetups with linked MRs by picking time, date, and location
+- [x] Organization can mark arrival at pickup/meetup location
+- [x] Organization can view material distribution analytics across its linked MRs (e.g., pie chart / reports) *(by material and by rep, 7/30/90/365 days)*
 
 ### 🆕 Selling content
-- [ ] Organization can manage its objection notes & pricing cheat sheet
-- [ ] Organization can upload its offline demo video
+- [x] Organization can manage its objection notes & pricing cheat sheet
+- [x] Organization can upload its offline demo video
 
 ---
 
 ## 👑 3. Admin Portal — web
 
 ### 🔐 Auth & Account
-- [ ] Admin can login
-- [ ] Admin can change own email and password
+- [x] Admin can login *(`php artisan affiliates:portal-user` for the first one, then the Team page)*
+- [x] Admin can change own email and password
 
 ### 🏢 Organization & MR Management
-- [ ] Admin can approve or deactivate Organization accounts
-- [ ] Admin can approve or deactivate Affiliate/MR accounts
-- [ ] Admin can change an Affiliate or Organization password
-- [ ] Admin can level up an affiliate
-- [ ] Admin can give custom bonus to an affiliate
-- [ ] Admin can set which MRs earn commission and at what rate per subscription year (default: none)
+- [x] Admin can approve or deactivate Organization accounts *(All programs: add with first admin, approve, switch off)*
+- [x] Admin can approve or deactivate Affiliate/MR accounts
+- [x] Admin can change an Affiliate or Organization password *(rep app password on the rep page; portal logins reset from Team)*
+- [x] Admin can level up an affiliate *(tier on the rep page; issues the tier's coupons)*
+- [x] Admin can give custom bonus to an affiliate
+- [x] Admin can set which MRs earn commission and at what rate per subscription year (default: none)
 
 ### 📅 Meetups & Direct Coordination
-- [ ] Admin can schedule high-level meetups with Organizations / Affiliates
-- [ ] Admin can mark as being in the location when arriving for a scheduled meetup
+- [x] Admin can schedule high-level meetups with Organizations / Affiliates *(platform admins can invite other programs' teams)*
+- [x] Admin can mark as being in the location when arriving for a scheduled meetup
 
 ### 💰 Finance, Sales & Payment Cycles
-- [ ] Admin can mark sales requests as proven, refunded, etc.
-- [ ] Weekly payment cycle will be on Friday of every week
-- [ ] Admin can set the payment delay if any delay has happened
-- [ ] Admin can delay the cycle globally with a reason and an apology email
+- [x] Admin can mark sales requests as proven, refunded, etc.
+- [x] Weekly payment cycle will be on Friday of every week *(per-program payout day, Friday by default)*
+- [x] Admin can set the payment delay if any delay has happened
+- [x] Admin can delay the cycle globally with a reason and an apology email
 
 ---
+
+## 🔜 Before the pilot (needs you)
+
+- [ ] Rebuild the dev app — new native modules (camera, audio, speech and text recognition, notifications, video, WebView, background task): `npx expo run:android`
+- [ ] Run the new migrations in dev (`php artisan migrate --path=database/migrations/affiliate`) and re-run the affiliate seeder (tier coupon counts changed)
+- [ ] Create the first portal login: `php artisan affiliates:portal-user you@medicinexp.com --name="Your Name"`
+- [ ] Scheduler running (`affiliates:send-reminders` every 5 min) and `php artisan storage:link` (demo videos, material photos)
+- [ ] Upload the demo video and write the cheat sheet in the portal (Program page)
+- [ ] Confirm the placeholder renewal-year rates and the referral discount
+- [ ] Test on 2–3 real phones: offline check-in then back online, voice memo in Nepali, signboard scan, reminders, two-program check-in
 
 ## 🚀 Launch
 
