@@ -26,7 +26,7 @@ Ticks are updated as work lands. Every item is built **program-aware** (see Deci
 
 ### Decisions (2026-10-12)
 
-- **Commission is opt-in per MR, default none.** Tiers carry requirements and perks only; an admin adds a commission rate (by subscription year) to the MRs who should earn.
+- ~~Commission is opt-in per MR, default none.~~ *Replaced by the earning model below (only renewal-year commission is manual).*
 - **Subscription amounts are NPR** (`tenant_subscriptions.amount`, rupees).
 - **No Gemini / server-side AI in the MR app.** Anyone with the app could run up the bill (e.g. 1,000 signboard photos). Voice memos are audio + optional **on-device** speech-to-text; signboard capture uses **on-device** text recognition. Nothing costs per use.
 - **Nothing is deployed until tested.** One week of testing in dev first.
@@ -37,7 +37,18 @@ Ticks are updated as work lands. Every item is built **program-aware** (see Deci
 - **Maps use OpenStreetMap** (Leaflet in a WebView), not Google Maps: no key, no per-use cost. The tile server is configurable (`EXPO_PUBLIC_MAP_TILE_URL`) if usage outgrows the public OSM servers.
 - **One check-in, many programs.** The check-in screen shows every program's materials in the rep's bag; the server stores one visit per program (same place and time), so each program only sees its own.
 - **Push notifications go through Expo's push service** (no server credentials). Reminders are also scheduled on the phone so they fire offline.
-- **Tier `coupon_count` = extra single-use coupons** on top of the referral code, issued when the rep reaches the tier (7-character codes, the sign-up form's format).
+- ~~Tier coupon_count = extra single-use coupons~~ *Replaced: codes are referral codes, see below.*
+
+### Earning model (2026-10-12, the point of the gamification)
+
+- **Tiers raise commission.** New rep: no tier, 0%, no codes. First lead → **Bronze** automatically: first code + year-1 rate. Reps climb on their own as they hit targets and never drop. Seeded year-1 rates **10 / 12 / 15 / 18 / 20%** (Bronze → Diamond), renewals from Gold (3%; Platinum 4/3%; Diamond 5/4%), sized to the real plan prices (रू 10k–60k first year). Rates are **locked per pharmacy at sign-up** (new sales only).
+- **Admin extras add on top** of the tier, per year (year 1 extra and manual year 2/3).
+- **Coupon = referral code.** Each tier unlocks codes: Bronze 1, Silver +1, Gold +2, Platinum +4, Diamond +5. Reusable. The rep names each code (4–12 chars, e.g. SAR-52) and sets its discount.
+- **Self-preserving discounts:** commission = rate × price before the code − the discount in rupees, never below 0; a discount can't exceed the rep's year-1 rate. MedicineXP never pays more than with no discount. The code's discount is year 1 only and locked at sign-up; pharmacies from before keep today's billing.
+- **Products per program** (MedicineXP linked to central plans): pitched in the app, picked on leads, recorded on sales, used for rupee amounts.
+- **Weekly activity bonus, per sale:** points for verified visits (GPS ≤300 m or shop photo, one per shop per day), leads with phone numbers, calls, sales, pickups, meetups — with caps. Bonus per sale = tier max (रू 150 → 400) × score ÷ target (40) × streak boost (+10%/week, max +50%). **No sale by the cutoff = points expire.** Groundwork on a lead carries over 3 weeks if it converts. Held until payment clears. No bonus for reaching a tier; the only fixed bonus is the रू 100 sign-up bonus.
+- **Payout cycle configurable per program** (weekly / every N weeks / monthly / set dates) with a cutoff. MedicineXP: **Friday, sales by Wednesday night**; later sales go in the next payout.
+- Weekly goal card, Monday/new-week and day-before-cutoff nudges, leaderboard, celebrations, earnings calculator in the portal.
 
 ---
 
@@ -175,6 +186,11 @@ Ticks are updated as work lands. Every item is built **program-aware** (see Deci
 - [x] **Tap to call or WhatsApp a lead**, logging the call automatically *(back in the app: "We talked / No answer", duration estimated)*
 - [x] **One check-in for several programs** — hand out MedicineXP and pharma materials in one visit; the server files each program's part separately
 - [x] Join another program with an invite code, accept/decline invitations, sign up with an invite code
+- [x] **Tiers raise commission**; automatic promotion from the first lead; rates locked per pharmacy
+- [x] **My codes:** rename, set discount, live "you earn" per product; more codes per tier
+- [x] **Weekly activity bonus** per sale with streaks, carry-over and expiry; Wednesday cutoff for Friday pay
+- [x] **Weekly goal card, leaderboard, nudges, celebrations**
+- [x] **Products** shown in the pitch kit and picked on leads
 
 ---
 
@@ -203,6 +219,13 @@ Ticks are updated as work lands. Every item is built **program-aware** (see Deci
 - [x] Organization can schedule meetups with linked MRs by picking time, date, and location
 - [x] Organization can mark arrival at pickup/meetup location
 - [x] Organization can view material distribution analytics across its linked MRs (e.g., pie chart / reports) *(by material and by rep, 7/30/90/365 days)*
+
+### 💰 Earning & gamification (portal)
+- [x] Tier rates per year, codes unlocked, activity bonus per sale
+- [x] Earnings calculator per tier and product
+- [x] Products catalogue (with central plan link for MedicineXP)
+- [x] Payout cycle, cutoff, activity points/caps/target/streak, leaderboard switch
+- [x] Rep extra commission per year on top of the tier
 
 ### 🆕 Selling content
 - [x] Organization can manage its objection notes & pricing cheat sheet
@@ -243,7 +266,9 @@ Ticks are updated as work lands. Every item is built **program-aware** (see Deci
 - [ ] Create the first portal login: `php artisan affiliates:portal-user you@medicinexp.com --name="Your Name"`
 - [ ] Scheduler running (`affiliates:send-reminders` every 5 min) and `php artisan storage:link` (demo videos, material photos)
 - [ ] Upload the demo video and write the cheat sheet in the portal (Program page)
-- [ ] Confirm the placeholder renewal-year rates and the referral discount
+- [ ] Confirm the tier rates and activity bonus amounts in the portal's **earnings calculator** (Tiers page) against your margins — seeded: 10/12/15/18/20% year 1, रू 150–400 bonus per sale
+- [ ] Add MedicineXP's products if the seeder didn't find your plans (Products page), and link each to its plan
+- [ ] Deploy the landing change that accepts 4–12 character codes (`landing-features`, commit `cea767a`) together with this, or custom codes won't verify at sign-up
 - [ ] Test on 2–3 real phones: offline check-in then back online, voice memo in Nepali, signboard scan, reminders, two-program check-in
 
 ## 🚀 Launch
