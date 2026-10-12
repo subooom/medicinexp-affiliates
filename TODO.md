@@ -174,6 +174,7 @@ Ticks are updated as work lands. Every item is built **program-aware** (see Deci
 
 - [x] Affiliate can switch between their programs (e.g. MedicineXP ↔ a pharma company)
 - [x] **Referral QR code / link** — pharmacy signs up on its own phone with the MR's code pre-filled; sale is credited automatically *(QR + share link; landing pre-fills ?coupon=)*
+- [x] **Sign-up filled from the visit** — "Send sign-up link" on a lead (WhatsApp/share, pick which code), or the pharmacy enters the rep's code + its PAN on the landing page ("Has a MedicineXP rep visited you?"). Owner, shop, PAN, address and the pitched plan come pre-filled; the pharmacy is tied to that exact lead and venue
 - [x] Pharmacy subscription payment automatically creates the MR's commission (no manual "convert lead") *(when an admin marks the subscription paid; reversals void or claw back)*
 - [x] **Offline demo video** of MedicineXP, downloaded to the phone and playable without internet
 - [x] **Live earnings** — "You earned रू X this week, paid Friday", each commission named after the pharmacy that paid *(commissions appear once Phase 2 creates them from payments)*
@@ -268,7 +269,9 @@ Ticks are updated as work lands. Every item is built **program-aware** (see Deci
 - [ ] Upload the demo video and write the cheat sheet in the portal (Program page)
 - [ ] Confirm the tier rates and activity bonus amounts in the portal's **earnings calculator** (Tiers page) against your margins — seeded: 10/12/15/18/20% year 1, रू 150–400 bonus per sale
 - [ ] Add MedicineXP's products if the seeder didn't find your plans (Products page), and link each to its plan
-- [ ] Deploy the landing change that accepts 4–12 character codes (`landing-features`, commit `cea767a`) together with this, or custom codes won't verify at sign-up
+- [ ] Deploy the landing changes (`landing-features`: `cea767a` 4–12 character codes, `bd7bc8e` sign-up filled from the rep's visit + phone layout) together with the server, or custom codes won't verify and invite links won't fill
+- [ ] Set `AFFILIATE_SIGNUP_URL` on the server to the live get-started page (invite links and QR codes point there)
+- [ ] Try an invite end to end: lead with a venue (PAN, address) and product → "Send sign-up link" → open on a phone → sign up → the lead and venue show the pharmacy
 - [ ] Test on 2–3 real phones: offline check-in then back online, voice memo in Nepali, signboard scan, reminders, two-program check-in
 
 ## 🚀 Launch

@@ -1,5 +1,6 @@
 // app/(app)/leads/[id].tsx
 import { AttachmentsCard } from '@/components/field/attachments-card';
+import { SignupLinkCard } from '@/components/field/signup-link-card';
 import { useCallLogger } from '@/hooks/use-call-logger';
 import { callLogApi } from '@/api/call-logs';
 import { leadApi } from '@/api/leads';
@@ -167,6 +168,8 @@ export default function LeadDetailScreen() {
           </View>
         )}
       </View>
+
+      {lead.status !== 'converted' && <SignupLinkCard lead={lead} phone={phone} whatsappNumber={whatsappNumber} />}
 
       <AttachmentsCard
         attachments={lead.attachments ?? []}
