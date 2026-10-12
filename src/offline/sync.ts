@@ -57,6 +57,8 @@ async function prefetch(force = false) {
     quiet(tierApi.getAll()),
     quiet(tierApi.getCurrent()),
     quiet(fieldApi.getCoupons()),
+    quiet(fieldApi.getProducts()),
+    quiet(fieldApi.getActivity()),
     quiet(pickupApi.getHubs()),
     quiet(pickupApi.getAll({ page: 1, per_page: 20 })),
     quiet(meetupApi.getAll({ scope: 'upcoming', page: 1, per_page: 20 })),

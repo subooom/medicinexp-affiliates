@@ -1,10 +1,11 @@
 // src/components/leads/lead-form.tsx
+import { fieldApi } from '@/api/field';
 import { venueApi } from '@/api/venues';
 import { queuedMessage, sendOrQueue } from '@/offline/send';
 import { AppColors } from '@/constants/colors';
 import { useAppTheme } from '@/hooks/use-app-theme';
 import { typography } from '@/styles/typography';
-import { Lead, LeadInput, LeadType, Venue } from '@/types/models';
+import { Lead, LeadInput, LeadType, Product, Venue } from '@/types/models';
 import { LEAD_TYPES, leadTypeColor } from '@/utils/lead-types';
 import { uuidv4 } from '@/utils/uuid';
 import Ionicons from '@expo/vector-icons/Ionicons';
@@ -46,6 +47,13 @@ export function LeadForm({ lead, venueId, visitId, onSaved }: LeadFormProps) {
     notes: lead?.notes ?? '',
   });
   const [interest, setInterest] = useState<number | null>(lead?.interest_level ?? null);
+  // Which product they're interested in (the program's catalogue, cached for offline)
+  const [products, setProducts] = useState<Product[]>([]);
+  const [productId, setProductId] = useState<number | null>(lead?.product_id ?? null);
+
+  useEffect(() => {
+    fieldApi.getProducts().then((r) => setProducts(r.data.data)).catch(() => undefined);
+  }, []);
   const [followUp, setFollowUp] = useState<Date | null>(lead?.next_follow_up_at ? new Date(lead.next_follow_up_at) : null);
   const [showFollowUpPicker, setShowFollowUpPicker] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -105,6 +113,7 @@ export function LeadForm({ lead, venueId, visitId, onSaved }: LeadFormProps) {
       contact_address: clean(values.contact_address),
       associated_entity: leadType === 'associate' ? clean(values.associated_entity) : null,
       interest_level: interest,
+      product_id: productId,
       next_follow_up_at: followUp ? followUp.toISOString() : null,
       notes: clean(values.notes),
     };
@@ -255,6 +264,23 @@ export function LeadForm({ lead, venueId, visitId, onSaved }: LeadFormProps) {
           </TouchableOpacity>
         ))}
       </View>
+
+      {products.length > 0 && (
+        <>
+          <Text style={[typography.body2, styles.label, { color: colors.foreground }]}>Interested in</Text>
+          <View style={styles.chips}>
+            {products.map((product) => (
+              <TouchableOpacity
+                key={product.id}
+                style={[styles.chip, { borderColor: productId === product.id ? colors.primary : colors.border }, productId === product.id && { backgroundColor: colors.primary }]}
+                onPress={() => setProductId(productId === product.id ? null : product.id)}
+              >
+                <Text style={[typography.body2, { color: productId === product.id ? colors.primaryForeground : colors.foreground, fontWeight: '600' }]}>{product.name}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </>
+      )}
 
       <Text style={[typography.body2, styles.label, { color: colors.foreground }]}>Follow up on</Text>
       <TouchableOpacity

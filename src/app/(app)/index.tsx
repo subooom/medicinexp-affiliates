@@ -1,4 +1,5 @@
 // app/(app)/index.tsx — Dashboard
+import { WeeklyGoal } from '@/components/field/weekly-goal';
 import { SyncBanner } from '@/components/ui/sync-banner';
 import { dashboardApi } from '@/api/dashboard';
 import { Logo } from '@/components/common/logo';
@@ -37,6 +38,7 @@ export default function DashboardScreen() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [goalTick, setGoalTick] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [showSwitcher, setShowSwitcher] = useState(false);
 
@@ -102,7 +104,7 @@ export default function DashboardScreen() {
       <SyncBanner topInset />
       <ScrollView
         contentContainerStyle={{ paddingBottom: 32 }}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(); }} tintColor={colors.primary} />}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); setGoalTick((t) => t + 1); load(); }} tintColor={colors.primary} />}
       >
         <LinearGradient colors={['#6C3CE1', '#8B5CF6']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.header}>
           <View style={styles.headerTop}>
@@ -149,6 +151,9 @@ export default function DashboardScreen() {
         {error && (
           <Text style={[typography.body2, { color: colors.destructive, margin: 16 }]}>{error}</Text>
         )}
+
+        {/* This week's score, bonus waiting, streak, next tier */}
+        <WeeklyGoal refreshKey={goalTick} />
 
         <View style={styles.quickActions}>
           {quickActions.map((action) => (

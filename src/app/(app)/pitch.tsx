@@ -5,7 +5,8 @@ import { Button, Card, EmptyState, ScreenHeader, SectionTitle } from '@/componen
 import { useAppTheme } from '@/hooks/use-app-theme';
 import { demoVideo } from '@/offline/demo-video';
 import { typography } from '@/styles/typography';
-import { FieldKit } from '@/types/models';
+import { FieldKit, Product } from '@/types/models';
+import { formatPaisa } from '@/utils/money';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useVideoPlayer, VideoView } from 'expo-video';
 import { useCallback, useEffect, useState } from 'react';
@@ -21,6 +22,8 @@ function DemoPlayer({ uri }: { uri: string }) {
 export default function PitchScreen() {
   const { colors } = useAppTheme();
   const [kit, setKit] = useState<FieldKit | null>(null);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [productOpen, setProductOpen] = useState<number | null>(null);
   const [videoUri, setVideoUri] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [progress, setProgress] = useState<number | null>(null);
@@ -29,6 +32,7 @@ export default function PitchScreen() {
 
   const load = useCallback(async () => {
     try {
+      fieldApi.getProducts().then((r) => setProducts(r.data.data)).catch(() => undefined);
       const next = (await fieldApi.getKit()).data.data;
       setKit(next);
       setVideoUri(await demoVideo.localUri(next.program_id));
@@ -80,6 +84,39 @@ export default function PitchScreen() {
           <EmptyState icon="cloud-offline-outline" title="Not downloaded yet" message="Open this once with internet and it will be saved on your phone." />
         ) : (
           <>
+            {products.length > 0 && (
+              <>
+                <SectionTitle>Products</SectionTitle>
+                {products.map((product) => (
+                  <Card key={product.id} onPress={() => setProductOpen(productOpen === product.id ? null : product.id)} style={{ gap: 8 }}>
+                    <View style={styles.row}>
+                      <View style={{ flex: 1 }}>
+                        <Text style={[typography.body1, { color: colors.foreground, fontWeight: '700' }]}>{product.name}</Text>
+                        {!!product.tagline && <Text style={[typography.caption, { color: colors.mutedForeground }]}>{product.tagline}</Text>}
+                      </View>
+                      <View style={{ alignItems: 'flex-end' }}>
+                        <Text style={[typography.body1, { color: colors.primary, fontWeight: '800' }]}>{formatPaisa(product.first_year_price_paisa)}</Text>
+                        <Text style={[typography.caption, { color: colors.mutedForeground }]}>
+                          {product.first_year_price_paisa !== product.price_paisa ? `then ${formatPaisa(product.price_paisa)}/yr` : product.billing_period === 'month' ? 'a month' : 'a year'}
+                        </Text>
+                      </View>
+                    </View>
+                    {productOpen === product.id && (
+                      <View style={{ gap: 6 }}>
+                        {!!product.description && <Text style={[typography.body2, { color: colors.foreground }]}>{product.description}</Text>}
+                        {product.features.map((feature) => (
+                          <View key={feature} style={styles.row}>
+                            <Ionicons name="checkmark-circle" size={18} color={colors.success} />
+                            <Text style={[typography.body2, { color: colors.foreground, flex: 1 }]}>{feature}</Text>
+                          </View>
+                        ))}
+                      </View>
+                    )}
+                  </Card>
+                ))}
+              </>
+            )}
+
             <SectionTitle>Demo video</SectionTitle>
             {!kit.demo_video ? (
               <Card>

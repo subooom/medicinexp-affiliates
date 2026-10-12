@@ -129,6 +129,9 @@ export default function LeadDetailScreen() {
           </View>
         </View>
 
+        {lead.product && (
+          <Text style={[typography.body2, { color: colors.primary, fontWeight: '600' }]}>Interested in {lead.product.name}</Text>
+        )}
         {lead.associated_entity && (
           <Text style={[typography.body2, { color: colors.mutedForeground }]}>Associated with {lead.associated_entity}</Text>
         )}

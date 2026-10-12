@@ -19,6 +19,7 @@ const HIDDEN_ROUTES = [
   'pitch',
   'map',
   'sync',
+  'leaderboard',
 ];
 
 export default function AppLayout() {

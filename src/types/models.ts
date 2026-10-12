@@ -53,6 +53,7 @@ export interface Tier {
   first_year_rate_bp: number;
   requirements: Record<string, number>;
   perks: Record<string, any>;
+  activity_bonus_paisa: number;
 }
 
 export type MembershipStatus = 'invited' | 'pending' | 'active' | 'suspended' | 'left';
@@ -296,6 +297,8 @@ export interface Lead {
   notes: string | null;
   venue_id: number | null;
   venue?: Venue | null;
+  product_id: number | null;
+  product?: { id: number; name: string } | null;
   visit_id: number | null;
   is_customer: boolean;
   converted_at: string | null;
@@ -321,6 +324,7 @@ export interface LeadInput {
   interest_level?: number | null;
   next_follow_up_at?: string | null;
   notes?: string | null;
+  product_id?: number | null;
   client_uuid?: string;
 }
 
@@ -369,6 +373,9 @@ export interface EarningsSummary {
   this_week_paisa: number;
   paid_paisa: number;
   next_payout_paisa: number;
+  // Earned after the cutoff: paid the payout after
+  later_payout_paisa: number;
+  cutoff_at: string;
   pending_paisa: number;
   held_bonus_paisa: number;
   next_payout_date: string; // YYYY-MM-DD
@@ -437,17 +444,89 @@ export interface FieldKit {
   contact: { name: string | null; phone: string | null; email: string | null; address: string | null };
 }
 
+/** A referral code a pharmacy enters at sign-up. The rep names it and sets its discount. */
 export interface Coupon {
   id: number;
   code: string;
-  kind: 'referral' | 'tier';
-  tier: { id: number; name: string; color: string | null } | null;
+  // The code in their QR / referral link
+  is_main: boolean;
   discount_percentage: number;
-  usage_limit: number | null;
-  usage_count: number;
-  status: 'active' | 'used' | 'inactive';
+  pharmacies_count: number;
+  status: 'active' | 'inactive';
   share_url: string;
   created_at: string | null;
+}
+
+export interface CodesResponse {
+  year1_rate_bp: number;
+  // A discount comes out of the rep's commission, so it can't be more than their rate
+  max_discount_bp: number;
+  codes_unlocked: number;
+  tier: { id: number; name: string; color: string | null } | null;
+  codes: Coupon[];
+  products: { id: number; name: string; first_year_price_paisa: number }[];
+}
+
+export interface Product {
+  id: number;
+  name: string;
+  tagline: string | null;
+  description: string | null;
+  image_url: string | null;
+  price_paisa: number;
+  first_year_price_paisa: number;
+  billing_period: 'year' | 'month' | 'one_time';
+  features: string[];
+}
+
+/** The weekly goal card (GET /activity). */
+export interface ActivityState {
+  starts_at: string;
+  cutoff_at: string;
+  payout_date: string;
+  score: number;
+  target: number;
+  counts: Record<'visit' | 'lead' | 'call' | 'sale' | 'pickup' | 'meetup', number>;
+  points: Record<string, number>;
+  point_values: Record<string, number>;
+  sales_count: number;
+  streak_weeks: number;
+  multiplier_bp: number;
+  tier_bonus_paisa: number;
+  bonus_per_sale_paisa: number;
+  bonus_so_far_paisa: number;
+  tier: { id: number; name: string; color: string | null; level: number; rates: number[] } | null;
+  next_tier: {
+    id: number;
+    name: string;
+    color: string | null;
+    rates: number[];
+    codes: number;
+    activity_bonus_paisa: number;
+    progress: TierProgress | null;
+  } | null;
+  codes_unlocked: number;
+  latest_sale: { commission_id: number; amount_paisa: number; pharmacy: string | null; earned_at: string | null } | null;
+  leaderboard_enabled: boolean;
+}
+
+export interface LeaderboardRow {
+  membership_id: number;
+  name: string;
+  tier: string | null;
+  tier_color: string | null;
+  sales: number;
+  score: number;
+  is_me: boolean;
+}
+
+export interface Leaderboard {
+  cutoff_at: string;
+  by_sales: LeaderboardRow[];
+  by_score: LeaderboardRow[];
+  my_rank_sales: number | null;
+  my_rank_score: number | null;
+  total_reps: number;
 }
 
 export interface Hub {

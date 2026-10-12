@@ -4,7 +4,7 @@ import { useAppTheme } from '@/hooks/use-app-theme';
 import { typography } from '@/styles/typography';
 import { Tier } from '@/types/models';
 import { toIconName } from '@/utils/icons';
-import { formatRate } from '@/utils/money';
+import { formatPaisa, formatRate } from '@/utils/money';
 import { requirementLabel } from '@/utils/tiers';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useLocalSearchParams } from 'expo-router';
@@ -36,7 +36,6 @@ export default function TierDetailScreen() {
   const schedule = [...tier.commission_schedule].sort((a, b) => a.from_year - b.from_year);
   const requirements = Object.entries(tier.requirements).filter(([, value]) => value > 0);
   const couponCount: number = tier.perks?.coupon_count ?? 0;
-  const couponDiscount: number | null = tier.perks?.coupon_discount_percentage ?? null;
   const perkItems: string[] = Array.isArray(tier.perks?.items) ? tier.perks.items : [];
 
   return (
@@ -87,18 +86,23 @@ export default function TierDetailScreen() {
         )}
       </View>
 
-      {couponCount || perkItems.length ? (
+      {couponCount || perkItems.length || tier.activity_bonus_paisa ? (
         <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
           <Text style={[typography.body1, styles.title, { color: colors.foreground }]}>Perks</Text>
           {couponCount ? (
             <View style={styles.row}>
               <Ionicons name="pricetag-outline" size={16} color={colors.primary} />
               <Text style={[typography.body2, { color: colors.foreground, flex: 1 }]}>
-                {couponCount} extra single-use coupon{couponCount > 1 ? 's' : ''} to offer pharmacies
-                {couponDiscount ? ` (${couponDiscount}% off)` : ''}, on top of your referral code
+                {couponCount} new code{couponCount > 1 ? 's' : ''} for pharmacies. You name them and set each one's discount (up to {formatRate(tier.first_year_rate_bp)}).
               </Text>
             </View>
           ) : null}
+          {tier.activity_bonus_paisa > 0 && (
+            <View style={styles.row}>
+              <Ionicons name="flash-outline" size={16} color={colors.primary} />
+              <Text style={[typography.body2, { color: colors.foreground, flex: 1 }]}>Activity bonus up to {formatPaisa(tier.activity_bonus_paisa)} per sale each week</Text>
+            </View>
+          )}
           {perkItems.map((item) => (
             <View key={item} style={styles.row}>
               <Ionicons name="gift-outline" size={16} color={colors.primary} />
