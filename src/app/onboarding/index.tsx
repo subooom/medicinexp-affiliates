@@ -1,4 +1,5 @@
 // app/onboarding/index.tsx
+import { IconName } from '@/utils/icons';
 import { Logo } from '@/components/common/logo';
 import { AppColors } from '@/constants/colors';
 import { useAppTheme } from '@/hooks/use-app-theme';
@@ -17,13 +18,13 @@ import {
   useWindowDimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Ionicons from 'react-native-vector-icons/Ionicons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 
 interface OnboardingSlide {
   id: string;
   title: string;
   description: string;
-  icon: string;
+  icon: IconName;
   color: string;
 }
 
