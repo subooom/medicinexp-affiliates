@@ -93,7 +93,7 @@ export default function DashboardScreen() {
   // (leads, codes), blue to talk, teal to find, purple for the kit and stock
   const quickActions: { label: string; icon: IconName; route: Href; color: string; anchor?: boolean }[] = [
     { label: 'Check in', icon: 'location', route: '/(app)/visits/checkin', color: colors.success, anchor: true },
-    { label: 'New lead', icon: 'person-add', route: '/(app)/leads/create', color: colors.secondary },
+    { label: 'New lead', icon: 'person-add', route: '/(app)/leads/create', color: colors.secondary, anchor: true },
     { label: 'Log call', icon: 'call', route: '/(app)/call-logs/create', color: colors.info },
     { label: 'Near me', icon: 'map', route: '/(app)/map' as Href, color: colors.accent },
     { label: 'Pitch kit', icon: 'easel', route: '/(app)/pitch' as Href, color: colors.primary },
@@ -187,7 +187,7 @@ export default function DashboardScreen() {
             <TouchableOpacity
               key={action.label}
               style={[styles.quickAction, { backgroundColor: colors.card, borderColor: action.color + '40' }]}
-              // Check-in opens in the Visits tab on top of its list, so Back lands there
+              // Check-in and New lead open on top of their tab's list, so Back lands there
               onPress={() => router.push(action.route, action.anchor ? { withAnchor: true } : undefined)}
             >
               <View style={[styles.quickIcon, { backgroundColor: action.color + (isDark ? '30' : '1A') }]}>
@@ -235,7 +235,7 @@ export default function DashboardScreen() {
                   <TouchableOpacity
                     key={`l${lead.id}`}
                     style={[styles.todoRow, { borderTopColor: colors.border }]}
-                    onPress={() => router.push({ pathname: '/(app)/leads/[id]', params: { id: lead.id } })}
+                    onPress={() => router.push({ pathname: '/(app)/leads/[id]', params: { id: lead.id } }, { withAnchor: true })}
                   >
                     <Ionicons name="alarm-outline" size={18} color={colors.warning} />
                     <Text style={[typography.body2, { flex: 1, color: colors.foreground }]} numberOfLines={1}>
@@ -350,7 +350,7 @@ export default function DashboardScreen() {
                   <TouchableOpacity
                     key={lead.id}
                     style={[styles.todoRow, { borderTopColor: colors.border }]}
-                    onPress={() => router.push({ pathname: '/(app)/leads/[id]', params: { id: lead.id } })}
+                    onPress={() => router.push({ pathname: '/(app)/leads/[id]', params: { id: lead.id } }, { withAnchor: true })}
                   >
                     <Ionicons name="person-outline" size={18} color={colors.secondary} />
                     <Text style={[typography.body2, { flex: 1, color: colors.foreground }]} numberOfLines={1}>{lead.display_name}</Text>

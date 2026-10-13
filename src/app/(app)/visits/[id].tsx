@@ -6,8 +6,8 @@ import { useAppTheme } from '@/hooks/use-app-theme';
 import { typography } from '@/styles/typography';
 import { Visit } from '@/types/models';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useMemo, useState } from 'react';
+import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -27,6 +27,18 @@ export default function VisitDetailScreen() {
   const styles = useMemo(() => createStyles(colors), [colors]);
   const { id } = useLocalSearchParams<{ id: string }>();
   const { data: visit, loading, error, reload, updateVisit, deleteVisit } = useVisit(parseInt(id));
+
+  // Back from "Convert to lead": refresh so the new lead shows instead of the button
+  const firstFocus = useRef(true);
+  useFocusEffect(
+    useCallback(() => {
+      if (firstFocus.current) {
+        firstFocus.current = false;
+        return;
+      }
+      reload();
+    }, [reload])
+  );
 
   const [saving, setSaving] = useState(false);
   const [showNotesModal, setShowNotesModal] = useState(false);
@@ -118,7 +130,8 @@ export default function VisitDetailScreen() {
     </View>
   );
 
-  if (loading) {
+  // Only the first load shows a spinner; refreshes on return keep the screen
+  if (loading && !visit) {
     return (
       <View style={[styles.container, { backgroundColor: colors.background }]}>
         {header}
@@ -258,28 +271,28 @@ export default function VisitDetailScreen() {
 
         {/* Actions */}
         <View style={styles.actionsContainer}>
-          {visit.status !== 'cancelled' && visit.id > 0 && (
-            visit.leads && visit.leads.length > 0 ? (
-              <TouchableOpacity
-                style={[styles.actionButton, styles.outlineButton, { borderColor: colors.secondary }]}
-                onPress={() => router.push({ pathname: '/(app)/leads/[id]', params: { id: visit.leads![0].id } })}
-              >
-                <Ionicons name="person-outline" size={20} color={colors.secondary} />
-                <Text style={[typography.button, styles.actionButtonText, { color: colors.secondary }]} numberOfLines={1}>
-                  Open lead: {visit.leads[0].display_name}
-                </Text>
-              </TouchableOpacity>
-            ) : (
-              <TouchableOpacity
-                style={[styles.actionButton, { backgroundColor: colors.secondary }]}
-                onPress={() => router.push({ pathname: '/(app)/leads/create', params: { venueId: visit.venue_id, visitId: visit.id } })}
-                disabled={saving}
-              >
-                <Ionicons name="person-add-outline" size={20} color={colors.secondaryForeground} />
-                <Text style={[typography.button, styles.actionButtonText, { color: colors.secondaryForeground }]}>Convert to lead</Text>
-              </TouchableOpacity>
-            )
-          )}
+          {/* The shop's lead (from this visit or made separately), else offer to make one */}
+          {visit.leads && visit.leads.length > 0 ? (
+            <TouchableOpacity
+              style={[styles.actionButton, styles.outlineButton, { borderColor: colors.secondary }]}
+              onPress={() => router.push({ pathname: '/(app)/leads/[id]', params: { id: visit.leads![0].id } }, { withAnchor: true })}
+            >
+              <Ionicons name={visit.leads[0].status === 'converted' ? 'checkmark-circle-outline' : 'person-outline'} size={20} color={colors.secondary} />
+              <Text style={[typography.button, styles.actionButtonText, { color: colors.secondary, flexShrink: 1 }]} numberOfLines={1}>
+                {visit.leads[0].status === 'converted' ? 'Customer' : 'Lead'}: {visit.leads[0].display_name}
+                {visit.leads.length > 1 ? ` (+${visit.leads.length - 1} more)` : ''}
+              </Text>
+            </TouchableOpacity>
+          ) : visit.status !== 'cancelled' && visit.id > 0 ? (
+            <TouchableOpacity
+              style={[styles.actionButton, { backgroundColor: colors.secondary }]}
+              onPress={() => router.push({ pathname: '/(app)/leads/create', params: { venueId: visit.venue_id, visitId: visit.id } }, { withAnchor: true })}
+              disabled={saving}
+            >
+              <Ionicons name="person-add-outline" size={20} color={colors.secondaryForeground} />
+              <Text style={[typography.button, styles.actionButtonText, { color: colors.secondaryForeground }]}>Convert to lead</Text>
+            </TouchableOpacity>
+          ) : null}
           {visit.status === 'planned' && (
             <TouchableOpacity
               style={[styles.actionButton, styles.outlineButton, { borderColor: colors.border }]}

@@ -77,7 +77,7 @@ export function WeeklyGoal({ refreshKey }: { refreshKey?: number }) {
   // No tier yet: the one thing to do is log a lead
   if (!state.tier) {
     return (
-      <TouchableOpacity style={[styles.card, { backgroundColor: colors.card, borderColor: colors.primary }]} onPress={() => router.push('/(app)/leads/create')}>
+      <TouchableOpacity style={[styles.card, { backgroundColor: colors.card, borderColor: colors.primary }]} onPress={() => router.push('/(app)/leads/create', { withAnchor: true })}>
         <View style={styles.row}>
           <Ionicons name="lock-open-outline" size={24} color={colors.primary} />
           <View style={{ flex: 1 }}>

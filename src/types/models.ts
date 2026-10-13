@@ -311,8 +311,24 @@ export interface Lead {
   latest_call_log?: CallLog | null;
   // Voice memos and photos (detail endpoint only)
   attachments?: Attachment[];
+  // Detail endpoint only: sales from this lead, and whether the rep reports them by hand
+  // (false for MedicineXP, whose sales arrive when the pharmacy pays)
+  sales?: LeadSale[];
+  can_record_sale?: boolean;
   created_at: string;
   updated_at: string;
+}
+
+export interface LeadSale {
+  id: number;
+  source: 'medicinexp_subscription' | 'manual' | 'import';
+  status: 'pending' | 'proven' | 'refunded' | 'rejected';
+  amount_paisa: number;
+  product: { id: number; name: string } | null;
+  subscription_year: number | null;
+  occurred_at: string | null;
+  commission_paisa: number;
+  commission_status: string | null;
 }
 
 export interface LeadInput {
