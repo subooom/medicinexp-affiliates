@@ -9,9 +9,10 @@ import { useAuth } from '@/context/AuthContext';
 import { useAppTheme } from '@/hooks/use-app-theme';
 import { typography } from '@/styles/typography';
 import { DashboardData } from '@/types/models';
-import { IconName } from '@/utils/icons';
+import { readableColor } from '@/utils/color';
+import { IconName, toIconName } from '@/utils/icons';
 import { leadStatusLabel } from '@/utils/lead-types';
-import { formatPaisa } from '@/utils/money';
+import { formatPaisa, formatRate } from '@/utils/money';
 import { requirementLabel } from '@/utils/tiers';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -31,7 +32,7 @@ const payoutDayLabel = (dateString: string) => {
 
 export default function DashboardScreen() {
   const router = useRouter();
-  const { colors } = useAppTheme();
+  const { colors, isDark } = useAppTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
   const { user, activeMembership, activeMemberships, needsProgramChoice } = useAuth();
 
@@ -88,15 +89,21 @@ export default function DashboardScreen() {
   }
 
   const earnings = data?.earnings;
-  const quickActions: { label: string; icon: IconName; route: Href }[] = [
-    { label: 'Check in', icon: 'location', route: '/(app)/visits/checkin' },
-    { label: 'New lead', icon: 'person-add', route: '/(app)/leads/create' },
-    { label: 'Log call', icon: 'call', route: '/(app)/call-logs/create' },
-    { label: 'Near me', icon: 'map', route: '/(app)/map' as Href },
-    { label: 'Pitch kit', icon: 'easel', route: '/(app)/pitch' as Href },
-    { label: 'My stock', icon: 'bag-handle', route: '/(app)/inventory' },
-    { label: 'Coupons', icon: 'pricetag', route: '/(app)/coupons' },
+  // Each action has a colour that matches what it does: green to go out, orange to grow
+  // (leads, codes), blue to talk, teal to find, purple for the kit and stock
+  const quickActions: { label: string; icon: IconName; route: Href; color: string; anchor?: boolean }[] = [
+    { label: 'Check in', icon: 'location', route: '/(app)/visits/checkin', color: colors.success, anchor: true },
+    { label: 'New lead', icon: 'person-add', route: '/(app)/leads/create', color: colors.secondary },
+    { label: 'Log call', icon: 'call', route: '/(app)/call-logs/create', color: colors.info },
+    { label: 'Near me', icon: 'map', route: '/(app)/map' as Href, color: colors.accent },
+    { label: 'Pitch kit', icon: 'easel', route: '/(app)/pitch' as Href, color: colors.primary },
+    { label: 'My stock', icon: 'bag-handle', route: '/(app)/inventory', color: colors.chart5 },
+    { label: 'Coupons', icon: 'pricetag', route: '/(app)/coupons', color: colors.secondary },
   ];
+  const currentTier = data?.membership?.tier ?? activeMembership?.tier ?? null;
+  const currentTierColor = readableColor(currentTier?.color, colors.primary, isDark);
+  const nextTier = data?.progress?.next_tier;
+  const nextTierColor = readableColor(nextTier?.color, colors.secondary, isDark);
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
@@ -106,22 +113,30 @@ export default function DashboardScreen() {
         contentContainerStyle={{ paddingBottom: 32 }}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); setGoalTick((t) => t + 1); load(); }} tintColor={colors.primary} />}
       >
-        <LinearGradient colors={['#6C3CE1', '#8B5CF6']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.header}>
+        <LinearGradient
+          colors={isDark ? ['#2A1B5C', colors.primary400] : [colors.primary700, colors.primary500]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.header}
+        >
+          {/* A warm orange glow in the corner so the header isn't one flat purple */}
+          <View pointerEvents="none" style={[styles.glow, { backgroundColor: colors.secondary }]} />
           <View style={styles.headerTop}>
             <Logo size="large" backdropColor="darker" />
-            <TouchableOpacity style={styles.qrButton} onPress={() => router.push('/(app)/referral')}>
-              <Ionicons name="qr-code-outline" size={20} color="#fff" />
+            <TouchableOpacity style={[styles.qrButton, { backgroundColor: colors.secondary }]} onPress={() => router.push('/(app)/referral')}>
+              <Ionicons name="qr-code-outline" size={20} color={colors.secondaryForeground} />
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.programPill}
               onPress={() => setShowSwitcher(true)}
-              disabled={activeMemberships.length < 2}
+              // Also opens with one usable program, to see programs that are paused or pending
+              disabled={(user?.memberships?.length ?? 0) < 2}
             >
               <Text style={styles.programPillText} numberOfLines={1}>
                 {activeMembership?.program?.name}
                 {activeMembership?.tier ? ` • ${activeMembership.tier.name}` : ''}
               </Text>
-              {activeMemberships.length > 1 && <Ionicons name="chevron-down" size={14} color="#fff" />}
+              {(user?.memberships?.length ?? 0) > 1 && <Ionicons name="chevron-down" size={14} color="#fff" />}
             </TouchableOpacity>
           </View>
 
@@ -131,13 +146,25 @@ export default function DashboardScreen() {
             <View style={styles.hero}>
               <Text style={styles.heroLabel}>Earned this week</Text>
               <Text style={styles.heroValue}>{formatPaisa(earnings.this_week_paisa)}</Text>
-              <Text style={styles.heroSub}>
-                {earnings.payout_delayed
-                  ? `Payout delayed${earnings.delay_reason ? `: ${earnings.delay_reason}` : ''}`
-                  : earnings.next_payout_paisa > 0
-                    ? `${formatPaisa(earnings.next_payout_paisa)} paid ${payoutDayLabel(earnings.next_payout_date)}`
-                    : `Next payout ${payoutDayLabel(earnings.next_payout_date)}`}
-              </Text>
+              <View
+                style={[
+                  styles.payoutPill,
+                  { backgroundColor: earnings.payout_delayed ? colors.destructive : colors.secondary },
+                ]}
+              >
+                <Ionicons
+                  name={earnings.payout_delayed ? 'time-outline' : 'wallet-outline'}
+                  size={13}
+                  color={earnings.payout_delayed ? '#fff' : colors.secondaryForeground}
+                />
+                <Text style={[styles.payoutPillText, { color: earnings.payout_delayed ? '#fff' : colors.secondaryForeground }]} numberOfLines={2}>
+                  {earnings.payout_delayed
+                    ? `Payout delayed${earnings.delay_reason ? `: ${earnings.delay_reason}` : ''}`
+                    : earnings.next_payout_paisa > 0
+                      ? `${formatPaisa(earnings.next_payout_paisa)} paid ${payoutDayLabel(earnings.next_payout_date)}`
+                      : `Next payout ${payoutDayLabel(earnings.next_payout_date)}`}
+                </Text>
+              </View>
               <View style={styles.heroDivider} />
               <View style={styles.heroRow}>
                 <HeroStat label="Lifetime" value={formatPaisa(earnings.lifetime_paisa)} />
@@ -159,11 +186,12 @@ export default function DashboardScreen() {
           {quickActions.map((action) => (
             <TouchableOpacity
               key={action.label}
-              style={[styles.quickAction, { backgroundColor: colors.card, borderColor: colors.border }]}
-              onPress={() => router.push(action.route)}
+              style={[styles.quickAction, { backgroundColor: colors.card, borderColor: action.color + '40' }]}
+              // Check-in opens in the Visits tab on top of its list, so Back lands there
+              onPress={() => router.push(action.route, action.anchor ? { withAnchor: true } : undefined)}
             >
-              <View style={[styles.quickIcon, { backgroundColor: colors.primary + '15' }]}>
-                <Ionicons name={action.icon} size={22} color={colors.primary} />
+              <View style={[styles.quickIcon, { backgroundColor: action.color + (isDark ? '30' : '1A') }]}>
+                <Ionicons name={action.icon} size={22} color={action.color} />
               </View>
               <Text style={[typography.caption, { color: colors.foreground, fontWeight: '600' }]}>{action.label}</Text>
             </TouchableOpacity>
@@ -175,9 +203,15 @@ export default function DashboardScreen() {
             <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
               <Text style={[typography.body1, styles.cardTitle, { color: colors.foreground }]}>Today</Text>
               <View style={styles.todayRow}>
-                <TodayStat icon="location-outline" label="Visits" value={data.today.visits} colors={colors} />
-                <TodayStat icon="call-outline" label="Calls" value={data.today.calls} colors={colors} />
-                <TodayStat icon="alarm-outline" label="Follow-ups due" value={data.follow_ups_due.length} colors={colors} />
+                <TodayStat icon="location-outline" label="Visits" value={data.today.visits} color={colors.success} colors={colors} />
+                <TodayStat icon="call-outline" label="Calls" value={data.today.calls} color={colors.info} colors={colors} />
+                <TodayStat
+                  icon="alarm-outline"
+                  label="Follow-ups due"
+                  value={data.follow_ups_due.length}
+                  color={data.follow_ups_due.length > 0 ? colors.secondary : colors.mutedForeground}
+                  colors={colors}
+                />
               </View>
             </View>
 
@@ -213,26 +247,68 @@ export default function DashboardScreen() {
               </View>
             )}
 
-            {data.progress && (
+            {(data.progress || currentTier) && (
               <TouchableOpacity
-                style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}
+                style={[styles.card, { backgroundColor: colors.card, borderColor: currentTierColor + '55' }]}
                 onPress={() => router.push('/(app)/tiers')}
               >
-                <View style={styles.progressHeader}>
-                  <Text style={[typography.body1, styles.cardTitle, { color: colors.foreground }]}>
-                    Road to {data.progress.next_tier.name}
-                  </Text>
-                  <Text style={[typography.caption, { color: colors.mutedForeground }]}>{data.progress.percent}%</Text>
+                {/* Where they are now → where they're heading, each in its tier colour */}
+                <View style={styles.tierRoad}>
+                  <TierBadge
+                    label={currentTier ? 'You are' : 'Starting out'}
+                    name={currentTier?.name ?? 'No tier yet'}
+                    icon={toIconName(currentTier?.icon, currentTier ? 'medal-outline' : 'footsteps-outline')}
+                    color={currentTier ? currentTierColor : colors.mutedForeground}
+                    rate={currentTier ? formatRate(currentTier.first_year_rate_bp) : null}
+                    colors={colors}
+                  />
+                  {nextTier ? (
+                    <>
+                      <Ionicons name="arrow-forward" size={18} color={colors.mutedForeground} />
+                      <TierBadge
+                        label="Next"
+                        name={nextTier.name}
+                        icon={toIconName(nextTier.icon, 'trophy-outline')}
+                        color={nextTierColor}
+                        rate={nextTier.first_year_rate_bp != null ? formatRate(nextTier.first_year_rate_bp) : null}
+                        colors={colors}
+                      />
+                    </>
+                  ) : null}
                 </View>
-                <View style={[styles.progressTrack, { backgroundColor: colors.border }]}>
-                  <View style={[styles.progressFill, { width: `${data.progress.percent}%`, backgroundColor: colors.primary }]} />
-                </View>
-                {Object.entries(data.progress.requirements).map(([key, requirement]) => (
-                  <Text key={key} style={[typography.caption, { color: requirement.met ? colors.success : colors.mutedForeground }]}>
-                    {requirement.met ? '✓ ' : ''}
-                    {Math.min(requirement.current, requirement.required)} / {requirement.required} {requirementLabel(key)}
-                  </Text>
-                ))}
+
+                {data.progress ? (
+                  <>
+                    <View style={styles.progressHeader}>
+                      <Text style={[typography.body1, styles.cardTitle, { color: colors.foreground }]}>
+                        Road to {data.progress.next_tier.name}
+                      </Text>
+                      <Text style={[typography.caption, { color: nextTierColor, fontWeight: '700' }]}>{data.progress.percent}%</Text>
+                    </View>
+                    <View style={[styles.progressTrack, { backgroundColor: colors.border }]}>
+                      <LinearGradient
+                        colors={[currentTier ? currentTierColor : colors.primary, nextTierColor]}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 0 }}
+                        style={[styles.progressFill, { width: `${Math.max(data.progress.percent, 3)}%` }]}
+                      />
+                    </View>
+                    {Object.entries(data.progress.requirements).map(([key, requirement]) => (
+                      <View key={key} style={styles.requirementRow}>
+                        <Ionicons
+                          name={requirement.met ? 'checkmark-circle' : 'ellipse-outline'}
+                          size={14}
+                          color={requirement.met ? colors.success : colors.mutedForeground}
+                        />
+                        <Text style={[typography.caption, { color: requirement.met ? colors.success : colors.mutedForeground }]}>
+                          {Math.min(requirement.current, requirement.required)} / {requirement.required} {requirementLabel(key)}
+                        </Text>
+                      </View>
+                    ))}
+                  </>
+                ) : (
+                  <Text style={[typography.body2, { color: currentTierColor, fontWeight: '600' }]}>You're at the top tier. Keep it up!</Text>
+                )}
               </TouchableOpacity>
             )}
 
@@ -250,9 +326,9 @@ export default function DashboardScreen() {
                   <TouchableOpacity
                     key={visit.id}
                     style={[styles.todoRow, { borderTopColor: colors.border }]}
-                    onPress={() => router.push({ pathname: '/(app)/visits/[id]', params: { id: visit.id } })}
+                    onPress={() => router.push({ pathname: '/(app)/visits/[id]', params: { id: visit.id } }, { withAnchor: true })}
                   >
-                    <Ionicons name="location-outline" size={18} color={colors.mutedForeground} />
+                    <Ionicons name="location-outline" size={18} color={colors.success} />
                     <Text style={[typography.body2, { flex: 1, color: colors.foreground }]} numberOfLines={1}>{visit.venue?.name}</Text>
                     <Text style={[typography.caption, { color: colors.mutedForeground }]}>{new Date(visit.visited_at).toLocaleDateString()}</Text>
                   </TouchableOpacity>
@@ -276,7 +352,7 @@ export default function DashboardScreen() {
                     style={[styles.todoRow, { borderTopColor: colors.border }]}
                     onPress={() => router.push({ pathname: '/(app)/leads/[id]', params: { id: lead.id } })}
                   >
-                    <Ionicons name="person-outline" size={18} color={colors.mutedForeground} />
+                    <Ionicons name="person-outline" size={18} color={colors.secondary} />
                     <Text style={[typography.body2, { flex: 1, color: colors.foreground }]} numberOfLines={1}>{lead.display_name}</Text>
                     <Text style={[typography.caption, { color: colors.mutedForeground }]}>{leadStatusLabel(lead.status)}</Text>
                   </TouchableOpacity>
@@ -309,20 +385,61 @@ function HeroStat({ label, value }: { label: string; value: string }) {
   );
 }
 
-function TodayStat({ icon, label, value, colors }: { icon: IconName; label: string; value: number; colors: AppColors }) {
+function TodayStat({ icon, label, value, color, colors }: { icon: IconName; label: string; value: number; color: string; colors: AppColors }) {
   return (
     <View style={{ flex: 1, alignItems: 'center', gap: 2 }}>
-      <Ionicons name={icon} size={20} color={colors.primary} />
+      <View style={{ width: 34, height: 34, borderRadius: 17, alignItems: 'center', justifyContent: 'center', backgroundColor: color + '1A' }}>
+        <Ionicons name={icon} size={18} color={color} />
+      </View>
       <Text style={[typography.h5, { color: colors.foreground, fontWeight: '700' }]}>{value}</Text>
       <Text style={[typography.caption, { color: colors.mutedForeground }]}>{label}</Text>
     </View>
   );
 }
 
+function TierBadge({
+  label,
+  name,
+  icon,
+  color,
+  rate,
+  colors,
+}: {
+  label: string;
+  name: string;
+  icon: IconName;
+  color: string;
+  rate: string | null;
+  colors: AppColors;
+}) {
+  return (
+    <View style={[tierBadgeStyles.badge, { backgroundColor: color + '14', borderColor: color + '55' }]}>
+      <View style={[tierBadgeStyles.icon, { backgroundColor: color + '26' }]}>
+        <Ionicons name={icon} size={20} color={color} />
+      </View>
+      <View style={{ flex: 1 }}>
+        <Text style={[typography.caption, { color: colors.mutedForeground }]}>{label}</Text>
+        <Text style={[typography.body2, { color, fontWeight: '800' }]} numberOfLines={1}>{name}</Text>
+        {rate && <Text style={[typography.caption, { color: colors.foreground }]}>{rate} commission</Text>}
+      </View>
+    </View>
+  );
+}
+
+const tierBadgeStyles = StyleSheet.create({
+  badge: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8, padding: 8, borderRadius: 12, borderWidth: 1 },
+  icon: { width: 34, height: 34, borderRadius: 17, alignItems: 'center', justifyContent: 'center' },
+});
+
 const createStyles = (colors: AppColors) =>
   StyleSheet.create({
     centered: { flex: 1, justifyContent: 'center', alignItems: 'center', gap: 12, padding: 32 },
-    header: { paddingTop: 48, paddingHorizontal: 16, paddingBottom: 20, borderBottomLeftRadius: 24, borderBottomRightRadius: 24 },
+    header: { paddingTop: 48, paddingHorizontal: 16, paddingBottom: 20, borderBottomLeftRadius: 24, borderBottomRightRadius: 24, overflow: 'hidden' },
+    glow: { position: 'absolute', width: 220, height: 220, borderRadius: 110, right: -70, bottom: -110, opacity: 0.28 },
+    payoutPill: { flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-start', gap: 5, marginTop: 6, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12, maxWidth: '100%' },
+    payoutPillText: { fontSize: 12, fontWeight: '700', flexShrink: 1 },
+    tierRoad: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+    requirementRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
     headerTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
     qrButton: { marginLeft: 'auto', width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(255,255,255,0.18)' },
     programPill: {

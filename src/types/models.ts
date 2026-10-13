@@ -91,7 +91,7 @@ export interface TierRequirementProgress {
 }
 
 export interface TierProgress {
-  next_tier: { id: number; name: string; level: number };
+  next_tier: { id: number; name: string; level: number; color?: string | null; icon?: string | null; first_year_rate_bp?: number };
   requirements: Record<string, TierRequirementProgress>;
   percent: number;
 }
@@ -242,6 +242,8 @@ export interface Visit {
   dropoffs?: Dropoff[];
   // Shop photos and voice memos (detail endpoint only)
   attachments?: Attachment[];
+  // Leads made from this visit (only on the visit detail)
+  leads?: { id: number; display_name: string; status: LeadStatus }[];
   created_at: string;
 }
 

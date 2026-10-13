@@ -258,6 +258,28 @@ export default function VisitDetailScreen() {
 
         {/* Actions */}
         <View style={styles.actionsContainer}>
+          {visit.status !== 'cancelled' && visit.id > 0 && (
+            visit.leads && visit.leads.length > 0 ? (
+              <TouchableOpacity
+                style={[styles.actionButton, styles.outlineButton, { borderColor: colors.secondary }]}
+                onPress={() => router.push({ pathname: '/(app)/leads/[id]', params: { id: visit.leads![0].id } })}
+              >
+                <Ionicons name="person-outline" size={20} color={colors.secondary} />
+                <Text style={[typography.button, styles.actionButtonText, { color: colors.secondary }]} numberOfLines={1}>
+                  Open lead: {visit.leads[0].display_name}
+                </Text>
+              </TouchableOpacity>
+            ) : (
+              <TouchableOpacity
+                style={[styles.actionButton, { backgroundColor: colors.secondary }]}
+                onPress={() => router.push({ pathname: '/(app)/leads/create', params: { venueId: visit.venue_id, visitId: visit.id } })}
+                disabled={saving}
+              >
+                <Ionicons name="person-add-outline" size={20} color={colors.secondaryForeground} />
+                <Text style={[typography.button, styles.actionButtonText, { color: colors.secondaryForeground }]}>Convert to lead</Text>
+              </TouchableOpacity>
+            )
+          )}
           {visit.status === 'planned' && (
             <TouchableOpacity
               style={[styles.actionButton, styles.outlineButton, { borderColor: colors.border }]}
