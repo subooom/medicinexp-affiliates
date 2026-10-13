@@ -1,6 +1,7 @@
 // app/(app)/leaderboard.tsx — this week's top reps in the program
 import { fieldApi } from '@/api/field';
 import { Card, EmptyState, ScreenHeader } from '@/components/ui';
+import { useAuth } from '@/context/AuthContext';
 import { useAppTheme } from '@/hooks/use-app-theme';
 import { typography } from '@/styles/typography';
 import { Leaderboard, LeaderboardRow } from '@/types/models';
@@ -28,9 +29,11 @@ export default function LeaderboardScreen() {
     }
   }, []);
 
+  // Stays mounted: reload when the rep switches program
+  const programId = useAuth().activeMembership?.program?.id;
   useEffect(() => {
     load();
-  }, [load]);
+  }, [load, programId]);
 
   const rows: LeaderboardRow[] = board ? (tab === 'sales' ? board.by_sales : board.by_score) : [];
   const myRank = board ? (tab === 'sales' ? board.my_rank_sales : board.my_rank_score) : null;

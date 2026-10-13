@@ -26,6 +26,8 @@ export interface Program {
   name: string;
   slug: string;
   kind: 'saas' | 'pharma' | 'other';
+  // false = paused by MedicineXP: listed in the picker but can't be chosen
+  is_active?: boolean;
   description: string | null;
   logo_url: string | null;
   contact_name: string | null;

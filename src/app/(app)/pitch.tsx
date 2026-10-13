@@ -2,6 +2,7 @@
 // demo video, both available offline
 import { fieldApi } from '@/api/field';
 import { Button, Card, EmptyState, ScreenHeader, SectionTitle } from '@/components/ui';
+import { useAuth } from '@/context/AuthContext';
 import { useAppTheme } from '@/hooks/use-app-theme';
 import { demoVideo } from '@/offline/demo-video';
 import { typography } from '@/styles/typography';
@@ -45,9 +46,19 @@ export default function PitchScreen() {
     }
   }, []);
 
+  // This screen stays mounted: start over when the rep switches program, so the old
+  // program's kit, products and video never show under the new one
+  const programId = useAuth().activeMembership?.program?.id;
   useEffect(() => {
+    setLoading(true);
+    setKit(null);
+    setProducts([]);
+    setVideoUri(null);
+    setProductOpen(null);
+    setOpen(0);
+    setSearch('');
     load();
-  }, [load]);
+  }, [load, programId]);
 
   const download = async () => {
     if (!kit?.demo_video) return;

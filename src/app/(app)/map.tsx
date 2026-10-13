@@ -3,6 +3,7 @@
 // Offline, the list still works from venues saved on the phone.
 import { fieldApi } from '@/api/field';
 import { Card, ScreenHeader } from '@/components/ui';
+import { useAuth } from '@/context/AuthContext';
 import { useAppTheme } from '@/hooks/use-app-theme';
 import { network } from '@/offline/network';
 import { venueIndex } from '@/offline/venue-index';
@@ -106,9 +107,11 @@ export default function MapScreen() {
     }
   }, []);
 
+  // Stays mounted: reload when the rep switches program (visit status is per program)
+  const programId = useAuth().activeMembership?.program?.id;
   useEffect(() => {
     load(radius);
-  }, [load, radius]);
+  }, [load, radius, programId]);
 
   const shown = useMemo(() => (filter ? pins.filter((p) => p.my_status === filter) : pins), [pins, filter]);
   const html = useMemo(() => (here ? leafletHtml(here, shown) : null), [here, shown]);

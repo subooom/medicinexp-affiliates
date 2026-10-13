@@ -1,5 +1,6 @@
 // src/hooks/data/use-visits.ts
 import { visitApi } from '@/api/visits';
+import { useAuth } from '@/context/AuthContext';
 import { Visit, VisitFilters } from '@/types/models';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { sendOrQueue } from '@/offline/send';
@@ -70,12 +71,14 @@ export function useVisits(filters?: VisitFilters): UseVisitsResult {
     }
   }, [fetchPage]);
 
+  // The visits tab stays mounted: reload when the rep switches program
+  const programId = useAuth().activeMembership?.program?.id;
   useEffect(() => {
     setLoading(true);
     loadFirstPage().finally(() => {
       if (isMounted.current) setLoading(false);
     });
-  }, [loadFirstPage]);
+  }, [loadFirstPage, programId]);
 
   const refresh = useCallback(async () => {
     setRefreshing(true);

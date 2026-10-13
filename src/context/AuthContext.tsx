@@ -24,7 +24,16 @@ interface AuthContextType {
   logout: () => Promise<void>;
   switchProgram: (programId: number) => Promise<void>;
   checkAuthStatus: () => Promise<void>;
+  // Re-read memberships from the server (e.g. a program was paused); keeps the session on failure
+  refreshUser: () => Promise<void>;
 }
+
+/**
+ * A membership the rep can work in: approved, and its program not paused by MedicineXP.
+ * (Older servers don't send is_active; treat that as on.)
+ */
+export const isUsableMembership = (membership: Membership) =>
+  membership.status === 'active' && !!membership.program && membership.program.is_active !== false;
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -32,7 +41,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
  * The program to use: the server's saved choice, else the only active membership.
  */
 function pickActiveProgramId(user: User): number | null {
-  const active = user.memberships.filter((m) => m.status === 'active' && m.program);
+  const active = user.memberships.filter(isUsableMembership);
   if (user.active_program_id && active.some((m) => m.program!.id === user.active_program_id)) {
     return user.active_program_id;
   }
@@ -127,9 +136,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const activeMemberships = useMemo(
-    () => (user?.memberships ?? []).filter((m) => m.status === 'active' && m.program),
+    () => (user?.memberships ?? []).filter(isUsableMembership),
     [user]
   );
+
+  const refreshUser = useCallback(async () => {
+    try {
+      const response = await authApi.me();
+      await applyUser(response.data.data);
+    } catch {
+      // Offline or a hiccup: keep what we have
+    }
+  }, [applyUser]);
   const activeMembership = activeMemberships.find((m) => m.program!.id === activeProgramId) ?? null;
 
   const value: AuthContextType = {
@@ -144,6 +162,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     logout,
     switchProgram,
     checkAuthStatus,
+    refreshUser,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

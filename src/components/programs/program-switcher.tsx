@@ -1,10 +1,10 @@
 // src/components/programs/program-switcher.tsx
-import { useAuth } from '@/context/AuthContext';
+import { isUsableMembership, useAuth } from '@/context/AuthContext';
 import { useAppTheme } from '@/hooks/use-app-theme';
 import { typography } from '@/styles/typography';
 import { Membership } from '@/types/models';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 interface ProgramSwitcherProps {
@@ -22,13 +22,21 @@ interface ProgramSwitcherProps {
  */
 export function ProgramSwitcher({ visible, onClose, onSwitched, required }: ProgramSwitcherProps) {
   const { colors } = useAppTheme();
-  const { user, activeMembership, switchProgram } = useAuth();
+  const { user, activeMembership, switchProgram, refreshUser } = useAuth();
   const [switching, setSwitching] = useState<number | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
 
   const memberships = user?.memberships ?? [];
 
+  // Fresh statuses each time it opens: a program may have been paused since login
+  useEffect(() => {
+    if (!visible) return;
+    setRefreshing(true);
+    refreshUser().finally(() => setRefreshing(false));
+  }, [visible, refreshUser]);
+
   const choose = async (membership: Membership) => {
-    if (!membership.program || membership.status !== 'active') return;
+    if (!membership.program || !isUsableMembership(membership)) return;
     if (membership.program.id === activeMembership?.program?.id) {
       onClose();
       return;
@@ -53,6 +61,7 @@ export function ProgramSwitcher({ visible, onClose, onSwitched, required }: Prog
             <Text style={[typography.h5, { color: colors.foreground, flex: 1 }]}>
               {required ? 'Which program are you working for?' : 'Switch program'}
             </Text>
+            {refreshing && <ActivityIndicator size="small" color={colors.mutedForeground} style={{ marginRight: 8 }} />}
             {!required && (
               <TouchableOpacity onPress={onClose}>
                 <Ionicons name="close" size={24} color={colors.mutedForeground} />
@@ -64,7 +73,8 @@ export function ProgramSwitcher({ visible, onClose, onSwitched, required }: Prog
             const program = membership.program;
             if (!program) return null;
             const active = program.id === activeMembership?.program?.id;
-            const usable = membership.status === 'active';
+            const usable = isUsableMembership(membership);
+            const paused = membership.status === 'active' && program.is_active === false;
 
             return (
               <TouchableOpacity
@@ -78,23 +88,30 @@ export function ProgramSwitcher({ visible, onClose, onSwitched, required }: Prog
                 disabled={!usable || switching !== null}
                 onPress={() => choose(membership)}
               >
-                <View style={[styles.logo, { backgroundColor: colors.primary + '15' }]}>
-                  <Text style={[typography.body1, { color: colors.primary, fontWeight: '700' }]}>{program.name.charAt(0)}</Text>
+                <View style={[styles.logo, { backgroundColor: (paused ? colors.mutedForeground : colors.primary) + '15' }]}>
+                  <Text style={[typography.body1, { color: paused ? colors.mutedForeground : colors.primary, fontWeight: '700' }]}>{program.name.charAt(0)}</Text>
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={[typography.body1, { color: colors.foreground, fontWeight: '600' }]}>{program.name}</Text>
-                  <Text style={[typography.caption, { color: colors.mutedForeground }]}>
+                  <Text style={[typography.caption, { color: paused ? colors.warning : colors.mutedForeground }]}>
                     {usable
                       ? [membership.tier?.name, `Code ${membership.referral_code}`].filter(Boolean).join(' • ')
-                      : membership.status === 'invited'
-                        ? 'Invitation waiting'
-                        : 'Waiting for approval'}
+                      : paused
+                        ? 'Paused by MedicineXP. You can switch to it once it is back on.'
+                        : membership.status === 'invited'
+                          ? 'Invitation waiting'
+                          : 'Waiting for approval'}
                   </Text>
                 </View>
                 {switching === program.id ? (
                   <ActivityIndicator color={colors.primary} />
                 ) : active ? (
                   <Ionicons name="checkmark-circle" size={22} color={colors.primary} />
+                ) : paused ? (
+                  <View style={[styles.statusPill, { backgroundColor: colors.warning + '20' }]}>
+                    <Ionicons name="pause" size={12} color={colors.warning} />
+                    <Text style={[typography.caption, { color: colors.warning, fontWeight: '700' }]}>Paused</Text>
+                  </View>
                 ) : null}
               </TouchableOpacity>
             );
@@ -111,4 +128,5 @@ const styles = StyleSheet.create({
   titleRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 4 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 12, borderRadius: 12, borderWidth: 1 },
   logo: { width: 40, height: 40, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
+  statusPill: { flexDirection: 'row', alignItems: 'center', gap: 3, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 10 },
 });
