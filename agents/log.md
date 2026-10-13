@@ -2,6 +2,8 @@
 
 One line per change: date · what · where (PR/branch). Append when you finish work.
 
+- 2026-10-14 · agents/architecture.md is the single entry point (index, keep-current rules,
+  anti-abuse); replaces overview.md; CLAUDE.md imports it · PR #2.
 - 2026-10-14 · AGENTS.md + agents/ docs; checklist.txt (owner's open-work list).
 - 2026-10-13 · Leads "Open" filter sends 1/0; Back from a lead → leads list; visits link the shop's
   lead; lead Sale card + "Convert to sale" (non-MedicineXP) · PR #2 (feat-lead-sales, stacked on #1).
