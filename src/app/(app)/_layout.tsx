@@ -22,6 +22,7 @@ const HIDDEN_ROUTES = [
   'sync',
   'leaderboard',
   'team-up',
+  'guide',
 ];
 
 export default function AppLayout() {
@@ -30,6 +31,9 @@ export default function AppLayout() {
   return (
     <>
     <Tabs
+      // Back returns to the screen you came from (e.g. Profile -> Pitch kit -> Back = Profile),
+      // not to the first tab. Hidden routes are tabs too, so the default sent them to the dashboard.
+      backBehavior="history"
       screenOptions={({ route }) => ({
         tabBarIcon: ({ focused, color, size }) => {
           let iconName: keyof typeof Ionicons.glyphMap = 'home-outline';

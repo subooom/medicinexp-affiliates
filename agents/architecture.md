@@ -57,6 +57,10 @@ Open work: `checklist.txt` (owner's list) · older roadmap `TODO.md`. Paths are 
 - `constants/colors.ts`: theme tokens, mirrored in `global.css`; `secondary` = orange #FF8A00.
 
 ## Navigation patterns
+- Tabs use `backBehavior="history"`: Back from a hidden route (pitch, tiers, guide…) returns to the screen
+  it was opened from, not the dashboard.
+- Guide: `(app)/guide.tsx` renders `api/guide.ts` (server `/guide` JSON, cached, bundled copy in
+  `src/content/rep-guide.json`; copy the server file there when it changes). Language: `utils/language.ts`.
 - Tabs stay mounted: one-time loaders must reload when `useAuth().activeMembership?.program?.id` changes.
 - Cross-tab opens: `router.push(href, { withAnchor: true })` + target stack
   `unstable_settings = { initialRouteName: 'index' }` (visits, leads) so Back lands on the list.

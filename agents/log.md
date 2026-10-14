@@ -2,6 +2,8 @@
 
 One line per change: date · what · where (PR/branch). Append when you finish work.
 
+- 2026-10-15 · Guide screen (FAQ + sections, EN/ने, links to live screens) linked from Profile; welcome tour
+  rewritten (5 slides, EN/ने, returns where it was opened); Back goes to the previous screen · feat-guide.
 - 2026-10-15 · Check-in: "Pitching here" program checkboxes (active ticked by default), materials of
   ticked programs only (active first, others labelled "From X"), each ticked program's pitch kit in the
   form (`components/field/pitch-kit-card.tsx`); sends `programs` · feat-checkin-pitch.

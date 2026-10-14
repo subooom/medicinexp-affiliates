@@ -1,11 +1,13 @@
-// app/onboarding/index.tsx
+// app/onboarding/index.tsx — the short welcome tour (English / नेपाली). Opened from the login
+// screen or Profile; finishing goes back there. The Guide (app)/guide has the details.
 import { IconName } from '@/utils/icons';
 import { Logo } from '@/components/common/logo';
 import { AppColors } from '@/constants/colors';
 import { useAppTheme } from '@/hooks/use-app-theme';
 import { typography } from '@/styles/typography';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { router } from 'expo-router';
+import { Href, router, useLocalSearchParams } from 'expo-router';
+import { Localized, pick, setLanguage, useLanguage } from '@/utils/language';
 import { useRef, useState } from 'react';
 import {
   Animated,
@@ -22,11 +24,19 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 
 interface OnboardingSlide {
   id: string;
-  title: string;
-  description: string;
+  title: Localized;
+  description: Localized;
   icon: IconName;
   color: string;
 }
+
+const TEXT = {
+  next: { en: 'Next', ne: 'अर्को' },
+  skip: { en: 'Skip', ne: 'छोड्नुहोस्' },
+  start: { en: 'Get started', ne: 'सुरु गरौं' },
+  done: { en: 'Done', ne: 'सकियो' },
+  guide: { en: 'Read the full guide', ne: 'पूरा गाइड पढ्नुहोस्' },
+};
 
 export default function OnboardingScreen() {
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -36,39 +46,77 @@ export default function OnboardingScreen() {
   const { width: windowWidth } = useWindowDimensions();
   const styles = createStyles(colors);
 
+  const language = useLanguage();
+  const t = (text: Localized) => pick(text, language);
+  // Opened from Profile (signed in) or from the login screen: finishing goes back there
+  const { returnTo } = useLocalSearchParams<{ returnTo?: string }>();
+  const signedIn = !!returnTo && returnTo.includes('(app)');
+
+  // The current rules in five steps; the Guide has the details
   const slides: OnboardingSlide[] = [
     {
       id: '1',
-      title: 'Earn with Every Visit',
-      description: 'Check in at pharmacies, share coupons, and earn commissions on every sale.',
-      icon: 'location-outline',
+      title: { en: 'Bring pharmacies on board', ne: 'फार्मेसीलाई जोड्नुहोस्' },
+      description: {
+        en: 'Visit pharmacies, show them what your program offers, and earn when they sign up and pay.',
+        ne: 'फार्मेसी जानुहोस्, प्रोग्रामले के दिन्छ देखाउनुहोस्, र उनीहरू साइन अप गरी भुक्तानी गरेपछि कमाउनुहोस्।',
+      },
+      icon: 'storefront-outline',
       color: colors.primary,
     },
     {
       id: '2',
-      title: 'Share Coupons, Get Paid',
-      description: 'Give your unique coupon codes to customers. When they buy, you earn instantly.',
-      icon: 'cash-outline',
+      title: { en: 'Check in at every shop', ne: 'हरेक पसलमा चेक-इन' },
+      description: {
+        en: 'Check in where you are, leave materials and add a shop photo. The pitch kit is right there in the form, and it all works without internet.',
+        ne: 'भएकै ठाउँमा चेक-इन गर्नुहोस्, सामग्री छोड्नुहोस् र पसलको फोटो थप्नुहोस्। पिच किट फारममै छ, र इन्टरनेट बिना पनि सबै चल्छ।',
+      },
+      icon: 'location-outline',
       color: '#10B981',
     },
     {
       id: '3',
-      title: 'Level Up, Earn More',
-      description: 'More visits and sales = higher commission rates. Start earning today!',
+      title: { en: 'Leads and your code', ne: 'लिड र तपाईंको कोड' },
+      description: {
+        en: 'Save interested shops as leads and follow up. They sign up with your code or a link you send. A discount on your code comes out of your commission.',
+        ne: 'चासो भएका पसल लिडमा राख्नुहोस् र फलो-अप गर्नुहोस्। उनीहरू तपाईंको कोड वा पठाएको लिंकबाट साइन अप गर्छन्। कोडको छुट तपाईंको कमिसनबाट कटौती हुन्छ।',
+      },
+      icon: 'pricetag-outline',
+      color: colors.secondary,
+    },
+    {
+      id: '4',
+      title: { en: 'Earn more as you grow', ne: 'बढ्दै जाँदा बढी कमाइ' },
+      description: {
+        en: 'Your tier sets your rate, and the rate is locked for each pharmacy you sign. Tiers only go up. Weekly activity adds a bonus to every sale.',
+        ne: 'टियरले दर तय गर्छ, र साइन गरेको हरेक फार्मेसीको दर स्थिर रहन्छ। टियर माथि मात्र जान्छ। हप्ताको कामले हरेक बिक्रीमा बोनस थप्छ।',
+      },
       icon: 'trophy-outline',
       color: '#F59E0B',
+    },
+    {
+      id: '5',
+      title: { en: 'Work together', ne: 'मिलेर काम गर्नुहोस्' },
+      description: {
+        en: 'Out with another rep? Team up for the day and agree a split together. Sales from that day are shared your way.',
+        ne: 'अर्को रेपसँग हुनुहुन्छ? दिनभरका लागि Team up गर्नुहोस् र सँगै भाग तय गर्नुहोस्। त्यो दिनको बिक्री त्यही अनुसार बाँडिन्छ।',
+      },
+      icon: 'people-outline',
+      color: colors.accent,
     },
   ];
 
   const handleComplete = async () => {
-    try {
-      await AsyncStorage.setItem('hasSeenOnboarding', 'true');
-      router.replace('/auth/login');
-    } catch (error) {
-      console.error('Error saving onboarding status:', error);
-      router.replace('/auth/login');
+    await AsyncStorage.setItem('hasSeenOnboarding', 'true').catch(() => undefined);
+    // Back to where the tour was opened from (Profile or the login screen)
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace((returnTo || '/auth/login') as Href);
     }
   };
+
+  const openGuide = () => router.replace('/(app)/guide');
 
   const handleNext = () => {
     if (currentIndex < slides.length - 1) {
@@ -107,11 +155,11 @@ export default function OnboardingScreen() {
       </View>
 
       <Text style={[typography.h2, styles.title, { color: colors.foreground }]}>
-        {item.title}
+        {t(item.title)}
       </Text>
 
       <Text style={[typography.body1, styles.description, { color: colors.mutedForeground }]}>
-        {item.description}
+        {t(item.description)}
       </Text>
     </View>
   );
@@ -122,6 +170,16 @@ export default function OnboardingScreen() {
       <View style={styles.logoContainer}>
         <Logo size="medium" />
       </View>
+
+      {/* English / नेपाली */}
+      <TouchableOpacity
+        style={[styles.languageButton, { borderColor: colors.primary, backgroundColor: colors.primary + '14' }]}
+        onPress={() => setLanguage(language === 'en' ? 'ne' : 'en')}
+        accessibilityLabel={language === 'en' ? 'नेपालीमा हेर्नुहोस्' : 'Show in English'}
+      >
+        <Ionicons name="language" size={14} color={colors.primary} />
+        <Text style={[typography.caption, { color: colors.primary, fontWeight: '700' }]}>{language === 'en' ? 'ने' : 'EN'}</Text>
+      </TouchableOpacity>
 
       {/* Carousel */}
       <FlatList
@@ -178,7 +236,7 @@ export default function OnboardingScreen() {
               onPress={handleComplete}
             >
               <Text style={[typography.button, styles.getStartedText, { color: colors.primaryForeground }]}>
-                Get Started
+                {t(signedIn ? TEXT.done : TEXT.start)}
               </Text>
               <Ionicons name="arrow-forward" size={20} color={colors.primaryForeground} />
             </TouchableOpacity>
@@ -188,19 +246,25 @@ export default function OnboardingScreen() {
               onPress={handleNext}
             >
               <Text style={[typography.button, styles.nextButtonText, { color: colors.primaryForeground }]}>
-                Next
+                {t(TEXT.next)}
               </Text>
               <Ionicons name="arrow-forward" size={20} color={colors.primaryForeground} />
             </TouchableOpacity>
           )}
         </View>
 
-        <TouchableOpacity style={styles.skipButton} onPress={handleSkip}>
-          <Text style={[typography.body2, styles.skipText, { color: colors.mutedForeground }]}>
-            Skip
-          </Text>
-          <Ionicons name="chevron-forward" size={16} color={colors.mutedForeground} />
-        </TouchableOpacity>
+        {/* Last slide, signed in: the Guide has the details. Otherwise: skip the tour. */}
+        {currentIndex === slides.length - 1 && signedIn ? (
+          <TouchableOpacity style={styles.skipButton} onPress={openGuide}>
+            <Ionicons name="book-outline" size={16} color={colors.primary} />
+            <Text style={[typography.body2, styles.skipText, { color: colors.primary }]}>{t(TEXT.guide)}</Text>
+          </TouchableOpacity>
+        ) : (
+          <TouchableOpacity style={styles.skipButton} onPress={handleSkip}>
+            <Text style={[typography.body2, styles.skipText, { color: colors.mutedForeground }]}>{t(TEXT.skip)}</Text>
+            <Ionicons name="chevron-forward" size={16} color={colors.mutedForeground} />
+          </TouchableOpacity>
+        )}
       </View>
     </SafeAreaView>
   );
@@ -210,6 +274,19 @@ const createStyles = (colors: AppColors) =>
   StyleSheet.create({
     container: {
       flex: 1,
+    },
+    languageButton: {
+      position: 'absolute',
+      top: 52,
+      right: 20,
+      zIndex: 11,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 3,
+      borderWidth: 1,
+      borderRadius: 14,
+      paddingHorizontal: 8,
+      paddingVertical: 4,
     },
     logoContainer: {
       position: 'absolute',
