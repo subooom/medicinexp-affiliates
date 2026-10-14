@@ -2,6 +2,7 @@
 
 One line per change: date · what · where (PR/branch). Append when you finish work.
 
+- 2026-10-15 · In-app QR scanner for Team up (expo-camera, loaded lazily; scanned code joins at once) · feat-team-up-scanner.
 - 2026-10-15 · How you earn screen ((app)/earn, server text with the rep's numbers, EN/ने, read-aloud), linked
   from dashboard, Earnings (+ first-visit card) and the tour; shared LanguageToggle · feat-how-you-earn.
 - 2026-10-15 · Guide read-aloud (expo-speech, play per FAQ/section, Nepali voice check + settings link);
