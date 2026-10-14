@@ -1,7 +1,10 @@
 // app/(app)/visits/checkin.tsx
 import { materialApi } from '@/api/materials';
 import { venueApi } from '@/api/venues';
+import { fieldApi } from '@/api/field';
 import { PhotoCapture } from '@/components/field/photo-capture';
+import { PitchKitCard } from '@/components/field/pitch-kit-card';
+import { useAuth } from '@/context/AuthContext';
 import { VoiceMemo } from '@/components/field/voice-memo';
 import { VenueForm } from '@/components/venues/venue-form';
 import { CapturedFile, uploadAttachment } from '@/offline/attachments';
@@ -79,6 +82,41 @@ export default function CheckInScreen() {
   });
   const [showPicker, setShowPicker] = useState(false);
 
+  // Programs pitched at this shop: the one the rep is working in by default. Ticking another
+  // shows its materials and pitch kit, and the server makes a visit for each ticked program.
+  const { activeMembership, activeMemberships } = useAuth();
+  const activeProgramId = activeMembership?.program?.id ?? null;
+  const programs = useMemo(
+    () => activeMemberships.map((m) => ({ id: m.program!.id, name: m.program!.name })),
+    [activeMemberships]
+  );
+  const [ticked, setTicked] = useState<number[]>(activeProgramId ? [activeProgramId] : []);
+  useEffect(() => {
+    setTicked(activeProgramId ? [activeProgramId] : []);
+  }, [activeProgramId]);
+
+  const toggleProgram = (programId: number) => {
+    if (ticked.includes(programId)) {
+      if (ticked.length === 1) return; // something must be pitched
+      setTicked(ticked.filter((id) => id !== programId));
+      // Its materials leave the list: drop any quantities picked for them
+      setQuantities((current) =>
+        Object.fromEntries(Object.entries(current).filter(([id]) => materials.find((m) => m.id === Number(id))?.program_id !== programId))
+      );
+    } else {
+      setTicked([...ticked, programId]);
+    }
+  };
+
+  // Ticked programs' materials, the active program's first
+  const shownMaterials = useMemo(
+    () =>
+      materials
+        .filter((m) => ticked.includes(m.program_id))
+        .sort((a, b) => Number(b.program_id === activeProgramId) - Number(a.program_id === activeProgramId) || ticked.indexOf(a.program_id) - ticked.indexOf(b.program_id)),
+    [materials, ticked, activeProgramId]
+  );
+
   const [submitting, setSubmitting] = useState(false);
   // Teamed up: this check-in counts for both reps (the server adds the teammate)
   const { running: teamUp } = useTeamUp();
@@ -106,6 +144,14 @@ export default function CheckInScreen() {
       setLocating(false);
     }
   }, []);
+
+  // Keep every program's pitch kit on the phone, so they open offline at the next shop
+  useEffect(() => {
+    programs.forEach((program) => {
+      fieldApi.getKit(program.id).catch(() => undefined);
+      fieldApi.getProducts(program.id).catch(() => undefined);
+    });
+  }, [programs]);
 
   useEffect(() => {
     locate();
@@ -182,6 +228,8 @@ export default function CheckInScreen() {
         payload.dropoffs = dropoffs;
         payload.received_by = receivedBy.trim() || undefined;
       }
+      // One visit per ticked program, with or without materials
+      if (ticked.length > 0) payload.programs = ticked;
     }
 
     setSubmitting(true);
@@ -357,13 +405,35 @@ export default function CheckInScreen() {
           <Switch value={planLater} onValueChange={setPlanLater} trackColor={{ false: colors.border, true: colors.primary }} />
         </View>
 
+        {/* What was pitched: one visit per ticked program (only shown with more than one program) */}
+        {!planLater && programs.length > 1 && (
+          <>
+            <Text style={[typography.body1, styles.sectionTitle, { color: colors.foreground }]}>Pitching here</Text>
+            <View style={styles.programChips}>
+              {programs.map((program) => {
+                const on = ticked.includes(program.id);
+                return (
+                  <TouchableOpacity
+                    key={program.id}
+                    onPress={() => toggleProgram(program.id)}
+                    style={[styles.programChip, { borderColor: on ? colors.primary : colors.border, backgroundColor: on ? colors.primary + '1A' : colors.card }]}
+                  >
+                    <Ionicons name={on ? 'checkbox' : 'square-outline'} size={18} color={on ? colors.primary : colors.mutedForeground} />
+                    <Text style={[typography.body2, { color: colors.foreground, fontWeight: on ? '700' : '400' }]}>{program.name}</Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          </>
+        )}
+
         {/* Materials */}
         {!planLater && (
           <>
             <Text style={[typography.body1, styles.sectionTitle, { color: colors.foreground }]}>
               Materials left here{totalItems > 0 ? ` (${totalItems})` : ''}
             </Text>
-            <MaterialPicker materials={materials} quantities={quantities} onChange={setQuantities} />
+            <MaterialPicker materials={shownMaterials} activeProgramId={activeProgramId} quantities={quantities} onChange={setQuantities} />
             {totalItems > 0 && (
               <TextInput
                 style={[styles.input, { backgroundColor: colors.card, borderColor: colors.border, color: colors.foreground }]}
@@ -375,6 +445,12 @@ export default function CheckInScreen() {
             )}
           </>
         )}
+
+        {/* Pitch kits of the ticked programs, right here instead of a trip back to the dashboard */}
+        {!planLater &&
+          ticked.map((programId) => (
+            <PitchKitCard key={programId} programId={programId} programName={programs.find((p) => p.id === programId)?.name ?? 'Program'} />
+          ))}
 
         {!planLater && (
           <>
@@ -463,6 +539,8 @@ const createStyles = (colors: AppColors) =>
     headerSide: { width: 40 },
     body: { padding: 16, gap: 10, paddingBottom: 120 },
     sectionTitle: { fontWeight: '600', marginTop: 8 },
+    programChips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+    programChip: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 18, borderWidth: 1 },
     teamChip: { flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'flex-start', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 14 },
     selectedVenue: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14, borderRadius: 12, borderWidth: 2 },
     search: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 12, paddingVertical: 10, borderRadius: 12, borderWidth: 1 },

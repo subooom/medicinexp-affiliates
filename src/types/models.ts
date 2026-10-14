@@ -271,6 +271,8 @@ export interface VisitInput {
   notes?: string;
   received_by?: string;
   dropoffs?: DropoffInput[];
+  // Programs pitched here (check-in checkboxes): one visit each, materials optional
+  programs?: number[];
 }
 
 export interface VisitStats {

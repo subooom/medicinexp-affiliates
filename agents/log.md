@@ -2,6 +2,9 @@
 
 One line per change: date · what · where (PR/branch). Append when you finish work.
 
+- 2026-10-15 · Check-in: "Pitching here" program checkboxes (active ticked by default), materials of
+  ticked programs only (active first, others labelled "From X"), each ticked program's pitch kit in the
+  form (`components/field/pitch-kit-card.tsx`); sends `programs` · feat-checkin-pitch.
 - 2026-10-15 · Team up: Team up screen (code + QR deep link, enter code, find nearby),
   live split bar (`components/team-up/`, polled, `hooks/use-team-up.ts` store + host in (app) layout),
   dashboard button + banner, "Were you with X?" after check-in, team line on lead detail · feat-team-up.
