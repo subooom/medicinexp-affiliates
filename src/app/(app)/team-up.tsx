@@ -3,6 +3,7 @@
 // and a sale from them is split the way you agree.
 import { NearbyRep, TeamUp, teamUpApi, teamUpLink } from '@/api/team-ups';
 import { QrCode } from '@/components/common/qr-code';
+import { QrScanner } from '@/components/team-up/qr-scanner';
 import { Button, Card, ScreenHeader, SectionTitle } from '@/components/ui';
 import { useAppTheme } from '@/hooks/use-app-theme';
 import { sharePercent, teamUpStore, useTeamUp } from '@/hooks/use-team-up';
@@ -27,6 +28,7 @@ export default function TeamUpScreen() {
   const params = useLocalSearchParams<{ code?: string }>();
   const { running, incoming, outgoing, loaded } = useTeamUp();
   const [mode, setMode] = useState<Mode>(params.code ? 'enter' : 'choose');
+  const [scanning, setScanning] = useState(false);
   const [code, setCode] = useState((params.code ?? '').toUpperCase());
   const [busy, setBusy] = useState<string | null>(null);
   const [focused, setFocused] = useState(true);
@@ -76,8 +78,9 @@ export default function TeamUpScreen() {
     if (!outgoing?.join_code || isExpired(outgoing.join_code_expires_at)) run('code', teamUpApi.showCode);
   };
 
-  const join = () =>
-    run('join', () => teamUpApi.join(code.trim()), (t) => {
+  // A scanned code joins at once; a typed one when the rep taps Team up
+  const join = (scanned?: string) =>
+    run('join', () => teamUpApi.join((scanned ?? code).trim()), (t) => {
       if (t.status === 'active') teamUpStore.openSplit(t.id);
     });
 
@@ -142,7 +145,7 @@ export default function TeamUpScreen() {
 
             <View style={styles.row}>
               <Choice icon="qr-code" label="Show my code" active={mode === 'show'} onPress={showCode} />
-              <Choice icon="keypad" label="Enter their code" active={mode === 'enter'} onPress={() => setMode('enter')} />
+              <Choice icon="scan" label="Scan their code" active={mode === 'enter'} onPress={() => setMode('enter')} />
             </View>
 
             {mode === 'show' && (
@@ -169,6 +172,8 @@ export default function TeamUpScreen() {
 
             {mode === 'enter' && (
               <Card style={styles.gap}>
+                <Button title="Scan their QR" icon="scan" onPress={() => setScanning(true)} />
+                <Text style={[styles.hint, { color: colors.mutedForeground }]}>or type their 6-letter code</Text>
                 <TextInput
                   value={code}
                   onChangeText={(t) => setCode(t.toUpperCase().replace(/[^A-Z0-9]/g, ''))}
@@ -179,10 +184,19 @@ export default function TeamUpScreen() {
                   maxLength={6}
                   style={[styles.codeInput, { color: colors.foreground, borderColor: colors.border, backgroundColor: colors.inputBackground }]}
                 />
-                <Button title="Team up" icon="people" onPress={join} loading={busy === 'join'} disabled={code.length !== 6} />
-                <Text style={[styles.hint, { color: colors.mutedForeground }]}>Or scan their QR with your phone camera: it opens this screen with the code filled in.</Text>
+                <Button title="Team up" icon="people" onPress={() => join()} loading={busy === 'join'} disabled={code.length !== 6} />
               </Card>
             )}
+
+            <QrScanner
+              visible={scanning}
+              onClose={() => setScanning(false)}
+              onCode={(scanned) => {
+                setScanning(false);
+                setCode(scanned);
+                join(scanned);
+              }}
+            />
 
             <SectionTitle>Teammates nearby</SectionTitle>
             <NearbyFinder enabled={focused} />
@@ -193,7 +207,7 @@ export default function TeamUpScreen() {
   );
 }
 
-function Choice({ icon, label, active, onPress }: { icon: 'qr-code' | 'keypad'; label: string; active: boolean; onPress: () => void }) {
+function Choice({ icon, label, active, onPress }: { icon: 'qr-code' | 'scan'; label: string; active: boolean; onPress: () => void }) {
   const { colors } = useAppTheme();
   return (
     <TouchableOpacity
