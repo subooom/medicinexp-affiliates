@@ -11,6 +11,9 @@
 - Comments: short, say why. User-facing text: plain, friendly sentences.
 
 ## Running
+- **npm only** (`package-lock.json`). Never run `yarn`: a stray `yarn.lock` made EAS install with yarn and fail
+  (now in `.gitignore`). New package: add it to `package.json` + `npm install --package-lock-only` so `npm ci` on EAS
+  matches. Native modules needing the current build: expo-speech, expo-camera (and the speech/audio/location ones).
 - API: no `.env.local` → staging `https://medicinexp-staging.com/api/affiliates`.
   Local server: `EXPO_PUBLIC_API_URL=http://<pc-ip>:8000/api/affiliates` in `.env.local`.
 - Dev client (not Expo Go): `npx expo start --dev-client` (add `--clear` after deleting/moving

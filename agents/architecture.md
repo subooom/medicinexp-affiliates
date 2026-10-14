@@ -49,9 +49,11 @@ Open work: `checklist.txt` (owner's list) · older roadmap `TODO.md`. Paths are 
   `sync-provider.tsx` (sync loop, notification taps → `router.push(data.screen)`), `notifications.ts`,
   `demo-video.ts`, `attachments.ts`.
 - `context/AuthContext.tsx`: user, `activeMembership`, `switchProgram`, `refreshUser`, `isUsableMembership`.
-- `components/team-up/`: `team-up-host` (mounted in `(app)/_layout`: requests + split modal), `split-modal`, `team-up-banner`.
-- `components/`: `ui/`, `field/` (weekly goal, sign-up link, attachments, voice memo, photo),
-  `leads/` (form, sales card), `programs/program-switcher.tsx`.
+- `components/team-up/`: `team-up-host` (mounted in `(app)/_layout`: requests + split modal), `split-modal`, `team-up-banner`,
+  `qr-scanner` (expo-camera, loaded lazily so older builds don't crash).
+- `components/`: `ui/`, `field/` (weekly goal, sign-up link, attachments, voice memo, photo, `pitch-kit-card`
+  used inside check-in), `leads/` (form, sales card), `programs/program-switcher.tsx`,
+  `common/language-toggle.tsx` (EN ⇄ ने, shared by Guide and How you earn).
 - Speech: `utils/speech-support.ts` (Nepali voice / recognition checks, settings links), `hooks/use-narrator.ts`
   (guide read-aloud). Voice memos must check `recognitionPlanFor()` first: a language the phone lacks makes
   recognition (and its recording) stop at once.
@@ -62,6 +64,8 @@ Open work: `checklist.txt` (owner's list) · older roadmap `TODO.md`. Paths are 
 ## Navigation patterns
 - Tabs use `backBehavior="history"`: Back from a hidden route (pitch, tiers, guide…) returns to the screen
   it was opened from, not the dashboard.
+- How you earn: `(app)/earn.tsx` renders server `/how-you-earn` (text with the rep's numbers, EN/ne); linked from the
+  dashboard hero, the Earnings tab (+ "New here?" card until `EARN_SEEN_KEY`) and the tour's earning slide.
 - Guide: `(app)/guide.tsx` renders `api/guide.ts` (server `/guide` JSON, cached, bundled copy in
   `src/content/rep-guide.json`; copy the server file there when it changes). Language: `utils/language.ts`.
 - Tabs stay mounted: one-time loaders must reload when `useAuth().activeMembership?.program?.id` changes.
@@ -72,4 +76,5 @@ Open work: `checklist.txt` (owner's list) · older roadmap `TODO.md`. Paths are 
 ## Server endpoints used most
 `/me`, `/programs`, `/dashboard`, `/visits`, `/leads` (+ `/signup-link`, `/sales`), `/coupons`,
 `/activity`, `/leaderboard`, `/products`, `/field-kit`, `/pickups`, `/meetups`, `/earnings`,
-`/team-ups` (`/current` with etag, polled by the split bar; `hooks/use-team-up.ts` holds the state).
+`/team-ups` (`/current` with etag, polled by the split bar; `hooks/use-team-up.ts` holds the state),
+`/guide` (etag), `/how-you-earn`. Check-in sends `programs` (ticked = pitched).
