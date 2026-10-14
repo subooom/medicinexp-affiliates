@@ -52,6 +52,9 @@ Open work: `checklist.txt` (owner's list) · older roadmap `TODO.md`. Paths are 
 - `components/team-up/`: `team-up-host` (mounted in `(app)/_layout`: requests + split modal), `split-modal`, `team-up-banner`.
 - `components/`: `ui/`, `field/` (weekly goal, sign-up link, attachments, voice memo, photo),
   `leads/` (form, sales card), `programs/program-switcher.tsx`.
+- Speech: `utils/speech-support.ts` (Nepali voice / recognition checks, settings links), `hooks/use-narrator.ts`
+  (guide read-aloud). Voice memos must check `recognitionPlanFor()` first: a language the phone lacks makes
+  recognition (and its recording) stop at once.
 - `utils/`: `formatPaisa`/`formatRate`, `apiErrorMessage`, `readableColor`, `toIconName`, `uuidv4`.
 - `types/models.ts`: API types (money paisa, rates basis points).
 - `constants/colors.ts`: theme tokens, mirrored in `global.css`; `secondary` = orange #FF8A00.

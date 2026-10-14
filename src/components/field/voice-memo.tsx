@@ -8,15 +8,20 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { AudioModule, RecordingPresets, setAudioModeAsync, useAudioPlayer, useAudioPlayerStatus, useAudioRecorder } from 'expo-audio';
 import { ExpoSpeechRecognitionModule, useSpeechRecognitionEvent } from 'expo-speech-recognition';
+import { downloadSpeechModel, RecognitionPlan, recognitionPlanFor } from '@/utils/speech-support';
 import { useEffect, useRef, useState } from 'react';
 import { Alert, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 const MAX_SECONDS = 180;
+// Recognition that ends this fast with an error never really ran
+const QUICK_FAIL_MS = 3000;
 const LANGUAGE_KEY = 'voice_memo_language';
 const LANGUAGES = [
   { code: 'en-US', label: 'English' },
   { code: 'ne-NP', label: 'नेपाली' },
 ];
+
+const languageLabel = (code: string) => (code.startsWith('ne') ? 'Nepali' : 'English');
 
 function canTranscribe(): boolean {
   try {
@@ -36,6 +41,9 @@ export function VoiceMemo({ memo, onChange }: { memo: CapturedFile | null; onCha
   const [seconds, setSeconds] = useState(0);
   const [language, setLanguage] = useState('en-US');
   const [liveText, setLiveText] = useState('');
+  // Shown under the recorder, e.g. "Recording without text"
+  const [notice, setNotice] = useState<string | null>(null);
+  const failed = useRef<string | null>(null);
   const usingSpeech = useRef(false);
   const finalText = useRef('');
   const startedAt = useRef(0);
@@ -71,11 +79,21 @@ export function VoiceMemo({ memo, onChange }: { memo: CapturedFile | null; onCha
     if (event.uri) audioUri.current = event.uri;
   });
   useSpeechRecognitionEvent('end', () => {
-    if (usingSpeech.current) finish();
+    if (!usingSpeech.current) return;
+    // Recognition died straight away (language not on the phone, no internet for online
+    // recognition...): its audio is a blank second. Record properly instead of saving that.
+    const quickFail = Date.now() - startedAt.current < QUICK_FAIL_MS && !finalText.current && failed.current;
+    if (quickFail) {
+      usingSpeech.current = false;
+      startPlain(`Writing out ${languageLabel(language)} didn't start on this phone. Recording without text.`);
+      return;
+    }
+    finish();
   });
   useSpeechRecognitionEvent('error', (event) => {
     // "no-speech" just means silence; keep whatever audio was recorded
-    if (event.error !== 'no-speech' && event.error !== 'aborted') {
+    if (event.error !== 'no-speech' && event.error !== 'aborted' && event.error !== 'speech-timeout') {
+      failed.current = event.error;
       console.warn('Speech recognition error', event.error, event.message);
     }
   });
@@ -100,42 +118,62 @@ export function VoiceMemo({ memo, onChange }: { memo: CapturedFile | null; onCha
   const start = async () => {
     audioUri.current = null;
     finalText.current = '';
+    failed.current = null;
     setLiveText('');
+    setNotice(null);
     setSeconds(0);
 
-    usingSpeech.current = canTranscribe();
-
-    if (usingSpeech.current) {
+    let speech = canTranscribe();
+    if (speech) {
       const permission = await ExpoSpeechRecognitionModule.requestPermissionsAsync();
-      if (!permission.granted) {
-        usingSpeech.current = false;
-      }
+      speech = permission.granted;
+    }
+    if (!speech) {
+      // Older Android, or speech permission refused: just record
+      return startPlain();
     }
 
-    if (usingSpeech.current) {
-      let onDevice = false;
+    // Check the language is understood here before recording through the recogniser: if it
+    // isn't, recognition stops at once and so does its recording (a blank one-second clip)
+    const plan = await recognitionPlanFor(language);
+    if (plan.kind === 'none') {
+      return askWithoutText();
+    }
+    startSpeech(plan);
+  };
+
+  const startSpeech = (plan: RecognitionPlan) => {
+    let onDevice = plan.kind === 'on-device';
+    if (plan.kind === 'unknown') {
       try {
         onDevice = ExpoSpeechRecognitionModule.supportsOnDeviceRecognition();
       } catch {
         onDevice = false;
       }
-      startedAt.current = Date.now();
-      setMode('recording');
-      ExpoSpeechRecognitionModule.start({
-        lang: language,
-        interimResults: true,
-        continuous: true,
-        requiresOnDeviceRecognition: onDevice,
-        addsPunctuation: onDevice,
-        recordingOptions: { persist: true },
-        androidIntentOptions: { EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS: 10000 },
-      });
-      return;
     }
+    const servicePackage = plan.kind === 'on-device' || plan.kind === 'online' ? plan.servicePackage : undefined;
+    usingSpeech.current = true;
+    startedAt.current = Date.now();
+    setMode('recording');
+    if (plan.kind === 'online') setNotice(`Writing out ${languageLabel(language)} needs internet while you record.`);
+    ExpoSpeechRecognitionModule.start({
+      lang: language,
+      interimResults: true,
+      continuous: true,
+      requiresOnDeviceRecognition: onDevice,
+      addsPunctuation: onDevice,
+      recordingOptions: { persist: true },
+      androidRecognitionServicePackage: servicePackage,
+      androidIntentOptions: { EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS: 10000 },
+    });
+  };
 
-    // Plain recording (older Android, or speech permission refused)
+  /** Record audio only (no writing out). */
+  const startPlain = async (message?: string) => {
+    usingSpeech.current = false;
     const permission = await AudioModule.requestRecordingPermissionsAsync();
     if (!permission.granted) {
+      setMode('idle');
       Alert.alert('Microphone needed', 'Allow microphone access in your phone settings to record voice memos.');
       return;
     }
@@ -144,6 +182,31 @@ export function VoiceMemo({ memo, onChange }: { memo: CapturedFile | null; onCha
     recorder.record();
     startedAt.current = Date.now();
     setMode('recording');
+    if (message) setNotice(message);
+  };
+
+  /** The language isn't on this phone: download it, record without text, or use English. */
+  const askWithoutText = () => {
+    const name = languageLabel(language);
+    Alert.alert(
+      `${name} isn't on this phone yet`,
+      `Your phone can't write out ${name} speech until its ${name} speech model is downloaded. You can still record the voice memo.`,
+      [
+        {
+          text: `Download ${name}`,
+          onPress: async () => {
+            const result = await downloadSpeechModel(language);
+            Alert.alert(
+              `Download ${name}`,
+              result ??
+                `Open the Google app → your profile picture → Settings → Voice → Offline speech recognition → All → ${name}. Then try again.`
+            );
+          },
+        },
+        { text: 'Use English', onPress: () => pickLanguage('en-US') },
+        { text: 'Record without text', style: 'cancel', onPress: () => startPlain() },
+      ]
+    );
   };
 
   const stop = async () => {
@@ -233,6 +296,12 @@ export function VoiceMemo({ memo, onChange }: { memo: CapturedFile | null; onCha
         </View>
       )}
       {mode === 'recording' && !!liveText && <Text style={[typography.body2, { color: colors.mutedForeground }]}>{liveText}</Text>}
+      {mode === 'recording' && !!notice && (
+        <View style={[styles.row, { gap: 6 }]}>
+          <Ionicons name="information-circle-outline" size={16} color={colors.mutedForeground} />
+          <Text style={[typography.caption, { color: colors.mutedForeground, flex: 1 }]}>{notice}</Text>
+        </View>
+      )}
     </View>
   );
 }
