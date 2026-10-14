@@ -1,6 +1,7 @@
 // app/(app)/index.tsx — Dashboard
 import { WeeklyGoal } from '@/components/field/weekly-goal';
 import { SyncBanner } from '@/components/ui/sync-banner';
+import { TeamUpBanner } from '@/components/team-up/team-up-banner';
 import { dashboardApi } from '@/api/dashboard';
 import { Logo } from '@/components/common/logo';
 import { ProgramSwitcher } from '@/components/programs/program-switcher';
@@ -95,6 +96,8 @@ export default function DashboardScreen() {
     { label: 'Check in', icon: 'location', route: '/(app)/visits/checkin', color: colors.success, anchor: true },
     { label: 'New lead', icon: 'person-add', route: '/(app)/leads/create', color: colors.secondary, anchor: true },
     { label: 'Log call', icon: 'call', route: '/(app)/call-logs/create', color: colors.info },
+    // Working with another rep today: show / enter a code (two taps from here)
+    { label: 'Team up', icon: 'people', route: '/(app)/team-up' as Href, color: colors.info },
     { label: 'Near me', icon: 'map', route: '/(app)/map' as Href, color: colors.accent },
     { label: 'Pitch kit', icon: 'easel', route: '/(app)/pitch' as Href, color: colors.primary },
     { label: 'My stock', icon: 'bag-handle', route: '/(app)/inventory', color: colors.chart5 },
@@ -181,6 +184,9 @@ export default function DashboardScreen() {
 
         {/* This week's score, bonus waiting, streak, next tier */}
         <WeeklyGoal refreshKey={goalTick} />
+
+        {/* Teamed up today: who with and the split */}
+        <TeamUpBanner />
 
         <View style={styles.quickActions}>
           {quickActions.map((action) => (

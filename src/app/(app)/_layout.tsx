@@ -1,4 +1,5 @@
 // app/(app)/_layout.tsx
+import { TeamUpHost } from '@/components/team-up/team-up-host';
 import { useAppTheme } from '@/hooks/use-app-theme';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { Tabs } from 'expo-router';
@@ -20,12 +21,14 @@ const HIDDEN_ROUTES = [
   'map',
   'sync',
   'leaderboard',
+  'team-up',
 ];
 
 export default function AppLayout() {
   const { colors } = useAppTheme();
 
   return (
+    <>
     <Tabs
       screenOptions={({ route }) => ({
         tabBarIcon: ({ focused, color, size }) => {
@@ -68,5 +71,8 @@ export default function AppLayout() {
         <Tabs.Screen key={name} name={name} options={{ href: null }} />
       ))}
     </Tabs>
+    {/* Team-up requests and the split bar, over any screen */}
+    <TeamUpHost />
+    </>
   );
 }

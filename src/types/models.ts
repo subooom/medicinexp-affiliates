@@ -244,6 +244,10 @@ export interface Visit {
   attachments?: Attachment[];
   // Leads made from this visit (only on the visit detail)
   leads?: { id: number; display_name: string; status: LeadStatus }[];
+  // Checked in during a team-up: the visit is the team's
+  team_up_id?: number | null;
+  // Right after a check-in: another rep checked in here at the same time ("Were you with X?")
+  team_up_suggestion?: { membership_id: number; name: string } | null;
   created_at: string;
 }
 
@@ -304,6 +308,9 @@ export interface Lead {
   product_id: number | null;
   product?: { id: number; name: string } | null;
   visit_id: number | null;
+  // Made during a team-up: the sale is split with the teammate (detail endpoint fills team)
+  team_up_id?: number | null;
+  team?: { partner_name: string | null; my_share_bp: number | null; agreed: boolean } | null;
   is_customer: boolean;
   converted_at: string | null;
   lost_at: string | null;

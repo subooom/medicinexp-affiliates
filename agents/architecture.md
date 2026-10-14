@@ -49,6 +49,7 @@ Open work: `checklist.txt` (owner's list) · older roadmap `TODO.md`. Paths are 
   `sync-provider.tsx` (sync loop, notification taps → `router.push(data.screen)`), `notifications.ts`,
   `demo-video.ts`, `attachments.ts`.
 - `context/AuthContext.tsx`: user, `activeMembership`, `switchProgram`, `refreshUser`, `isUsableMembership`.
+- `components/team-up/`: `team-up-host` (mounted in `(app)/_layout`: requests + split modal), `split-modal`, `team-up-banner`.
 - `components/`: `ui/`, `field/` (weekly goal, sign-up link, attachments, voice memo, photo),
   `leads/` (form, sales card), `programs/program-switcher.tsx`.
 - `utils/`: `formatPaisa`/`formatRate`, `apiErrorMessage`, `readableColor`, `toIconName`, `uuidv4`.
@@ -63,4 +64,5 @@ Open work: `checklist.txt` (owner's list) · older roadmap `TODO.md`. Paths are 
 
 ## Server endpoints used most
 `/me`, `/programs`, `/dashboard`, `/visits`, `/leads` (+ `/signup-link`, `/sales`), `/coupons`,
-`/activity`, `/leaderboard`, `/products`, `/field-kit`, `/pickups`, `/meetups`, `/earnings`.
+`/activity`, `/leaderboard`, `/products`, `/field-kit`, `/pickups`, `/meetups`, `/earnings`,
+`/team-ups` (`/current` with etag, polled by the split bar; `hooks/use-team-up.ts` holds the state).

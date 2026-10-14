@@ -153,6 +153,16 @@ export default function LeadDetailScreen() {
             <Text style={[typography.body2, { color: colors.primary }]}>{lead.venue.name}</Text>
           </TouchableOpacity>
         )}
+        {lead.team && (
+          // Made during a team-up: the sale is split with the teammate
+          <View style={styles.linkRow}>
+            <Ionicons name="people-outline" size={16} color={colors.secondary} />
+            <Text style={[typography.body2, { color: colors.foreground }]}>
+              Team lead with {lead.team.partner_name ?? 'a teammate'} · your share {Math.round((lead.team.my_share_bp ?? 5000) / 100)}%
+              {lead.team.agreed ? '' : ' (50/50 until agreed)'}
+            </Text>
+          </View>
+        )}
         {lead.contact_email && (
           <TouchableOpacity style={styles.linkRow} onPress={() => Linking.openURL(`mailto:${lead.contact_email}`)}>
             <Ionicons name="mail-outline" size={16} color={colors.mutedForeground} />
