@@ -2,7 +2,7 @@
 import { useAppTheme } from '@/hooks/use-app-theme';
 import { router } from 'expo-router';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import Ionicons from 'react-native-vector-icons/Ionicons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 
 interface HintButtonProps {
   variant?: 'light' | 'dark';

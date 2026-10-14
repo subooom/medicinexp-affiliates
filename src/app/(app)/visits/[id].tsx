@@ -1,4 +1,5 @@
 // app/(app)/visits/[id].tsx
+import { AttachmentsCard } from '@/components/field/attachments-card';
 import { AppColors } from '@/constants/colors';
 import { useVisit } from '@/hooks/data/use-visits';
 import { useAppTheme } from '@/hooks/use-app-theme';
@@ -18,6 +19,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import DateTimePickerModal from 'react-native-modal-datetime-picker';
 
 export default function VisitDetailScreen() {
   const router = useRouter();
@@ -29,6 +31,19 @@ export default function VisitDetailScreen() {
   const [saving, setSaving] = useState(false);
   const [showNotesModal, setShowNotesModal] = useState(false);
   const [notesDraft, setNotesDraft] = useState('');
+  const [showReschedule, setShowReschedule] = useState(false);
+
+  const reschedule = async (date: Date) => {
+    setShowReschedule(false);
+    setSaving(true);
+    try {
+      await updateVisit({ visited_at: date.toISOString() });
+    } catch (err: any) {
+      Alert.alert('Could not reschedule', err.message || 'Please try again.');
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -234,8 +249,47 @@ export default function VisitDetailScreen() {
           </Text>
         </View>
 
+        <AttachmentsCard
+          attachments={visit.attachments ?? []}
+          to={{ type: 'visit', id: visit.id, clientUuid: visit.client_uuid ?? undefined }}
+          label={visit.venue?.name ?? 'visit'}
+          onAdded={reload}
+        />
+
         {/* Actions */}
         <View style={styles.actionsContainer}>
+          {visit.status !== 'cancelled' && visit.id > 0 && (
+            visit.leads && visit.leads.length > 0 ? (
+              <TouchableOpacity
+                style={[styles.actionButton, styles.outlineButton, { borderColor: colors.secondary }]}
+                onPress={() => router.push({ pathname: '/(app)/leads/[id]', params: { id: visit.leads![0].id } })}
+              >
+                <Ionicons name="person-outline" size={20} color={colors.secondary} />
+                <Text style={[typography.button, styles.actionButtonText, { color: colors.secondary }]} numberOfLines={1}>
+                  Open lead: {visit.leads[0].display_name}
+                </Text>
+              </TouchableOpacity>
+            ) : (
+              <TouchableOpacity
+                style={[styles.actionButton, { backgroundColor: colors.secondary }]}
+                onPress={() => router.push({ pathname: '/(app)/leads/create', params: { venueId: visit.venue_id, visitId: visit.id } })}
+                disabled={saving}
+              >
+                <Ionicons name="person-add-outline" size={20} color={colors.secondaryForeground} />
+                <Text style={[typography.button, styles.actionButtonText, { color: colors.secondaryForeground }]}>Convert to lead</Text>
+              </TouchableOpacity>
+            )
+          )}
+          {visit.status === 'planned' && (
+            <TouchableOpacity
+              style={[styles.actionButton, styles.outlineButton, { borderColor: colors.border }]}
+              onPress={() => setShowReschedule(true)}
+              disabled={saving}
+            >
+              <Ionicons name="calendar-outline" size={20} color={colors.foreground} />
+              <Text style={[typography.button, styles.actionButtonText, { color: colors.foreground }]}>Reschedule</Text>
+            </TouchableOpacity>
+          )}
           {visit.status !== 'completed' && (
             <TouchableOpacity
               style={[styles.actionButton, { backgroundColor: colors.success || '#10B981' }]}
@@ -266,6 +320,15 @@ export default function VisitDetailScreen() {
           </TouchableOpacity>
         </View>
       </ScrollView>
+
+      <DateTimePickerModal
+        isVisible={showReschedule}
+        mode="datetime"
+        date={new Date(visit.visited_at) > new Date() ? new Date(visit.visited_at) : new Date()}
+        minimumDate={new Date()}
+        onConfirm={reschedule}
+        onCancel={() => setShowReschedule(false)}
+      />
 
       <Modal visible={showNotesModal} transparent animationType="slide" onRequestClose={() => setShowNotesModal(false)}>
         <View style={styles.modalOverlay}>

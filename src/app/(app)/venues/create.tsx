@@ -11,7 +11,7 @@ export default function CreateVenueScreen() {
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
       <VenueForm
-        onSaved={(venue) => router.replace({ pathname: '/(app)/venues/[id]', params: { id: venue.id } })}
+        onSaved={(venue) => (venue ? router.replace({ pathname: '/(app)/venues/[id]', params: { id: venue.id } }) : router.back())}
       />
     </View>
   );

@@ -6,6 +6,7 @@ import { typography } from '@/styles/typography';
 import { Lead, LeadStatus } from '@/types/models';
 import { leadStatusLabel, leadTypeColor, leadTypeInfo } from '@/utils/lead-types';
 import { getLeadStatusColor } from '@/utils/status-colors';
+import { apiErrorMessage } from '@/utils/errors';
 import { getTimeAgo } from '@/utils/time';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useFocusEffect, useRouter } from 'expo-router';
@@ -51,6 +52,7 @@ export default function LeadsListScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const load = useCallback(async (pageToLoad: number, nextFilter: Filter, nextSearch: string) => {
@@ -62,8 +64,11 @@ export default function LeadsListScreen() {
       setLeads((prev) => (pageToLoad === 1 ? result.data : [...prev, ...result.data]));
       setPage(result.current_page);
       setLastPage(result.last_page);
-    } catch (error) {
-      console.error('Error loading leads:', error);
+      setError(null);
+    } catch (err) {
+      // Shown on the screen (a console.error only showed up as the red dev overlay)
+      setError(apiErrorMessage(err, 'Could not load your leads.'));
+      if (pageToLoad === 1) setLeads([]);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -197,11 +202,31 @@ export default function LeadsListScreen() {
           onEndReached={loadMore}
           onEndReachedThreshold={0.4}
           ListFooterComponent={loadingMore ? <ActivityIndicator color={colors.primary} style={{ marginVertical: 16 }} /> : null}
+          ListHeaderComponent={
+            error && leads.length > 0 ? (
+              <Text style={[typography.caption, styles.inlineError, { color: colors.destructive }]}>{error}</Text>
+            ) : null
+          }
           ListEmptyComponent={
-            <View style={styles.empty}>
-              <Ionicons name="people-outline" size={40} color={colors.mutedForeground} />
-              <Text style={[typography.body1, { color: colors.mutedForeground }]}>No leads here</Text>
-            </View>
+            error ? (
+              <View style={styles.empty}>
+                <Ionicons name="alert-circle-outline" size={40} color={colors.destructive} />
+                <Text style={[typography.body1, { color: colors.foreground, fontWeight: '600' }]}>Couldn't load leads</Text>
+                <Text style={[typography.body2, styles.errorText, { color: colors.mutedForeground }]}>{error}</Text>
+                <TouchableOpacity
+                  style={[styles.retryButton, { backgroundColor: colors.primary }]}
+                  onPress={() => { setLoading(true); load(1, filter, search); }}
+                >
+                  <Ionicons name="refresh" size={16} color={colors.primaryForeground} />
+                  <Text style={[typography.button, { color: colors.primaryForeground }]}>Try again</Text>
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <View style={styles.empty}>
+                <Ionicons name="people-outline" size={40} color={colors.mutedForeground} />
+                <Text style={[typography.body1, { color: colors.mutedForeground }]}>No leads here</Text>
+              </View>
+            )
           }
         />
       )}
@@ -234,4 +259,7 @@ const createStyles = (colors: AppColors) =>
     metaRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
     callSnippet: { flexDirection: 'row', alignItems: 'center', gap: 6, padding: 8, borderRadius: 8, borderWidth: 1 },
     empty: { alignItems: 'center', gap: 8, paddingVertical: 60 },
+    errorText: { textAlign: 'center', paddingHorizontal: 24 },
+    inlineError: { marginBottom: 8 },
+    retryButton: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 18, paddingVertical: 10, borderRadius: 20, marginTop: 4 },
   });

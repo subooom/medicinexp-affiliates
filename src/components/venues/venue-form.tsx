@@ -1,5 +1,10 @@
 // src/components/venues/venue-form.tsx
 import { venueApi } from '@/api/venues';
+import { takePhoto } from '@/components/field/photo-capture';
+import { guessFromSignboard } from '@/utils/signboard';
+import { extractTextFromImage, isSupported as ocrSupported } from 'expo-text-extractor';
+import { queuedMessage, sendOrQueue } from '@/offline/send';
+import { venueIndex } from '@/offline/venue-index';
 import { AppColors } from '@/constants/colors';
 import { useAppTheme } from '@/hooks/use-app-theme';
 import { typography } from '@/styles/typography';
@@ -15,7 +20,8 @@ interface VenueFormProps {
   // Editing an existing venue; omit to create one
   venue?: Venue | null;
   submitLabel?: string;
-  onSaved: (venue: Venue) => void;
+  // null: saved on the phone, waiting to sync (no server id yet)
+  onSaved: (venue: Venue | null, pending?: Venue) => void;
 }
 
 type FieldKey = 'name' | 'address' | 'city' | 'district' | 'phone' | 'email' | 'pan_number';
@@ -72,6 +78,37 @@ export function VenueForm({ venue, submitLabel, onSaved }: VenueFormProps) {
   }, []);
 
   const selectedType = types.find((t) => t.id === typeId) ?? null;
+  const [scanning, setScanning] = useState(false);
+
+  // Read the signboard / licence on the phone (no internet, nothing sent anywhere) and
+  // fill the empty fields with what it finds
+  const scanSignboard = async () => {
+    const photo = await takePhoto();
+    if (!photo) return;
+    setScanning(true);
+    try {
+      const guess = guessFromSignboard(await extractTextFromImage(photo.uri));
+      const filled: string[] = [];
+      setValues((prev) => {
+        const next = { ...prev };
+        (['name', 'address', 'phone', 'pan_number'] as const).forEach((key) => {
+          if (!next[key].trim() && guess[key]) {
+            next[key] = guess[key]!;
+            filled.push(key === 'pan_number' ? 'PAN' : key);
+          }
+        });
+        return next;
+      });
+      Alert.alert(
+        filled.length ? 'Filled in from the photo' : 'Could not read much',
+        filled.length ? `Check the ${filled.join(', ')} before saving.` : 'Type the details in, or try a closer, straighter photo.'
+      );
+    } catch {
+      Alert.alert('Could not read the photo', 'Type the details in instead.');
+    } finally {
+      setScanning(false);
+    }
+  };
 
   const useCurrentLocation = async () => {
     setLocating(true);
@@ -111,10 +148,20 @@ export function VenueForm({ venue, submitLabel, onSaved }: VenueFormProps) {
 
     setSaving(true);
     try {
-      const response = venue
-        ? await venueApi.update(venue.id, payload)
-        : await venueApi.create({ ...payload, client_uuid: clientUuid.current });
-      onSaved(response.data.data);
+      const result = venue
+        ? await sendOrQueue<Venue>({ method: 'put', url: `/venues/${venue.id}`, data: payload, label: `Edit ${payload.name}` })
+        : await sendOrQueue<Venue>({ method: 'post', url: '/venues', data: { ...payload, client_uuid: clientUuid.current }, label: `New place: ${payload.name}` });
+      if (result.queued) {
+        // Usable right away offline (check in, add a lead) with a temporary id
+        let pending: Venue | undefined;
+        if (!venue) {
+          pending = await venueIndex.addPending({ ...(payload as any), client_uuid: clientUuid.current, is_active: true, is_customer: false, can_edit: true, distance: null, province: null, type: null, created_at: new Date().toISOString(), updated_at: new Date().toISOString() });
+        }
+        Alert.alert('Saved on your phone', queuedMessage);
+        onSaved(null, pending);
+      } else {
+        onSaved(result.data);
+      }
     } catch (error: any) {
       if (error.status === 409 && error.data?.venue_id) {
         Alert.alert('Already added', 'This pharmacy is already in the list. Search for it instead.');
@@ -128,6 +175,16 @@ export function VenueForm({ venue, submitLabel, onSaved }: VenueFormProps) {
 
   return (
     <ScrollView contentContainerStyle={styles.form} keyboardShouldPersistTaps="handled">
+      {!venue && ocrSupported && (
+        <TouchableOpacity
+          style={[styles.input, styles.selector, { backgroundColor: colors.primary + '10', borderColor: colors.primary, justifyContent: 'center', gap: 8 }]}
+          onPress={scanSignboard}
+          disabled={scanning}
+        >
+          {scanning ? <ActivityIndicator color={colors.primary} /> : <Ionicons name="scan-outline" size={20} color={colors.primary} />}
+          <Text style={[typography.body1, { color: colors.primary, fontWeight: '600' }]}>{scanning ? 'Reading…' : 'Scan signboard or licence'}</Text>
+        </TouchableOpacity>
+      )}
       <View style={styles.field}>
         <Text style={[typography.body2, styles.label, { color: colors.foreground }]}>Type</Text>
         <TouchableOpacity

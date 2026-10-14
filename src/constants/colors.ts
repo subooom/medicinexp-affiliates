@@ -82,8 +82,9 @@ export const lightColors: AppColors = {
   primary950: '#130D24',
   green500: '#16A34A',
   green600: '#15803D',
-  secondary: '#E8E2F8',
-  secondaryForeground: '#452F82',
+  // Brand orange (--secondary in global.css): highlights, money and "grow" actions
+  secondary: '#FF8A00',
+  secondaryForeground: '#FFFFFF',
   muted: '#F1EFF5',
   mutedForeground: '#6E6880',
   accent: '#0D9488', // Teal accent that complements purple nicely
@@ -134,8 +135,9 @@ export const darkColors: AppColors = {
   primary950: '#F3F0FA',
   green500: '#22C55E',
   green600: '#16A34A',
-  secondary: '#251A4A',
-  secondaryForeground: '#BCB0FF',
+  // Brand orange, a touch lighter so it pops on the dark background
+  secondary: '#FF9A26',
+  secondaryForeground: '#1A0F00',
   muted: '#1E153E',
   mutedForeground: '#9E95B8',
   accent: '#2DD4BF', // Vibrant teal contrast for dark mode

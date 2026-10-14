@@ -1,6 +1,6 @@
 // src/components/call-logs/call-log-form.tsx
-import { callLogApi } from '@/api/call-logs';
 import { leadApi } from '@/api/leads';
+import { queuedMessage, sendOrQueue } from '@/offline/send';
 import { venueApi } from '@/api/venues';
 import { AppColors } from '@/constants/colors';
 import { useAppTheme } from '@/hooks/use-app-theme';
@@ -21,7 +21,8 @@ interface CallLogFormProps {
   venueId?: number;
   // Start as a scheduled call (e.g. "Schedule a call" buttons)
   scheduled?: boolean;
-  onSaved: (callLog: CallLog) => void;
+  // null: saved on the phone, waiting to sync (no server id yet)
+  onSaved: (callLog: CallLog | null) => void;
 }
 
 const STATUSES: { value: CallStatus; label: string }[] = [
@@ -114,10 +115,16 @@ export function CallLogForm({ callLog, leadId, venueId, scheduled, onSaved }: Ca
 
     setSaving(true);
     try {
-      const response = callLog
-        ? await callLogApi.update(callLog.id, payload)
-        : await callLogApi.create({ ...payload, client_uuid: clientUuid.current });
-      onSaved(response.data.data);
+      const who = lead?.display_name || venue?.name || 'contact';
+      const result = callLog
+        ? await sendOrQueue<CallLog>({ method: 'put', url: `/call-logs/${callLog.id}`, data: payload, label: `Edit call: ${who}` })
+        : await sendOrQueue<CallLog>({ method: 'post', url: '/call-logs', data: { ...payload, client_uuid: clientUuid.current }, label: `Call: ${who}` });
+      if (result.queued) {
+        Alert.alert('Saved on your phone', queuedMessage);
+        onSaved(null);
+      } else {
+        onSaved(result.data);
+      }
     } catch (error: any) {
       Alert.alert('Could not save', error.message || 'Please try again.');
     } finally {

@@ -14,7 +14,7 @@ export default function CreateLeadScreen() {
       <LeadForm
         venueId={params.venueId ? parseInt(params.venueId) : undefined}
         visitId={params.visitId ? parseInt(params.visitId) : undefined}
-        onSaved={(lead) => router.replace({ pathname: '/(app)/leads/[id]', params: { id: lead.id } })}
+        onSaved={(lead) => (lead ? router.replace({ pathname: '/(app)/leads/[id]', params: { id: lead.id } }) : router.back())}
       />
     </View>
   );

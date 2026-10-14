@@ -5,6 +5,7 @@ import { useAppTheme } from '@/hooks/use-app-theme';
 import { typography } from '@/styles/typography';
 import { CurrentTier, Tier } from '@/types/models';
 import { toIconName } from '@/utils/icons';
+import { formatRate } from '@/utils/money';
 import { describeSchedule, requirementLabel } from '@/utils/tiers';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useFocusEffect, useRouter } from 'expo-router';
@@ -60,12 +61,13 @@ export default function TiersScreen() {
       {/* Where you are */}
       <View style={[styles.card, { backgroundColor: colors.card, borderColor: myTier?.color || colors.primary }]}>
         <Text style={[typography.caption, { color: colors.mutedForeground }]}>Your tier</Text>
-        <Text style={[typography.h3, { color: colors.foreground, fontWeight: '700' }]}>{myTier?.name ?? 'Not assigned yet'}</Text>
+        <Text style={[typography.h3, { color: colors.foreground, fontWeight: '700' }]}>{myTier?.name ?? 'No tier yet'}</Text>
         <Text style={[typography.body2, { color: colors.foreground }]}>
           {current && current.commission_schedule.length > 0
             ? `Your commission: ${describeSchedule(current.commission_schedule)}`
-            : 'No commission set yet. Your program adds it for you.'}
+            : 'Log your first lead to reach the first tier and start earning.'}
         </Text>
+        <Text style={[typography.caption, { color: colors.mutedForeground }]}>Each tier pays more on every new pharmacy. You move up on your own as you hit the targets.</Text>
 
         {progress ? (
           <View style={{ gap: 6, marginTop: 8 }}>
@@ -114,6 +116,7 @@ export default function TiersScreen() {
               </View>
               {tier.description ? <Text style={[typography.caption, { color: colors.mutedForeground }]}>{tier.description}</Text> : null}
             </View>
+            <Text style={[typography.h5, { color: tierColor, fontWeight: '800' }]}>{formatRate(tier.first_year_rate_bp)}</Text>
             <Ionicons name="chevron-forward" size={18} color={colors.mutedForeground} />
           </TouchableOpacity>
         );

@@ -26,6 +26,7 @@ export function MaterialPicker({ materials, quantities, onChange }: MaterialPick
   const { colors } = useAppTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
   const [infoFor, setInfoFor] = useState<MaterialWithStock | null>(null);
+  const multiProgram = new Set(materials.map((m) => m.program_id)).size > 1;
 
   const limitOf = (material: MaterialWithStock) =>
     material.max_per_venue ? Math.min(material.in_bag, material.max_per_venue) : material.in_bag;
@@ -54,14 +55,19 @@ export function MaterialPicker({ materials, quantities, onChange }: MaterialPick
 
   return (
     <View style={styles.list}>
-      {materials.map((material) => {
+      {materials.map((material, index) => {
         const quantity = quantities[material.id] ?? 0;
+        // Program heading when the bag holds more than one program's materials
+        const showProgram = multiProgram && material.program_id !== materials[index - 1]?.program_id;
         const limit = limitOf(material);
         const typeColor = material.type?.color || colors.primary;
 
         return (
+          <View key={material.id} style={{ gap: 8 }}>
+          {showProgram && (
+            <Text style={[typography.overline, { color: colors.primary, marginTop: index > 0 ? 8 : 0 }]}>{material.program_name ?? 'Program'}</Text>
+          )}
           <View
-            key={material.id}
             style={[styles.row, { backgroundColor: colors.card, borderColor: quantity > 0 ? colors.primary : colors.border }]}
           >
             <TouchableOpacity style={styles.info} onPress={() => setInfoFor(material)}>
@@ -103,6 +109,7 @@ export function MaterialPicker({ materials, quantities, onChange }: MaterialPick
                 </TouchableOpacity>
               ))}
             </View>
+          </View>
           </View>
         );
       })}

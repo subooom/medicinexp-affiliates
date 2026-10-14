@@ -1,7 +1,9 @@
 // src/hooks/data/use-visits.ts
 import { visitApi } from '@/api/visits';
+import { useAuth } from '@/context/AuthContext';
 import { Visit, VisitFilters } from '@/types/models';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { sendOrQueue } from '@/offline/send';
 
 const PER_PAGE = 20;
 
@@ -69,12 +71,14 @@ export function useVisits(filters?: VisitFilters): UseVisitsResult {
     }
   }, [fetchPage]);
 
+  // The visits tab stays mounted: reload when the rep switches program
+  const programId = useAuth().activeMembership?.program?.id;
   useEffect(() => {
     setLoading(true);
     loadFirstPage().finally(() => {
       if (isMounted.current) setLoading(false);
     });
-  }, [loadFirstPage]);
+  }, [loadFirstPage, programId]);
 
   const refresh = useCallback(async () => {
     setRefreshing(true);
@@ -159,12 +163,13 @@ export function useVisit(id: number) {
 
   const updateVisit = useCallback(
     async (updateData: Partial<Pick<Visit, 'notes' | 'status' | 'visited_at'>>) => {
-      const response = await visitApi.update(id, updateData);
-      const updated: Visit = response.data.data;
+      const result = await sendOrQueue<Visit>({ method: 'put', url: `/visits/${id}`, data: updateData, label: 'Visit change' });
+      // Offline: show the change now; the queue sends it later
+      const updated = result.queued ? ({ ...(data as Visit), ...updateData } as Visit) : result.data;
       setData((prev) => (prev ? { ...prev, ...updated, venue: updated.venue ?? prev.venue } : updated));
       return updated;
     },
-    [id]
+    [id, data]
   );
 
   const deleteVisit = useCallback(async () => {

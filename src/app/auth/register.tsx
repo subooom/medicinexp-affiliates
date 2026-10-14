@@ -16,7 +16,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import Ionicons from 'react-native-vector-icons/Ionicons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 
 export default function RegisterScreen() {
   const router = useRouter();
@@ -34,6 +34,8 @@ export default function RegisterScreen() {
     password: '',
     password_confirmation: '',
   });
+  // Optional: a pharma program's invite code (joins that program instead of MedicineXP)
+  const [inviteCode, setInviteCode] = useState('');
 
   const handleRegister = async () => {
     const { name, email, contact, password, password_confirmation } = formData;
@@ -61,7 +63,7 @@ export default function RegisterScreen() {
 
     setLoading(true);
     try {
-      await register(formData);
+      await register({ ...formData, invite_code: inviteCode.trim() || undefined });
       Alert.alert(
         'Registration Successful 🎉',
         'Your account has been created. Please wait for admin approval.',
@@ -120,6 +122,23 @@ export default function RegisterScreen() {
             </View>
           </View>
         ))}
+
+        <View style={styles.inputGroup}>
+          <Text style={[typography.body2, styles.label]}>Invite code (optional)</Text>
+          <View style={styles.inputContainer}>
+            <Ionicons name="ticket-outline" size={20} color={colors.icon} style={styles.inputIcon} />
+            <TextInput
+              style={[typography.body1, styles.input]}
+              value={inviteCode}
+              onChangeText={(text) => setInviteCode(text.toUpperCase())}
+              placeholder="Only if a company gave you one"
+              placeholderTextColor={colors.placeholder}
+              autoCapitalize="characters"
+              maxLength={16}
+              editable={!loading}
+            />
+          </View>
+        </View>
 
         {(['password', 'password_confirmation'] as const).map((field) => (
           <View key={field} style={styles.inputGroup}>

@@ -1,4 +1,7 @@
 // app/(app)/leads/[id].tsx
+import { AttachmentsCard } from '@/components/field/attachments-card';
+import { SignupLinkCard } from '@/components/field/signup-link-card';
+import { useCallLogger } from '@/hooks/use-call-logger';
 import { callLogApi } from '@/api/call-logs';
 import { leadApi } from '@/api/leads';
 import { AppColors } from '@/constants/colors';
@@ -57,6 +60,9 @@ export default function LeadDetailScreen() {
       load();
     }, [load])
   );
+
+  // Tap to call / WhatsApp, then one tap to log it when back in the app
+  const logger = useCallLogger(load);
 
   const changeStatus = async (status: 'new' | 'contacted' | 'qualified' | 'lost') => {
     try {
@@ -124,6 +130,9 @@ export default function LeadDetailScreen() {
           </View>
         </View>
 
+        {lead.product && (
+          <Text style={[typography.body2, { color: colors.primary, fontWeight: '600' }]}>Interested in {lead.product.name}</Text>
+        )}
         {lead.associated_entity && (
           <Text style={[typography.body2, { color: colors.mutedForeground }]}>Associated with {lead.associated_entity}</Text>
         )}
@@ -145,13 +154,13 @@ export default function LeadDetailScreen() {
 
         {phone && (
           <View style={styles.contactButtons}>
-            <TouchableOpacity style={[styles.contactButton, { backgroundColor: colors.primary }]} onPress={() => Linking.openURL(`tel:${phone}`)}>
+            <TouchableOpacity style={[styles.contactButton, { backgroundColor: colors.primary }]} onPress={() => logger.call({ phone, name: lead.display_name, leadId: lead.id, venueId: lead.venue_id })}>
               <Ionicons name="call" size={18} color={colors.primaryForeground} />
               <Text style={[typography.caption, { color: colors.primaryForeground, fontWeight: '600' }]}>Call {phone}</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.contactButton, { backgroundColor: '#25D366' }]}
-              onPress={() => Linking.openURL(`https://wa.me/${whatsappNumber(phone)}`)}
+              onPress={() => logger.whatsapp({ phone, name: lead.display_name, leadId: lead.id, venueId: lead.venue_id }, `https://wa.me/${whatsappNumber(phone)}`)}
             >
               <Ionicons name="logo-whatsapp" size={18} color="#fff" />
               <Text style={[typography.caption, { color: '#fff', fontWeight: '600' }]}>WhatsApp</Text>
@@ -159,6 +168,15 @@ export default function LeadDetailScreen() {
           </View>
         )}
       </View>
+
+      {lead.status !== 'converted' && <SignupLinkCard lead={lead} phone={phone} whatsappNumber={whatsappNumber} />}
+
+      <AttachmentsCard
+        attachments={lead.attachments ?? []}
+        to={{ type: 'lead', id: lead.id, clientUuid: lead.client_uuid ?? undefined }}
+        label={lead.display_name}
+        onAdded={load}
+      />
 
       {/* Status */}
       {lead.status !== 'converted' && (

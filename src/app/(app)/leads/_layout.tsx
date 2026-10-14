@@ -1,11 +1,12 @@
 // app/(app)/leads/_layout.tsx
 import { useAppTheme } from '@/hooks/use-app-theme';
-import { useResetNavigationOnUnmount } from '@/hooks/use-reset-navigation';
 import { typography } from '@/styles/typography';
 import { Stack } from 'expo-router';
 
+// The Leads tab returns to its list when you leave it (popToTopOnBlur in (app)/_layout).
+// It used to reset whenever it gained focus, which threw away a lead form opened from
+// another screen (dashboard "New lead", a visit's "Convert to lead").
 export default function LeadsLayout() {
-  useResetNavigationOnUnmount('/(app)/leads');
   const { colors } = useAppTheme();
 
   return (

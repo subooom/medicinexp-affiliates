@@ -108,6 +108,12 @@ export default function EarningsScreen() {
                 ? `${formatPaisa(summary.next_payout_paisa)} will be paid ${payoutDayLabel(summary.next_payout_date)}`
                 : `Next payout: ${payoutDayLabel(summary.next_payout_date)}`}
             </Text>
+            {!!summary.cutoff_at && (
+              <Text style={[typography.caption, styles.heroText]}>
+                Sales by {new Date(summary.cutoff_at).toLocaleDateString([], { weekday: 'long' })} night are paid that day
+                {summary.later_payout_paisa > 0 ? ` · ${formatPaisa(summary.later_payout_paisa)} goes in the payout after` : ''}
+              </Text>
+            )}
           </View>
 
           {summary.payout_delayed && (

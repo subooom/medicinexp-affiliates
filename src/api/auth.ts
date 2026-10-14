@@ -8,6 +8,8 @@ export interface RegisterInput {
   contact: string;
   password: string;
   password_confirmation: string;
+  // A program's invite code: joins that program instead of MedicineXP
+  invite_code?: string;
 }
 
 export const authApi = {
@@ -22,4 +24,8 @@ export const authApi = {
 export const programApi = {
   list: () => apiClient.get<ApiResponse<{ active_program_id: number | null; memberships: Membership[] }>>('/programs'),
   switchTo: (programId: number) => apiClient.post<ApiResponse<Membership>>(`/programs/${programId}/switch`),
+  // Ask to join another program with its invite code
+  join: (inviteCode: string) => apiClient.post<ApiResponse<Membership>>('/programs/join', { invite_code: inviteCode }),
+  respond: (programId: number, response: 'accept' | 'decline') =>
+    apiClient.post<ApiResponse<Membership | null>>(`/programs/${programId}/respond`, { response }),
 };

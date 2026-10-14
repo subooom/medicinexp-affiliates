@@ -124,9 +124,19 @@ export default function CallLogsListScreen() {
           <Ionicons name="chevron-back" size={28} color={colors.foreground} />
         </TouchableOpacity>
         <Text style={[typography.h4, { color: colors.foreground, fontWeight: '600' }]}>Calls</Text>
-        <TouchableOpacity style={[styles.addButton, { backgroundColor: colors.primary }]} onPress={() => router.push('/(app)/call-logs/create')}>
-          <Ionicons name="add" size={24} color={colors.primaryForeground} />
-        </TouchableOpacity>
+        <View style={{ flexDirection: 'row', gap: 8 }}>
+          {/* A pharmacy or organisation that isn't in the list yet */}
+          <TouchableOpacity
+            style={[styles.addButton, { backgroundColor: colors.card, borderWidth: 1, borderColor: colors.primary }]}
+            onPress={() => router.push('/(app)/venues/create')}
+            accessibilityLabel="Add a pharmacy or organisation"
+          >
+            <Ionicons name="business-outline" size={20} color={colors.primary} />
+          </TouchableOpacity>
+          <TouchableOpacity style={[styles.addButton, { backgroundColor: colors.primary }]} onPress={() => router.push('/(app)/call-logs/create')} accessibilityLabel="Log a call">
+            <Ionicons name="add" size={24} color={colors.primaryForeground} />
+          </TouchableOpacity>
+        </View>
       </View>
 
       <View>

@@ -1,7 +1,9 @@
 // app/(app)/profile/index.tsx
+import { programApi } from '@/api/auth';
 import { earningsApi } from '@/api/earnings';
 import { tierApi } from '@/api/tiers';
 import { ProgramSwitcher } from '@/components/programs/program-switcher';
+import { outbox } from '@/offline/outbox';
 import { AppColors } from '@/constants/colors';
 import { useAuth } from '@/context/AuthContext';
 import { useAppTheme } from '@/hooks/use-app-theme';
@@ -12,11 +14,39 @@ import { formatPaisa } from '@/utils/money';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { Href, useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
-import { Alert, ScrollView, Share, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, ScrollView, Share, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 export default function ProfileScreen() {
   const router = useRouter();
-  const { user, logout, activeMembership, activeMemberships } = useAuth();
+  const { user, logout, activeMembership, activeMemberships, checkAuthStatus } = useAuth();
+  const [inviteCode, setInviteCode] = useState('');
+  const [joining, setJoining] = useState(false);
+  const invitations = (user?.memberships ?? []).filter((m) => m.status === 'invited' && m.program);
+
+  const join = async () => {
+    if (inviteCode.trim().length < 4) return;
+    setJoining(true);
+    try {
+      const response = await programApi.join(inviteCode.trim());
+      setInviteCode('');
+      Alert.alert('Done', response.data.message || 'Request sent.');
+      await checkAuthStatus();
+    } catch (error: any) {
+      Alert.alert('Could not join', error.status ? error.message : 'You need internet for this.');
+    } finally {
+      setJoining(false);
+    }
+  };
+
+  const respond = async (programId: number, response: 'accept' | 'decline') => {
+    try {
+      const result = await programApi.respond(programId, response);
+      Alert.alert(response === 'accept' ? 'Welcome' : 'Declined', result.data.message || '');
+      await checkAuthStatus();
+    } catch (error: any) {
+      Alert.alert('Could not update', error.status ? error.message : 'You need internet for this.');
+    }
+  };
   const { colors } = useAppTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
 
@@ -51,21 +81,31 @@ export default function ProfileScreen() {
     });
   };
 
-  const handleLogout = () => {
-    Alert.alert('Log out', 'Are you sure you want to log out?', [
+  const handleLogout = async () => {
+    const waiting = (await outbox.list()).length;
+    Alert.alert(
+      'Log out',
+      waiting > 0
+        ? `${waiting} thing${waiting > 1 ? 's' : ''} you did offline ${waiting > 1 ? 'have' : 'has'} not been sent yet and will be lost. Connect to the internet first to keep them.`
+        : 'Are you sure you want to log out?',
+      [
       { text: 'Cancel', style: 'cancel' },
       { text: 'Log out', style: 'destructive', onPress: logout },
     ]);
   };
 
   const menu: { icon: IconName; label: string; route: Href; hint?: string }[] = [
+    { icon: 'map-outline', label: 'Pharmacies near me', route: '/(app)/map' },
+    { icon: 'easel-outline', label: 'Pitch kit (tips & demo video)', route: '/(app)/pitch' },
     { icon: 'trophy-outline', label: 'Tiers & rewards', route: '/(app)/tiers', hint: activeMembership?.tier?.name },
     { icon: 'business-outline', label: 'Pharmacies & clinics', route: '/(app)/venues' },
-    { icon: 'bag-handle-outline', label: 'My materials', route: '/(app)/materials' },
-    { icon: 'cube-outline', label: 'Drop-offs', route: '/(app)/distributions' },
+    { icon: 'bag-handle-outline', label: 'My stock', route: '/(app)/inventory' },
+    { icon: 'cube-outline', label: 'Materials pickup', route: '/(app)/pickups' },
+    { icon: 'archive-outline', label: 'Drop-offs', route: '/(app)/distributions' },
     { icon: 'call-outline', label: 'Calls', route: '/(app)/call-logs' },
     { icon: 'pricetag-outline', label: 'Coupons', route: '/(app)/coupons' },
     { icon: 'people-circle-outline', label: 'Meetups', route: '/(app)/meetups' },
+    { icon: 'cloud-upload-outline', label: 'Sync', route: '/(app)/sync' },
   ];
 
   return (
@@ -123,6 +163,22 @@ export default function ProfileScreen() {
         </View>
       )}
 
+      {invitations.map((m) => (
+        <View key={m.id} style={[styles.codeCard, { backgroundColor: colors.card, borderColor: colors.primary, flexDirection: 'column', alignItems: 'stretch', gap: 10 }]}>
+          <Text style={[typography.body1, { color: colors.foreground }]}>
+            <Text style={{ fontWeight: '700' }}>{m.program!.name}</Text> invited you to join their team.
+          </Text>
+          <View style={{ flexDirection: 'row', gap: 10 }}>
+            <TouchableOpacity style={[styles.inviteButton, { backgroundColor: colors.primary }]} onPress={() => respond(m.program!.id, 'accept')}>
+              <Text style={[typography.button, { color: colors.primaryForeground }]}>Join</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={[styles.inviteButton, { borderWidth: 1, borderColor: colors.border }]} onPress={() => respond(m.program!.id, 'decline')}>
+              <Text style={[typography.button, { color: colors.foreground }]}>No thanks</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      ))}
+
       <View style={[styles.stats, { backgroundColor: colors.card, borderColor: colors.border }]}>
         <Stat label="Pharmacies signed" value={counts?.sales ?? '—'} colors={colors} />
         <Stat label="Earned" value={lifetimePaisa != null ? formatPaisa(lifetimePaisa) : '—'} colors={colors} />
@@ -142,6 +198,25 @@ export default function ProfileScreen() {
             <Ionicons name="chevron-forward" size={18} color={colors.mutedForeground} />
           </TouchableOpacity>
         ))}
+      </View>
+
+      <View style={[styles.menu, { backgroundColor: colors.card, borderColor: colors.border, padding: 16, gap: 10 }]}>
+        <Text style={[typography.body1, { color: colors.foreground, fontWeight: '600' }]}>Join another program</Text>
+        <Text style={[typography.caption, { color: colors.mutedForeground }]}>Got an invite code from a pharma company? Enter it here.</Text>
+        <View style={{ flexDirection: 'row', gap: 10 }}>
+          <TextInput
+            value={inviteCode}
+            onChangeText={(text) => setInviteCode(text.toUpperCase())}
+            placeholder="INVITE CODE"
+            placeholderTextColor={colors.placeholder}
+            autoCapitalize="characters"
+            maxLength={16}
+            style={[styles.codeInput, { borderColor: colors.border, color: colors.foreground }]}
+          />
+          <TouchableOpacity style={[styles.inviteButton, { backgroundColor: colors.primary, flex: 0, paddingHorizontal: 18 }]} onPress={join} disabled={joining}>
+            {joining ? <ActivityIndicator color={colors.primaryForeground} /> : <Text style={[typography.button, { color: colors.primaryForeground }]}>Join</Text>}
+          </TouchableOpacity>
+        </View>
       </View>
 
       <TouchableOpacity
@@ -175,6 +250,8 @@ function Stat({ label, value, colors }: { label: string; value: number | string;
 const createStyles = (colors: AppColors) =>
   StyleSheet.create({
     content: { padding: 16, paddingTop: 56, gap: 12, paddingBottom: 40 },
+    inviteButton: { flex: 1, minHeight: 46, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
+    codeInput: { flex: 1, minHeight: 46, borderWidth: 1, borderRadius: 10, paddingHorizontal: 12, fontSize: 16, letterSpacing: 2 },
     header: { alignItems: 'center', gap: 2, marginBottom: 4 },
     avatar: { width: 72, height: 72, borderRadius: 36, alignItems: 'center', justifyContent: 'center', marginBottom: 8 },
     programCard: { flexDirection: 'row', alignItems: 'center', padding: 16, borderRadius: 14, borderWidth: 2 },

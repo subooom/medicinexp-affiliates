@@ -15,6 +15,11 @@ const HIDDEN_ROUTES = [
   'coupons',
   'meetups',
   'inventory',
+  'pickups',
+  'pitch',
+  'map',
+  'sync',
+  'leaderboard',
 ];
 
 export default function AppLayout() {
@@ -55,8 +60,8 @@ export default function AppLayout() {
     >
       <Tabs.Screen name="index" options={{ title: 'Dashboard' }} />
       <Tabs.Screen name="visits" options={{ title: 'Visits' }} />
-      <Tabs.Screen name="leads" options={{ title: 'Leads', freezeOnBlur: true }} />
-      <Tabs.Screen name="commissions" options={{ title: 'Earnings' }} />
+      <Tabs.Screen name="leads" options={{ title: 'Leads', freezeOnBlur: true, popToTopOnBlur: true }} />
+      <Tabs.Screen name="commissions" options={{ title: 'Earnings', popToTopOnBlur: true }} />
       <Tabs.Screen name="profile" options={{ title: 'Profile' }} />
 
       {HIDDEN_ROUTES.map((name) => (

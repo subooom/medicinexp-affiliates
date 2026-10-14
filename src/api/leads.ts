@@ -32,4 +32,7 @@ export const leadApi = {
   updateStatus: (id: number, status: 'new' | 'contacted' | 'qualified' | 'lost', lostReason?: string) =>
     apiClient.patch<ApiResponse<Lead>>(`/leads/${id}/status`, { status, lost_reason: lostReason }),
   getStats: () => apiClient.get<ApiResponse<LeadStats>>('/leads/stats'),
+  // A personal link that opens the pharmacy's sign-up already filled in from this lead
+  signupLink: (id: number, couponId?: number) =>
+    apiClient.post<ApiResponse<{ url: string; code: string | null }>>(`/leads/${id}/signup-link`, couponId ? { coupon_id: couponId } : {}),
 };

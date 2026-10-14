@@ -4,7 +4,7 @@ import { useAppTheme } from '@/hooks/use-app-theme';
 import { typography } from '@/styles/typography';
 import { Tier } from '@/types/models';
 import { toIconName } from '@/utils/icons';
-import { formatRate } from '@/utils/money';
+import { formatPaisa, formatRate } from '@/utils/money';
 import { requirementLabel } from '@/utils/tiers';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useLocalSearchParams } from 'expo-router';
@@ -35,7 +35,8 @@ export default function TierDetailScreen() {
   const tierColor = tier.color || colors.primary;
   const schedule = [...tier.commission_schedule].sort((a, b) => a.from_year - b.from_year);
   const requirements = Object.entries(tier.requirements).filter(([, value]) => value > 0);
-  const couponCount = tier.perks?.coupon_count;
+  const couponCount: number = tier.perks?.coupon_count ?? 0;
+  const perkItems: string[] = Array.isArray(tier.perks?.items) ? tier.perks.items : [];
 
   return (
     <ScrollView style={{ flex: 1, backgroundColor: colors.background }} contentContainerStyle={{ padding: 16, gap: 12 }}>
@@ -85,15 +86,29 @@ export default function TierDetailScreen() {
         )}
       </View>
 
-      {couponCount ? (
+      {couponCount || perkItems.length || tier.activity_bonus_paisa ? (
         <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
           <Text style={[typography.body1, styles.title, { color: colors.foreground }]}>Perks</Text>
-          <View style={styles.row}>
-            <Ionicons name="pricetag-outline" size={16} color={colors.primary} />
-            <Text style={[typography.body2, { color: colors.foreground }]}>
-              {couponCount} discount coupon{couponCount > 1 ? 's' : ''} to offer pharmacies
-            </Text>
-          </View>
+          {couponCount ? (
+            <View style={styles.row}>
+              <Ionicons name="pricetag-outline" size={16} color={colors.primary} />
+              <Text style={[typography.body2, { color: colors.foreground, flex: 1 }]}>
+                {couponCount} new code{couponCount > 1 ? 's' : ''} for pharmacies. You name them and set each one's discount (up to {formatRate(tier.first_year_rate_bp)}).
+              </Text>
+            </View>
+          ) : null}
+          {tier.activity_bonus_paisa > 0 && (
+            <View style={styles.row}>
+              <Ionicons name="flash-outline" size={16} color={colors.primary} />
+              <Text style={[typography.body2, { color: colors.foreground, flex: 1 }]}>Activity bonus up to {formatPaisa(tier.activity_bonus_paisa)} per sale each week</Text>
+            </View>
+          )}
+          {perkItems.map((item) => (
+            <View key={item} style={styles.row}>
+              <Ionicons name="gift-outline" size={16} color={colors.primary} />
+              <Text style={[typography.body2, { color: colors.foreground, flex: 1 }]}>{item}</Text>
+            </View>
+          ))}
         </View>
       ) : null}
     </ScrollView>

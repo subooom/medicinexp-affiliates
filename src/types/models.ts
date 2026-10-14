@@ -26,6 +26,8 @@ export interface Program {
   name: string;
   slug: string;
   kind: 'saas' | 'pharma' | 'other';
+  // false = paused by MedicineXP: listed in the picker but can't be chosen
+  is_active?: boolean;
   description: string | null;
   logo_url: string | null;
   contact_name: string | null;
@@ -53,6 +55,7 @@ export interface Tier {
   first_year_rate_bp: number;
   requirements: Record<string, number>;
   perks: Record<string, any>;
+  activity_bonus_paisa: number;
 }
 
 export type MembershipStatus = 'invited' | 'pending' | 'active' | 'suspended' | 'left';
@@ -88,7 +91,7 @@ export interface TierRequirementProgress {
 }
 
 export interface TierProgress {
-  next_tier: { id: number; name: string; level: number };
+  next_tier: { id: number; name: string; level: number; color?: string | null; icon?: string | null; first_year_rate_bp?: number };
   requirements: Record<string, TierRequirementProgress>;
   percent: number;
 }
@@ -189,6 +192,8 @@ export interface Material {
 
 // From GET /materials: the material plus what this MR carries and has dropped off
 export interface MaterialWithStock extends Material {
+  program_id: number;
+  program_name: string | null;
   in_bag: number;
   total_dropped_off: number;
   recent_dropoffs: Dropoff[];
@@ -211,6 +216,8 @@ export interface DropoffInput {
   material_id: number;
   quantity: number;
   client_uuid?: string;
+  // Another program the MR is in: stored as that program's own visit (same place and time)
+  program_id?: number;
 }
 
 // ---------------------------------------------------------------------------
@@ -233,6 +240,10 @@ export interface Visit {
   notes: string | null;
   checked_out_at: string | null;
   dropoffs?: Dropoff[];
+  // Shop photos and voice memos (detail endpoint only)
+  attachments?: Attachment[];
+  // Leads made from this visit (only on the visit detail)
+  leads?: { id: number; display_name: string; status: LeadStatus }[];
   created_at: string;
 }
 
@@ -290,12 +301,16 @@ export interface Lead {
   notes: string | null;
   venue_id: number | null;
   venue?: Venue | null;
+  product_id: number | null;
+  product?: { id: number; name: string } | null;
   visit_id: number | null;
   is_customer: boolean;
   converted_at: string | null;
   lost_at: string | null;
   lost_reason: string | null;
   latest_call_log?: CallLog | null;
+  // Voice memos and photos (detail endpoint only)
+  attachments?: Attachment[];
   created_at: string;
   updated_at: string;
 }
@@ -313,6 +328,7 @@ export interface LeadInput {
   interest_level?: number | null;
   next_follow_up_at?: string | null;
   notes?: string | null;
+  product_id?: number | null;
   client_uuid?: string;
 }
 
@@ -361,6 +377,9 @@ export interface EarningsSummary {
   this_week_paisa: number;
   paid_paisa: number;
   next_payout_paisa: number;
+  // Earned after the cutoff: paid the payout after
+  later_payout_paisa: number;
+  cutoff_at: string;
   pending_paisa: number;
   held_bonus_paisa: number;
   next_payout_date: string; // YYYY-MM-DD
@@ -410,4 +429,189 @@ export interface DashboardData {
   scheduled_calls_today: CallLog[];
   recent_visits: Visit[];
   recent_leads: Lead[];
+}
+
+// ---------------------------------------------------------------------------
+// Field kit, coupons, pickups, meetups, attachments, map
+// ---------------------------------------------------------------------------
+
+export interface CheatSheetCard {
+  title: string;
+  body: string;
+}
+
+export interface FieldKit {
+  program_id: number;
+  program_name: string;
+  cheat_sheet: CheatSheetCard[];
+  demo_video: { url: string; bytes: number; updated_at: string | null } | null;
+  contact: { name: string | null; phone: string | null; email: string | null; address: string | null };
+}
+
+/** A referral code a pharmacy enters at sign-up. The rep names it and sets its discount. */
+export interface Coupon {
+  id: number;
+  code: string;
+  // The code in their QR / referral link
+  is_main: boolean;
+  discount_percentage: number;
+  pharmacies_count: number;
+  status: 'active' | 'inactive';
+  share_url: string;
+  created_at: string | null;
+}
+
+export interface CodesResponse {
+  year1_rate_bp: number;
+  // A discount comes out of the rep's commission, so it can't be more than their rate
+  max_discount_bp: number;
+  codes_unlocked: number;
+  tier: { id: number; name: string; color: string | null } | null;
+  codes: Coupon[];
+  products: { id: number; name: string; first_year_price_paisa: number }[];
+}
+
+export interface Product {
+  id: number;
+  name: string;
+  tagline: string | null;
+  description: string | null;
+  image_url: string | null;
+  price_paisa: number;
+  first_year_price_paisa: number;
+  billing_period: 'year' | 'month' | 'one_time';
+  features: string[];
+}
+
+/** The weekly goal card (GET /activity). */
+export interface ActivityState {
+  starts_at: string;
+  cutoff_at: string;
+  payout_date: string;
+  score: number;
+  target: number;
+  counts: Record<'visit' | 'lead' | 'call' | 'sale' | 'pickup' | 'meetup', number>;
+  points: Record<string, number>;
+  point_values: Record<string, number>;
+  sales_count: number;
+  streak_weeks: number;
+  multiplier_bp: number;
+  tier_bonus_paisa: number;
+  bonus_per_sale_paisa: number;
+  bonus_so_far_paisa: number;
+  tier: { id: number; name: string; color: string | null; level: number; rates: number[] } | null;
+  next_tier: {
+    id: number;
+    name: string;
+    color: string | null;
+    rates: number[];
+    codes: number;
+    activity_bonus_paisa: number;
+    progress: TierProgress | null;
+  } | null;
+  codes_unlocked: number;
+  latest_sale: { commission_id: number; amount_paisa: number; pharmacy: string | null; earned_at: string | null } | null;
+  leaderboard_enabled: boolean;
+}
+
+export interface LeaderboardRow {
+  membership_id: number;
+  name: string;
+  tier: string | null;
+  tier_color: string | null;
+  sales: number;
+  score: number;
+  is_me: boolean;
+}
+
+export interface Leaderboard {
+  cutoff_at: string;
+  by_sales: LeaderboardRow[];
+  by_score: LeaderboardRow[];
+  my_rank_sales: number | null;
+  my_rank_score: number | null;
+  total_reps: number;
+}
+
+export interface Hub {
+  id: number;
+  name: string;
+  address: string | null;
+  latitude: number | null;
+  longitude: number | null;
+}
+
+export type PickupStatus = 'requested' | 'approved' | 'rejected' | 'collected' | 'cancelled';
+
+export interface PickupItem {
+  material_id: number;
+  material_name: string | null;
+  unit: string | null;
+  quantity_requested: number;
+  quantity_approved: number | null;
+  quantity_handed_over: number | null;
+}
+
+export interface Pickup {
+  id: number;
+  client_uuid: string | null;
+  status: PickupStatus;
+  notes: string | null;
+  rejection_reason: string | null;
+  pickup_at: string | null;
+  pickup_location_note: string | null;
+  hub: Hub | null;
+  mr_arrived_at: string | null;
+  handed_over_at: string | null;
+  items: PickupItem[];
+  created_at: string | null;
+}
+
+export type MeetupStatus = 'requested' | 'scheduled' | 'done' | 'cancelled';
+
+export interface Meetup {
+  id: number;
+  client_uuid: string | null;
+  title: string;
+  purpose: string | null;
+  status: MeetupStatus;
+  starts_at: string | null;
+  ends_at: string | null;
+  location_name: string | null;
+  address: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  cancellation_reason: string | null;
+  requested_by_me: boolean;
+  organizer: string | null;
+  my_response: 'pending' | 'accepted' | 'declined' | null;
+  my_arrived_at: string | null;
+  participant_count: number;
+}
+
+export interface Attachment {
+  id: number;
+  client_uuid: string | null;
+  kind: 'photo' | 'voice_memo';
+  mime_type: string | null;
+  size_bytes: number | null;
+  duration_seconds: number | null;
+  transcript: string | null;
+  url: string;
+  recorded_at: string | null;
+  created_at: string | null;
+}
+
+export type MapPinStatus = 'signed_up' | 'interested' | 'visited' | 'not_visited';
+
+export interface MapPin {
+  id: number;
+  name: string;
+  address: string;
+  latitude: number;
+  longitude: number;
+  type: string | null;
+  distance_km: number;
+  my_status: MapPinStatus;
+  last_visit_at: string | null;
 }
