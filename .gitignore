@@ -41,3 +41,7 @@ example
 # generated native folders
 /ios
 /android
+
+# This project uses npm (package-lock.json). A stray yarn.lock makes EAS install with
+# yarn --frozen-lockfile, which fails when it is out of date; ignored files are not uploaded.
+yarn.lock
