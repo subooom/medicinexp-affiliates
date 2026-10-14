@@ -11,6 +11,8 @@ import { Image, Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } fr
 interface MaterialPickerProps {
   // Materials in the MR's bag (GET /materials?in_bag=1)
   materials: MaterialWithStock[];
+  // The program the rep is working in: its materials have no "From ..." label
+  activeProgramId?: number | null;
   // material_id -> quantity being left at this venue
   quantities: Record<number, number>;
   onChange: (quantities: Record<number, number>) => void;
@@ -22,7 +24,7 @@ const STEPS = [1, 2, 5];
  * What the MR leaves at a venue during check-in. Each material is capped by what's
  * in their bag and the program's per-visit limit.
  */
-export function MaterialPicker({ materials, quantities, onChange }: MaterialPickerProps) {
+export function MaterialPicker({ materials, activeProgramId, quantities, onChange }: MaterialPickerProps) {
   const { colors } = useAppTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
   const [infoFor, setInfoFor] = useState<MaterialWithStock | null>(null);
@@ -57,15 +59,17 @@ export function MaterialPicker({ materials, quantities, onChange }: MaterialPick
     <View style={styles.list}>
       {materials.map((material, index) => {
         const quantity = quantities[material.id] ?? 0;
-        // Program heading when the bag holds more than one program's materials
-        const showProgram = multiProgram && material.program_id !== materials[index - 1]?.program_id;
+        // Program heading at each program's first material: always for another program's
+        // ("From Acme"), and for the active one too when others are listed
+        const fromOther = activeProgramId != null && material.program_id !== activeProgramId;
+        const showProgram = (multiProgram || fromOther) && material.program_id !== materials[index - 1]?.program_id;
         const limit = limitOf(material);
         const typeColor = material.type?.color || colors.primary;
 
         return (
           <View key={material.id} style={{ gap: 8 }}>
           {showProgram && (
-            <Text style={[typography.overline, { color: colors.primary, marginTop: index > 0 ? 8 : 0 }]}>{material.program_name ?? 'Program'}</Text>
+            <Text style={[typography.overline, { color: colors.primary, marginTop: index > 0 ? 8 : 0 }]}>{fromOther ? `From ${material.program_name ?? 'another program'}` : material.program_name ?? 'Program'}</Text>
           )}
           <View
             style={[styles.row, { backgroundColor: colors.card, borderColor: quantity > 0 ? colors.primary : colors.border }]}
