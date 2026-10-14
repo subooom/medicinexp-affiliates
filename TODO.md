@@ -262,9 +262,9 @@ Ticks are updated as work lands. Every item is built **program-aware** (see Deci
 
 ## 🔜 Before the pilot (needs you)
 
-- [ ] Rebuild the dev app — new native modules (camera, audio, speech and text recognition, notifications, video, WebView, background task): `npx expo run:android`
-- [ ] Run the new migrations in dev (`php artisan migrate --path=database/migrations/affiliate`) and re-run the affiliate seeder (tier coupon counts changed)
-- [ ] Create the first portal login: `php artisan affiliates:portal-user you@medicinexp.com --name="Your Name"`
+- [x] Rebuild the dev app — new native modules (camera, audio, speech and text recognition, notifications, video, WebView, background task): `npx expo run:android`
+- [x] Run the new migrations in dev (`php artisan migrate --path=database/migrations/affiliate`) and re-run the affiliate seeder (tier coupon counts changed)
+- [x] Create the first portal login: `php artisan affiliates:portal-user you@medicinexp.com --name="Your Name"`
 - [ ] Scheduler running (`affiliates:send-reminders` every 5 min) and `php artisan storage:link` (demo videos, material photos)
 - [ ] Upload the demo video and write the cheat sheet in the portal (Program page)
 - [ ] Confirm the tier rates and activity bonus amounts in the portal's **earnings calculator** (Tiers page) against your margins — seeded: 10/12/15/18/20% year 1, रू 150–400 bonus per sale

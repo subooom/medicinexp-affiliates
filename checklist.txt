@@ -1,0 +1,299 @@
+MEDICINEXP AFFILIATES - WHAT'S LEFT
+(tick with [x]) - verified 14 Oct 2026
+
+Order: merge PRs -> run-book -> codes fix + push -> pilot (How you earn, bucket) ->
+journal import -> companions + contacts -> team up / credit / holds -> rep map -> pitch recordings ->
+portal live map (any time) -> HUD performance (any time) -> near-expiry ->
+security fixes (any time, small) -> server upgrade LAST
+
+- [ ] PRs
+  - [x] pharmacyxp #54 - lead sales, leads "Open" filter fix, visits link the shop's lead (merged 13 Oct)
+  - [ ] medicinexp-affiliates #1 - field kit, earning model, dashboard (into main)
+  - [ ] medicinexp-affiliates #2 - convert to sale, back to leads list, agent docs (stacked on #1)
+  - [ ] pharmacyxp-landing #22 - sign-up filled from the visit, phone layout, agent docs
+  - [ ] pharmacyxp #46 - bulk entry (feat-bulk-entry-gemini), yours
+  - [x] pharmacyxp #55 - AGENTS.md + agents/ docs (merged)
+    - [ ] Pull production on your machine (the local copies were removed so the pull won't clash)
+  - [x] pharmacyxp #56 - HUD one-request dashboard (merged)
+  - [x] pharmacyxp #58 - HUD filters + facet counts (merged)
+  - [ ] pharmacyxp #59 - HUD incident actions show at once, bulk resolve closes acknowledged
+  - [ ] Delete merged server branches
+    - [ ] feat-affiliate-portal, feat-affiliate-programs, feat-affiliate-lead-sales
+    - [ ] bug-fix-ajax-delete-redirect, bug-fix-validation-messages
+    - [x] docs-agents (deleted)
+    - [ ] enhancement-hud-dashboard, enhancement-hud-filters (after #59)
+
+- [x] Agent docs: AGENTS.md + agents/ in server, app and landing
+  - [ ] Keep agents/log.md updated (one line per change) and decisions.md when rules change
+
+- [ ] Codes not showing at Bronze
+  - [ ] Run the 3 diagnostic SQL queries on staging
+  - [ ] Self-repair: opening My codes tops up missing codes (PR)
+  - [ ] If tiers lack coupon_count: re-run affiliate seeder or SQL update
+
+- [ ] Push notifications (not arriving: no Firebase set up)
+  - [ ] Firebase project, Android app com.medicinexp.affiliates, google-services.json (you)
+  - [ ] Point app.json at it (me)
+  - [ ] Upload FCM V1 service account key to EAS (you)
+  - [ ] New EAS build, test with a pickup approval
+  - [ ] Profile shows "Push: on/off"
+  - [ ] Tell the hub when a rep taps "I'm here" on a pickup
+  - [ ] iOS later: Apple developer account, EAS makes the push key, TestFlight
+
+- [ ] "How you earn" screen (app)
+  - [ ] One screen, plain words, with the rep's own numbers (tier, rate, codes)
+    - [ ] Commission: rate x price, locked when the pharmacy signs up; renewals from Gold
+    - [ ] Codes: discount comes out of your commission (live example)
+    - [ ] Activity bonus: points -> paid per sale; expire at the cutoff without a sale
+    - [ ] Payouts: day + cutoff ("sales by Wednesday are paid Friday"), sign-up bonus
+  - [ ] Later sections when built: team splits, shop holds
+  - [ ] Linked from dashboard, Earnings tab and onboarding; first-open walkthrough
+  - [ ] Text comes from the server (per program), so rules stay in one place
+
+- [ ] Bucket icon on every screen (quick view)
+  - [x] Bucket = the rep's bag of materials
+  - [ ] Small floating button, all screens except login, camera and full-screen video
+    - [ ] Badge: items running low / pickup waiting
+  - [ ] Tap -> bottom sheet, no navigation away
+    - [ ] Bag contents by program: material, count, low-stock warning
+    - [ ] Pickups waiting (approved: where + when) and items waiting to sync offline
+    - [ ] Quick actions: request pickup, open My stock, add to bag
+  - [ ] Add to bag = whatever the rep carries in their satchel ("10 pens, 20 notebooks, 3 samples of medicine A")
+    - [ ] Two kinds in the bag: program materials (from pickups) + own items (added by the rep)
+    - [ ] Own item: type name, unit, quantity, optional photo; reuse names already added; works offline
+    - [ ] Own items: rep adds/edits freely, no approval; handing them out at a check-in lowers the count
+    - [ ] Own items never change program stock and don't earn activity points (no gaming)
+    - [ ] Portal: read-only view of what reps carry; admin can turn a common item into a catalogue material
+    - [ ] Medicine samples feed the central drug DB (quiet curation)
+      - [ ] "Is this a medicine?" -> drug form; its name field suggests central drugs as they type (CentralDrugMatcher / trigrams)
+        - [ ] Pick a suggestion: fills the form; name + manufacturer locked, strength + form stay editable
+        - [ ] Variants: server checks the identity key (CentralDrugService::getUniqueKey)
+          - [ ] Same key -> link; existing variant -> link to it; new strength/form -> new pending variant (copies names, manufacturer, group)
+          - [ ] Add created_by_mr_id to central_drugs (bulk entry only tracks tenants); admins merge bad variants
+        - [ ] No match: fill the form -> new central drug, status pending, source = affiliate rep (bulk entry's columns)
+      - [ ] Form fields: manufacturer (suggests existing, ManufacturerMatcher), form (dosage forms list), strength (text), photo
+      - [ ] De-dupe: matcher check before creating; repeat names from other reps link to the same pending drug
+      - [ ] Central admin reviews pending drugs (same queue as bulk entry's); approved ones join search for all tenants
+  - [ ] Works offline from cached stock; doesn't cover tab bar or check-in buttons
+
+- [ ] Journal import (MedicineXP program)
+  - [ ] Send photos (one page per shot)
+  - [ ] Transcribe into a review table, writer per row (you / Naindra / Sushma)
+    - [ ] Sushma's call logs go to her
+    - [ ] Note who went along (companions)
+  - [ ] Correct the table, send the 3 app emails
+  - [ ] SQL file with preview block, run on a copy/staging first, then production
+  - [ ] Old visits count toward tiers (tier updates on each person's next app action)
+
+- [ ] Visits: who went with you
+  - [ ] "Who came with you?" chips at check-in and on the visit
+    - [ ] App users linked to their account, others by name (Dad, Suwan)
+  - [ ] Visit shows linked people with status
+
+- [ ] Team up
+  - [ ] QR link (short-lived signed token, camera already in app)
+  - [ ] Find teammate screen (location only while open, cache only, other side accepts)
+  - [ ] Session banner, auto-adds partner to every check-in, ends end of day
+  - [ ] "Were you with Naindra?" suggestion from check-in GPS (same shop / 100 m / 15 min)
+  - [ ] Dashboard -> Team up -> scan/show: max 2 taps
+
+- [ ] Team credit (decided: pot capped at the lower tier)
+  - [ ] Pot = lower tier's rate (minus code discount), split by shares
+  - [ ] Bidding screen to agree shares ("I want 70" / "I can give 50"), back and forth
+    - [ ] Each rep has a default share to start from; offer, counter, accept or decline
+    - [ ] Offers expire after 24 h; max ~5 rounds; accepted split is locked and shown on the lead
+  - [ ] Shares locked at pharmacy sign-up
+  - [ ] Activity bonus x share
+  - [x] Tier counts follow the agreed share (70/30 -> 0.7 and 0.3 of a sale)
+  - [ ] Watch if seniors stop teaming with juniors (uneven shares / mentoring bonus)
+
+- [ ] Shop holds
+  - [ ] Settings in .env: hold days, first hold, check-in age (3 days), distance (150 m), cap per rep (25), check-in-only hold
+  - [ ] Decide shorter holds (30 days felt too long; a 24 h check-in hold from 5 PM blocks most of the next day)
+    - [ ] Proposed: check-in-only hold lasts until midnight that day (at least 4 h, so a late visit still counts)
+    - [ ] Proposed: lead hold 14 days (was 30), first hold 3 days (was 7); each real visit/call resets it
+  - [ ] Hold starts at a qualifying lead (anti-squatting)
+    - [ ] Rep checked in there with GPS within 150 m in the last few days
+    - [ ] Lead has a contact name + phone of someone at the shop
+    - [ ] Short first hold, each real visit/call resets to the full length, lapses if idle
+  - [ ] Anti-squatting (stop fake leads holding shops)
+    - [ ] Proposed: only progress extends a hold; max total hold (45 days) unless the lead's stage moves forward
+    - [ ] Proposed: only a GPS check-in at the shop resets the hold; logged calls don't (can't be verified)
+    - [ ] Proposed: unanswered "Ask to join" goes to a program admin after 48 h (release or team up)
+    - [ ] Cooldown: a rep whose hold lapsed can't hold the same shop again for 14 days (config)
+    - [ ] Cap follows results: reps whose holds keep lapsing without a sale get a smaller cap (down to ~10)
+    - [ ] Contact checks: valid Nepali number, not the rep's or another rep's, same number on several shops -> flag
+    - [ ] Contact already on another rep's lead -> "this shop's contact is with Naindra"
+    - [ ] Portal "Suspicious holds": many holds/few sales, hold right after another rep's check-in, check-ins under a minute, shared contact phones
+      - [ ] One-click release with a reason the rep sees
+    - [ ] Sign-up with another rep's code beats the hold; admin decides credit (normally the closer)
+  - [ ] "Naindra is working this shop" on venue, map and check-in
+  - [ ] Ask to join -> holder negotiates -> team on that lead
+  - [ ] Signed up with another rep's code: flag in portal, program admins resolve
+  - [ ] Program admins can release a hold
+  - [x] Decided: a GPS check-in alone holds the shop (length: see "Decide shorter holds" above)
+  - [x] One lead per shop while held (lock days in config)
+    - [ ] During the lock: another rep must agree a split with the holder (bidding screen) to work it
+    - [ ] Lock lapses unconverted -> another rep can take the shop (fresh hold)
+
+- [ ] Contact sync
+  - [ ] Save to phone on lead create/edit (tick, on by default), never on visits
+  - [ ] Manual "Save to contacts" on venue and lead
+  - [ ] Name: "Ram Thapa (Shree Ganesh Pharmacy) MedicineXP" (search "medicinexp" finds all)
+  - [ ] Update by phone number, never duplicate, never delete
+  - [x] Tested vivo: call screen (in and out) shows company + job title on one line
+  - [ ] Remarks on the call screen, updated on events
+    - [ ] Company = status + product ("Interested · Premium plan")
+    - [ ] Job title = next step / latest event ("Follow up Fri 3 PM · demo done")
+    - [ ] Note = last visit/call note (contact card only); keep line under ~55 chars
+    - [ ] Pad: company ends with a space, title starts with one (vivo joins them with "-")
+  - [x] Test contact "Ram Thapa (Shree Ganesh Pharmacy)" 9880001234 deleted from the vivo
+  - [x] Decided: reps don't keep our contacts when they leave
+    - [ ] Android: save contacts under the app's own "MedicineXP" account (not Google)
+      - [ ] Not synced to their Google account; removed automatically if the app is uninstalled
+      - [ ] Still shown on the call screen and in contact search
+      - [ ] Needs a small native module (account + sync adapter); expo-contacts can't do this alone
+    - [ ] On suspension/leaving: app deletes its contacts at next launch (backup to the above)
+    - [ ] iOS: no app-owned accounts; best effort only (delete on suspension)
+    - [ ] Build the native module with the next build for push (one build for both)
+
+- [ ] Rep map: available pharmacies (after shop holds)
+  - [ ] Own program only; nothing from other programs
+  - [ ] Layers: available (highlighted), mine (full detail), held by another rep
+    - [ ] Held: "Naindra · held until Fri" + Ask to join
+  - [ ] Customers: shown only within 1000 m of the rep (no whole-map customer list)
+  - [ ] Never show other reps' notes, contacts, discounts or lead details
+  - [ ] Builds on the app map's existing my_status per shop
+
+- [ ] Pitch recordings (find out which reps pitch best; rewards only)
+  - [x] Decided: rewards are bonuses only (no tier bumps; tiers stay earned by sales)
+  - [x] Decided: never a penalty for not recording or for a weak pitch; results stay the main measure
+  - [x] Decided: reviewers are portal_admin and program_admin
+  - [ ] Ask a lawyer to check the consent wording (Individual Privacy Act 2075)
+  - [ ] 1. Record + review
+    - [ ] App, visit screen: Record pitch -> consent line to read out -> pharmacist says yes on the recording -> "They agreed" / "Declined" (declined keeps nothing)
+    - [ ] Red indicator + timer, 15 min cap, stops when leaving the visit screen, no background recording
+    - [ ] After: Submit for review or Delete (only submitted ones reach the portal)
+    - [ ] expo-audio, mono low bitrate (~180 KB/min), saved on the phone, uploaded by the offline queue
+    - [ ] Table aff_visit_recordings: visit, rep, consent time, duration, file, status (draft/submitted/reviewed/deleted), scores, reviewer, delete_after
+    - [ ] Private encrypted storage, short-lived playback links, every listen logged
+    - [ ] Auto-delete: drafts after 7 days, audio 90 days after review (scores + notes kept)
+    - [ ] Portal "Pitch reviews": queue, player, scores (opening, product knowledge, objections, close) + notes
+  - [ ] 2. Rewards + feedback
+    - [ ] Reviewer awards a bonus with a reason; shows in the rep's earnings
+    - [ ] Rep sees their scores and notes in the app
+    - [ ] decisions.md: bonuses only, no penalties, who reviews
+  - [ ] 3. Good pitches in the pitch kit
+    - [ ] Admins upload an audio recording to the pitch kit for all reps to hear
+    - [ ] Only with the rep's OK (and the pharmacist's, or cut their part out)
+  - [ ] Later (optional): transcripts + AI coaching notes; a person always decides the bonus
+
+- [ ] Portal live map (can be built any time)
+  - [ ] MapLibre GL + OpenFreeMap tiles (free, no key), own dark style
+    - [ ] Black background, grey roads, labels only for cities/main areas
+  - [ ] Pulsing events at shop locations (never a rep's live position)
+    - [ ] Check-in: red pulse (the "sensor")
+    - [ ] New lead: orange pulse (brand colour)
+    - [ ] Sale / sign-up: bigger white-gold burst
+    - [ ] Hubs: static markers, no pulse; heat layer underneath for density
+  - [ ] Live: poll every 30-60 s; server sends summarised points (cap a few thousand)
+  - [ ] Filters: live / today / week / month, event type, rep (admins only), program (platform admin)
+  - [ ] Access
+    - [ ] Platform admins: all programs; program admins: own program (existing portal scoping)
+    - [ ] Program staff: heatmap + event types, no per-rep filter
+
+- [ ] Tenant: near-expiry drug notifications (pharmacy admin panel)
+  - [ ] Daily scheduled check, per tenant
+    - [ ] Window = setting('admin.near_expiry_date_in_days')
+    - [ ] Re-check when the setting changes
+  - [ ] Drug newly inside the window -> notify users who can browse_drugs_near_expiry
+    - [ ] Channel: database (bell in admin panel), links to /admin/drugs_near_expiry
+    - [ ] Several new ones in one run -> one notification ("5 drugs expire within 60 days")
+  - [ ] Remember which drugs were already notified (no repeats)
+  - [ ] First run: all existing near-expiry drugs -> one summary notification, not dozens
+  - [ ] Tests
+
+- [ ] Production run-book (back up central + tenant DBs first; deploys don't migrate)
+  - [ ] Affiliates (already in production code)
+    - [ ] php artisan migrate --path=database/migrations/affiliate --force (001100, 001200)
+    - [ ] Affiliate seeder for tier rates/code counts/products (overwrites tier edits made in the portal)
+    - [ ] Codes for reps already on a tier: run MembershipLifecycle::sync for every membership
+    - [ ] After the journal import: TierPromoter::check for each imported rep
+    - [ ] AFFILIATE_SIGNUP_URL set to the live get-started page
+  - [ ] Bulk entry (after #46 merges)
+    - [ ] php artisan migrate --force (central: pricing events/columns, ocr_payments, central_drugs status)
+    - [ ] php artisan tenants:migrate --force (ocr_stagings/drugs cost + charge columns, ocr_images)
+    - [ ] Edited migration 2026_07_25 add_created_at_to_service_tenant won't re-run where it already ran
+    - [ ] ocr:backfill-images (try --tenant=<id> first)
+    - [ ] pricing:backfill-tenants --dry-run, review per tenant, then with --events (decided: bill historical images)
+      - [ ] Tell pharmacies before the charges appear; skip demo/test tenants
+    - [ ] ocr:repair-shipments (dry run by default), then --apply
+    - [ ] .env: GOOGLE_VISION_CREDENTIALS path, GEMINI_API_KEY
+  - [ ] Central drugs search (if not run before): drugs:populate-letter-masks, then drugs:build-trigrams
+
+- [ ] Scheduler (production)
+  - [ ] Confirm the laravel-scheduler supervisor program runs (schedule:work or cron schedule:run)
+  - [ ] Added in the last 5 days (in code, run by themselves once the scheduler runs)
+    - [ ] affiliates:send-reminders - every 5 min: call reminders, follow-ups, weekly nudges
+    - [ ] affiliates:close-activity-periods - hourly: pays activity bonus after each cutoff (money)
+  - [ ] Check CACHE_DRIVER is redis/file/database, NOT array
+    - [ ] With array: weekly nudges repeat every 5 min all evening, withoutOverlapping does nothing
+  - [ ] Reminders are marked sent even with no push token: useless until Firebase push works
+  - [ ] Timezone is Asia/Kathmandu (cutoffs, 9 AM / 6 PM nudges) - keep it
+  - [ ] Optional: index aff_leads(next_follow_up_at); send pushes in batches when reps > ~200
+  - [ ] To add when built
+    - [ ] Near-expiry notifications: daily per tenant
+    - [ ] Team-up sessions / shop holds: work out expiry at read time, no new job needed
+  - [ ] Bulk entry (#46) adds no scheduled tasks
+
+- [ ] HUD - performance + filters BUILT; incident fix in #59
+  - [x] One request: /api/hud/dashboard returns all panels, short server caches
+  - [x] Version check (newest log/integrity id, incident change, snapshot) -> "no change", no queries
+  - [x] Cursors: logs + file integrity id > cursor with filters; incidents updated_at (MySQL keeps it)
+  - [x] Filter change -> full load; window ranking only on first load; app merges + trims
+  - [x] Full log load limited to HUD_LOGS_WINDOW (24h default); LIKE only when searching
+  - [x] Indexes + updated_at added by the daemon on start
+  - [x] App: one poll every 10 s, paused when hidden/unfocused, catches up on return
+  - [x] Processes from the daemon heartbeat (top 30); SSH only as a one-off button
+  - [x] agents/hud.md (in #55), linked from architecture.md
+  - [x] Daemon prunes logs after 30 days (RETENTION, already there)
+  - [x] You: merge #56, deploy, restart the HUD daemon (column + indexes added by hand)
+  - [ ] You: pull/rebuild hud-monitor (yarn tauri build) and test
+  - [ ] Optional: compare CPU / slow query log before and after
+  - [x] hud-monitor in git: subooom/medicinexp-hud-monitor
+  - [x] Filters: Source (one), What x Action, Severity, time range 1h-30d, server counts (#58)
+  - [x] Daemon migrations no longer block when the HUD DB user lacks ALTER (#58)
+  - [x] Window maximised + fixed, no console window, pauses only when minimised
+  - [x] Incident colours follow status (red/amber/green), actions show at once (needs #59)
+  - [x] hud-monitor agents/ docs (architecture, features, log)
+  - [ ] You: merge #59, rebuild hud-monitor, test incident colours
+  - [ ] Later (internal tool only): Discord alerts, then Jira or Notion tasks from incidents
+
+- [ ] Security fixes (small PR, before the upgrade)
+  - [ ] nginx: deny PHP under /storage (uploads can't run code)
+  - [ ] config/voyager.php: media allowed_mimetypes images/PDF, not '*'
+  - [ ] Central: remove browse_media, browse_database, browse_bread from roles in production
+  - [ ] /phpmyadmin: your IP only or password in front, or remove (SSH tunnel)
+  - [ ] Check production .env has APP_ENV=production
+  - [ ] No new admin screens on Voyager from now on (build like the portal)
+
+- [ ] Server upgrade - LAST (after the affiliate pilot and bulk entry), in place, same repo + runner
+  - [ ] 1. Tests first (~3-5 days)
+    - [ ] Tenant test harness (one test tenant DB per run)
+    - [ ] Flow tests: sign-up -> tenant DB, billing maths, subscription paid -> commission
+    - [ ] Flow tests: features on/off, OCR bulk commit, near-expiry/low-stock, login/permissions
+    - [ ] CI on GitHub-hosted runners (not the prod runner)
+  - [ ] 2. PHP 8.3 + Laravel 9 -> 10 -> 11, Voyager 1.7 -> 1.8 (~1 week, Laravel Shift per step)
+    - [ ] Voyager 1.8 = Laravel 11 only, PHP 8.2/8.3; no Laravel 12, no PHP 8.4
+    - [ ] Patch our Voyager overrides (app/Http/Controllers/Voyager, vendor views) against 1.8
+    - [ ] stancl/tenancy + Sanctum versions that support Laravel 11
+    - [ ] Blue-green deploy: new PHP-FPM pool + new folder, nginx switch, supervisor switch
+    - [ ] Back up DBs first; rollback = switch nginx back
+  - [ ] 3. Replace Voyager area by area (~3-6 weeks; Filament or own Blade like the portal)
+    - [ ] FeatureService + tenant seeders move to the new permissions/menus
+  - [ ] 4. Laravel 12 + PHP 8.4, only after Voyager is gone (~2-4 days)
+  - [ ] 5. Update the PHP 7.4 rule in server/agents/architecture.md
+
+- [ ] Small things
+  - [ ] Deploy workflow: remove pull_request trigger (red X on every PR)
+  - [ ] Optional: "signed up without my code" claim button for MedicineXP leads
