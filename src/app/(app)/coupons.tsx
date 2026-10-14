@@ -162,7 +162,7 @@ export default function CodesScreen() {
         }
         ListEmptyComponent={
           <EmptyState icon="lock-closed-outline" title="Log your first lead" message="Your first lead unlocks your code and your commission.">
-            <Button title="Add a lead" icon="person-add-outline" onPress={() => router.push('/(app)/leads/create')} />
+            <Button title="Add a lead" icon="person-add-outline" onPress={() => router.push('/(app)/leads/create', { withAnchor: true })} />
           </EmptyState>
         }
         renderItem={({ item }) => (

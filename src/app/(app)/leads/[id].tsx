@@ -1,6 +1,7 @@
 // app/(app)/leads/[id].tsx
 import { AttachmentsCard } from '@/components/field/attachments-card';
 import { SignupLinkCard } from '@/components/field/signup-link-card';
+import { LeadSalesCard } from '@/components/leads/lead-sales-card';
 import { useCallLogger } from '@/hooks/use-call-logger';
 import { callLogApi } from '@/api/call-logs';
 import { leadApi } from '@/api/leads';
@@ -67,7 +68,14 @@ export default function LeadDetailScreen() {
   const changeStatus = async (status: 'new' | 'contacted' | 'qualified' | 'lost') => {
     try {
       const response = await leadApi.updateStatus(leadId, status);
-      setLead({ ...response.data.data, latest_call_log: lead?.latest_call_log });
+      // The status response is the short form: keep what only the detail endpoint sends
+      setLead({
+        ...response.data.data,
+        latest_call_log: lead?.latest_call_log,
+        attachments: lead?.attachments,
+        sales: lead?.sales,
+        can_record_sale: lead?.can_record_sale,
+      });
     } catch (err: any) {
       Alert.alert('Could not update', err.message || 'Please try again.');
     }
@@ -145,6 +153,16 @@ export default function LeadDetailScreen() {
             <Text style={[typography.body2, { color: colors.primary }]}>{lead.venue.name}</Text>
           </TouchableOpacity>
         )}
+        {lead.team && (
+          // Made during a team-up: the sale is split with the teammate
+          <View style={styles.linkRow}>
+            <Ionicons name="people-outline" size={16} color={colors.secondary} />
+            <Text style={[typography.body2, { color: colors.foreground }]}>
+              Team lead with {lead.team.partner_name ?? 'a teammate'} · your share {Math.round((lead.team.my_share_bp ?? 5000) / 100)}%
+              {lead.team.agreed ? '' : ' (50/50 until agreed)'}
+            </Text>
+          </View>
+        )}
         {lead.contact_email && (
           <TouchableOpacity style={styles.linkRow} onPress={() => Linking.openURL(`mailto:${lead.contact_email}`)}>
             <Ionicons name="mail-outline" size={16} color={colors.mutedForeground} />
@@ -169,7 +187,12 @@ export default function LeadDetailScreen() {
         )}
       </View>
 
-      {lead.status !== 'converted' && <SignupLinkCard lead={lead} phone={phone} whatsappNumber={whatsappNumber} />}
+      {/* Sign-up links are for MedicineXP pharmacies; other programs record the sale below */}
+      {lead.status !== 'converted' && lead.can_record_sale !== true && (
+        <SignupLinkCard lead={lead} phone={phone} whatsappNumber={whatsappNumber} />
+      )}
+
+      <LeadSalesCard lead={lead} onChanged={setLead} />
 
       <AttachmentsCard
         attachments={lead.attachments ?? []}

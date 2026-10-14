@@ -22,8 +22,14 @@ export interface LeadStats {
   by_status: Record<string, number>;
 }
 
+// Laravel's boolean rule takes 1/0, not the "true"/"false" axios writes into the query
+// string (that made the "Open" filter fail with 422)
+const queryParams = (params?: LeadFilters) =>
+  params &&
+  Object.fromEntries(Object.entries(params).map(([key, value]) => [key, typeof value === 'boolean' ? (value ? 1 : 0) : value]));
+
 export const leadApi = {
-  getAll: (params?: LeadFilters) => apiClient.get<ApiResponse<Paginated<Lead>>>('/leads', { params }),
+  getAll: (params?: LeadFilters) => apiClient.get<ApiResponse<Paginated<Lead>>>('/leads', { params: queryParams(params) }),
   getById: (id: number) => apiClient.get<ApiResponse<Lead>>(`/leads/${id}`),
   create: (data: LeadInput) => apiClient.post<ApiResponse<Lead>>('/leads', data),
   update: (id: number, data: LeadInput) => apiClient.put<ApiResponse<Lead>>(`/leads/${id}`, data),
@@ -35,4 +41,7 @@ export const leadApi = {
   // A personal link that opens the pharmacy's sign-up already filled in from this lead
   signupLink: (id: number, couponId?: number) =>
     apiClient.post<ApiResponse<{ url: string; code: string | null }>>(`/leads/${id}/signup-link`, couponId ? { coupon_id: couponId } : {}),
+  // Report a sale from this lead (not MedicineXP); waits for the program to confirm it
+  recordSale: (id: number, data: { amount: number; product_id?: number | null; occurred_at?: string; notes?: string; client_uuid?: string }) =>
+    apiClient.post<ApiResponse<Lead>>(`/leads/${id}/sales`, data),
 };

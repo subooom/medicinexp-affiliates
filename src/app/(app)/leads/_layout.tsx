@@ -3,6 +3,12 @@ import { useAppTheme } from '@/hooks/use-app-theme';
 import { typography } from '@/styles/typography';
 import { Stack } from 'expo-router';
 
+// A lead opened from another tab (dashboard, a visit) with { withAnchor: true } gets the
+// leads list underneath, so Back lands on the list instead of the dashboard
+export const unstable_settings = {
+  initialRouteName: 'index',
+};
+
 // The Leads tab returns to its list when you leave it (popToTopOnBlur in (app)/_layout).
 // It used to reset whenever it gained focus, which threw away a lead form opened from
 // another screen (dashboard "New lead", a visit's "Convert to lead").

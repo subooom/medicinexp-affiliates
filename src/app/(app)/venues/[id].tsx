@@ -112,7 +112,7 @@ export default function VenueDetailScreen() {
     {
       label: 'Add lead',
       icon: 'person-add-outline' as const,
-      onPress: () => router.push({ pathname: '/(app)/leads/create', params: { venueId: venue.id } }),
+      onPress: () => router.push({ pathname: '/(app)/leads/create', params: { venueId: venue.id } }, { withAnchor: true }),
     },
   ];
 
