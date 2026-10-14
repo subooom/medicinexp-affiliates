@@ -1,5 +1,5 @@
 MEDICINEXP AFFILIATES - WHAT'S LEFT
-(tick with [x]) - verified 15 Oct 2026
+(tick with [x]) - verified 15 Oct 2026 (evening)
 
 Order: merge PRs -> run-book -> codes fix + push -> pilot (How you earn, bucket) ->
 journal import -> companions + contacts -> team up / credit / holds -> rep map -> pitch recordings ->
@@ -12,7 +12,7 @@ security fixes (any time, small) -> server upgrade LAST
   - [x] medicinexp-affiliates #2, #3 (team up), #4 (check-in pitching) - merged, but into the stacked
         branches AFTER #1 went into main, so main doesn't have them yet
   - [x] medicinexp-affiliates #5 - catch-up PR: #2, #3, #4 and this checklist now on main (merged)
-    - [ ] Then: git checkout main, git pull, npm install, npx expo start --dev-client --clear
+    - [x] Then: git checkout main, git pull, npm install, npx expo start --dev-client --clear
     - [x] Deleted feat-field-kit-offline, feat-lead-sales, feat-team-up, feat-checkin-pitch, fix-catch-up-main
   - [ ] pharmacyxp-landing #22 - sign-up filled from the visit, phone layout, agent docs
   - [ ] pharmacyxp #46 - bulk entry (feat-bulk-entry-gemini), yours
@@ -27,6 +27,12 @@ security fixes (any time, small) -> server upgrade LAST
   - [x] pharmacyxp #61 - check-in: a visit for each program pitched (merged, no migration)
   - [x] pharmacyxp #65 - deploy keeps public/storage -> ../storage/app/public and checks it (merged)
   - [x] pharmacyxp #66 - stray newline in config/supabase.php broke every served file (merged, guarded by a test)
+  - [x] pharmacyxp #67 - rep guide JSON + /guide (merged)
+  - [x] pharmacyxp #68 - portal live map (merged)
+  - [x] pharmacyxp #69 - /how-you-earn (merged)
+  - [x] medicinexp-affiliates #6 checklist, #7 guide + tour + Back fix, #8 read-aloud + Nepali voice memo fix,
+        #9 How you earn, #10 ignore yarn.lock, #11 in-app QR scanner (all merged)
+  - [ ] pharmacyxp #46 bulk entry: ready to merge (conflicts resolved, 146 tests pass)
   - [ ] Draft PRs opened for a look at unmerged work (all conflict with production)
     - [ ] #62 A-Z drugs of India (was only on your PC)
     - [ ] #63 HUD audit telemetry (probably replaced by #56/#58: close?)
@@ -56,15 +62,32 @@ security fixes (any time, small) -> server upgrade LAST
   - [ ] Tell the hub when a rep taps "I'm here" on a pickup
   - [ ] iOS later: Apple developer account, EAS makes the push key, TestFlight
 
-- [ ] "How you earn" screen (app)
-  - [ ] One screen, plain words, with the rep's own numbers (tier, rate, codes)
-    - [ ] Commission: rate x price, locked when the pharmacy signs up; renewals from Gold
-    - [ ] Codes: discount comes out of your commission (live example)
-    - [ ] Activity bonus: points -> paid per sale; expire at the cutoff without a sale
-    - [ ] Payouts: day + cutoff ("sales by Wednesday are paid Friday"), sign-up bonus
-  - [ ] Later sections when built: team splits, shop holds
-  - [ ] Linked from dashboard, Earnings tab and onboarding; first-open walkthrough
-  - [ ] Text comes from the server (per program), so rules stay in one place
+- [x] "How you earn" screen (app) - BUILT (pharmacyxp #69, app #9)
+  - [x] One screen, plain words, with the rep's own numbers (tier, rates by year, codes)
+    - [x] Commission: rate x price, locked when the pharmacy signs up; renewal rates per tier; real product example
+    - [x] Codes: discount comes out of your commission (live example)
+    - [x] Activity bonus: points, target, this week's score, cut-off, carry-over, streak
+    - [x] Payouts: next date + cut-off from the payout calendar; sign-up bonus; refunds
+  - [x] Team splits and extra bonuses sections; next tier (what's left)
+  - [ ] Shop holds section when holds are built
+  - [x] Linked from dashboard, Earnings tab (+ "New here?" card until opened) and the tour's earning slide
+  - [x] Text comes from the server (HowYouEarn), EN/ne, read-aloud per section
+  - [ ] Test on the new build (steps in app PR #9)
+
+- [x] Guide + welcome tour - BUILT (pharmacyxp #67, app #7, #8)
+  - [x] Guide (Profile -> Guide): search, FAQ, 13 sections, EN/ने, links to live screens, read-aloud
+  - [x] Text in server resources/guide/rep-guide.json (edit + deploy, no app build); app keeps a copy
+    - [ ] Copy the server file to the app's src/content/rep-guide.json before each app build
+  - [x] Tour rewritten (5 slides, current rules, EN/ने); finishing returns where it was opened
+  - [x] Back from screens opened from Profile returns there (was: dashboard)
+  - [ ] Native speaker reads the Nepali (guide, tour, How you earn), money parts first
+  - [ ] No Nepali voice on a phone: test the "Add Nepali voice" settings link on the vivo
+
+- [x] Voice memo in Nepali recorded a blank second (app #8)
+  - [x] Cause: forced on-device recognition; no Nepali model on the phone stopped recording too
+  - [x] Now: checks which service understands the language; else download / English / record without text
+  - [x] Safety net: recognition dying in the first 3 s switches to a plain recording
+  - [ ] Test on the vivo (steps in app PR #8)
 
 - [ ] Bucket icon on every screen (quick view)
   - [x] Bucket = the rep's bag of materials
@@ -119,6 +142,9 @@ security fixes (any time, small) -> server upgrade LAST
   - [ ] PHP-FPM hit pm.max_children (5) ~30 times on 14 Oct: raise to 12 in /etc/php/7.4/fpm/pool.d/www.conf, reload
   - [ ] Test helper agents/scripts/wt-bootstrap.php: fix ../ paths for classes missing in the main checkout (small PR)
   - [ ] Bots scanning for .env / .ssh / credentials: all blocked by nginx rules (nothing to do)
+  - [x] EAS build failed: a stray untracked yarn.lock made EAS use yarn --frozen-lockfile (app #10 ignores it)
+    - [ ] Locally: del yarn.lock, git pull, npm install; use npm (not yarn) from now on
+  - [ ] New EAS dev build with expo-speech + expo-camera (from the E: folder, not the C:\Users\...\projects link)
 
 - [ ] Visits: who went with you
   - [ ] "Who came with you?" chips at check-in and on the visit
@@ -127,7 +153,8 @@ security fixes (any time, small) -> server upgrade LAST
 
 - [x] Team up - BUILT (pharmacyxp #60, app #3)
   - [x] Code + QR (6 letters, 10 min; QR = medicinexp://team-up?code=..., opens the app from the phone camera)
-  - [ ] In-app QR scanner (needs expo-camera + new EAS build; do it with the Firebase build)
+  - [x] In-app QR scanner (app #11, expo-camera; Team up -> Scan their code)
+    - [ ] Test on the new build (steps in app PR #11)
   - [x] Find teammate screen (location only while on, server cache only, other side accepts)
   - [x] Dashboard banner, partner added to every check-in and new lead, ends at midnight
   - [x] "Were you with Naindra?" after a check-in (same shop / 100 m / 15 min)
@@ -226,19 +253,20 @@ security fixes (any time, small) -> server upgrade LAST
     - [ ] Only with the rep's OK (and the pharmacist's, or cut their part out)
   - [ ] Later (optional): transcripts + AI coaching notes; a person always decides the bonus
 
-- [ ] Portal live map (can be built any time)
-  - [ ] MapLibre GL + OpenFreeMap tiles (free, no key), own dark style
-    - [ ] Black background, grey roads, labels only for cities/main areas
-  - [ ] Pulsing events at shop locations (never a rep's live position)
-    - [ ] Check-in: red pulse (the "sensor")
-    - [ ] New lead: orange pulse (brand colour)
-    - [ ] Sale / sign-up: bigger white-gold burst
-    - [ ] Hubs: static markers, no pulse; heat layer underneath for density
-  - [ ] Live: poll every 30-60 s; server sends summarised points (cap a few thousand)
-  - [ ] Filters: live / today / week / month, event type, rep (admins only), program (platform admin)
-  - [ ] Access
-    - [ ] Platform admins: all programs; program admins: own program (existing portal scoping)
-    - [ ] Program staff: heatmap + event types, no per-rep filter
+- [x] Portal live map - BUILT (pharmacyxp #68)
+  - [x] MapLibre GL + OpenFreeMap tiles (free, no key), own dark style
+    - [x] Black background, grey roads, labels only for cities/main areas
+  - [x] Pulsing events at shop locations (never a rep's live position)
+    - [x] Check-in: red pulse (the "sensor")
+    - [x] New lead: orange pulse (brand colour)
+    - [x] Sale / sign-up: bigger white-gold burst
+    - [x] Hubs: static markers, no pulse; heat layer underneath for density
+  - [x] Live: poll every 30 s (60 s for other ranges, only while visible); per-shop points, max 2,500 per type
+  - [x] Filters: live / today / week / month, event type, rep (admins only), program (platform admin)
+  - [x] Access
+    - [x] Platform admins: all programs; program admins: own program (existing portal scoping)
+    - [x] Program staff: heatmap + event types, no per-rep filter
+  - [ ] Test on staging (steps in pharmacyxp PR #68)
 
 - [ ] Tenant: near-expiry drug notifications (pharmacy admin panel)
   - [ ] Daily scheduled check, per tenant
@@ -296,8 +324,8 @@ security fixes (any time, small) -> server upgrade LAST
   - [x] agents/hud.md (in #55), linked from architecture.md
   - [x] Daemon prunes logs after 30 days (RETENTION, already there)
   - [x] You: merge #56, deploy, restart the HUD daemon (column + indexes added by hand)
-  - [ ] You: pull/rebuild hud-monitor (yarn tauri build) and test
-  - [ ] Optional: compare CPU / slow query log before and after
+  - [x] You: pull/rebuild hud-monitor (yarn tauri build) and test
+  - [x] Optional: compare CPU / slow query log before and after
   - [x] hud-monitor in git: subooom/medicinexp-hud-monitor
   - [x] Filters: Source (one), What x Action, Severity, time range 1h-30d, server counts (#58)
   - [x] Daemon migrations no longer block when the HUD DB user lacks ALTER (#58)
@@ -305,7 +333,7 @@ security fixes (any time, small) -> server upgrade LAST
   - [x] Incident colours follow status (red/amber/green), actions show at once (needs #59)
   - [x] hud-monitor agents/ docs (architecture, features, log)
   - [x] You: merge #59 (merged)
-  - [ ] Rebuild hud-monitor, test incident colours
+  - [x] Rebuild hud-monitor, test incident colours
   - [ ] Later (internal tool only): Discord alerts, then Jira or Notion tasks from incidents
 
 - [ ] Security fixes (small PR, before the upgrade)
