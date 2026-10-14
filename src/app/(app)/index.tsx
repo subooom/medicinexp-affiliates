@@ -174,6 +174,10 @@ export default function DashboardScreen() {
                 <HeroStat label="Being verified" value={formatPaisa(earnings.pending_paisa)} />
                 <HeroStat label="Signed up" value={String(data?.counts.sales ?? 0)} />
               </View>
+              <TouchableOpacity onPress={() => router.push('/(app)/earn')} style={styles.howEarn}>
+                <Ionicons name="help-circle-outline" size={15} color="#fff" />
+                <Text style={styles.howEarnText}>How you earn</Text>
+              </TouchableOpacity>
             </View>
           )}
         </LinearGradient>
@@ -462,6 +466,8 @@ const createStyles = (colors: AppColors) =>
     greeting: { color: '#fff', fontSize: 20, fontWeight: '700', marginTop: 16 },
     hero: { marginTop: 12, padding: 16, borderRadius: 16, backgroundColor: 'rgba(255,255,255,0.14)' },
     heroLabel: { color: 'rgba(255,255,255,0.8)', fontSize: 12 },
+    howEarn: { flexDirection: 'row', alignItems: 'center', gap: 4, alignSelf: 'flex-start', marginTop: 10 },
+    howEarnText: { color: '#fff', fontSize: 12, fontWeight: '700', textDecorationLine: 'underline' },
     heroValue: { color: '#fff', fontSize: 32, fontWeight: '800', marginTop: 2 },
     heroSub: { color: '#fff', fontSize: 13, marginTop: 2 },
     heroDivider: { height: 1, backgroundColor: 'rgba(255,255,255,0.2)', marginVertical: 12 },

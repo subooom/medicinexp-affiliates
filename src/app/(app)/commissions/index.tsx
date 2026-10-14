@@ -1,5 +1,5 @@
 // app/(app)/commissions/index.tsx (Earnings tab)
-import { earningsApi } from '@/api/earnings';
+import { EARN_SEEN_KEY, earningsApi } from '@/api/earnings';
 import { AppColors } from '@/constants/colors';
 import { useAppTheme } from '@/hooks/use-app-theme';
 import { typography } from '@/styles/typography';
@@ -7,7 +7,8 @@ import { Commission, EarningsSummary, Payout } from '@/types/models';
 import { formatPaisa, formatRate } from '@/utils/money';
 import { getCommissionStatusColor } from '@/utils/status-colors';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { useFocusEffect } from 'expo-router';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
 import { ActivityIndicator, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
@@ -56,6 +57,19 @@ export default function EarningsScreen() {
   const [tab, setTab] = useState<Tab>('commissions');
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const router = useRouter();
+
+  // "New here? See how you earn" until the rep has opened that screen or hidden this
+  const [showIntro, setShowIntro] = useState(false);
+  useFocusEffect(
+    useCallback(() => {
+      AsyncStorage.getItem(EARN_SEEN_KEY).then((seen) => setShowIntro(!seen)).catch(() => undefined);
+    }, [])
+  );
+  const dismissIntro = () => {
+    setShowIntro(false);
+    AsyncStorage.setItem(EARN_SEEN_KEY, '1').catch(() => undefined);
+  };
 
   const load = useCallback(async () => {
     try {
@@ -95,7 +109,27 @@ export default function EarningsScreen() {
       contentContainerStyle={styles.content}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(); }} tintColor={colors.primary} />}
     >
-      <Text style={[typography.h3, { color: colors.foreground, fontWeight: '700' }]}>Earnings</Text>
+      <View style={styles.titleRow}>
+        <Text style={[typography.h3, { color: colors.foreground, fontWeight: '700', flex: 1 }]}>Earnings</Text>
+        <TouchableOpacity onPress={() => router.push('/(app)/earn')} style={[styles.howLink, { borderColor: colors.primary }]}>
+          <Ionicons name="help-circle-outline" size={16} color={colors.primary} />
+          <Text style={[typography.caption, { color: colors.primary, fontWeight: '700' }]}>How you earn</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* First visits: point new reps at the explanation until they've opened it once */}
+      {showIntro && (
+        <TouchableOpacity onPress={() => router.push('/(app)/earn')} style={[styles.intro, { backgroundColor: colors.secondary + '1A', borderColor: colors.secondary + '55' }]}>
+          <Ionicons name="bulb-outline" size={22} color={colors.secondary} />
+          <View style={{ flex: 1 }}>
+            <Text style={[typography.body2, { color: colors.foreground, fontWeight: '700' }]}>New here? See how you earn</Text>
+            <Text style={[typography.caption, { color: colors.mutedForeground }]}>Every way to earn, with your own numbers. One minute.</Text>
+          </View>
+          <TouchableOpacity onPress={dismissIntro} hitSlop={10} accessibilityLabel="Hide">
+            <Ionicons name="close" size={18} color={colors.mutedForeground} />
+          </TouchableOpacity>
+        </TouchableOpacity>
+      )}
 
       {summary && (
         <>
@@ -239,6 +273,9 @@ const createStyles = (colors: AppColors) =>
   StyleSheet.create({
     centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
     content: { padding: 16, paddingTop: 56, gap: 12, paddingBottom: 40 },
+    titleRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+    howLink: { flexDirection: 'row', alignItems: 'center', gap: 4, borderWidth: 1, borderRadius: 14, paddingHorizontal: 10, paddingVertical: 5 },
+    intro: { flexDirection: 'row', alignItems: 'center', gap: 10, borderWidth: 1, borderRadius: 14, padding: 12 },
     hero: { padding: 18, borderRadius: 16, gap: 4 },
     heroLabel: { color: 'rgba(255,255,255,0.8)' },
     heroValue: { color: '#fff', fontSize: 32, fontWeight: '800' },

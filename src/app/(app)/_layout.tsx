@@ -23,6 +23,7 @@ const HIDDEN_ROUTES = [
   'leaderboard',
   'team-up',
   'guide',
+  'earn',
 ];
 
 export default function AppLayout() {

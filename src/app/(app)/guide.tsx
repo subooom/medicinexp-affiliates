@@ -6,7 +6,8 @@ import { ScreenHeader } from '@/components/ui';
 import { useAppTheme } from '@/hooks/use-app-theme';
 import { typography } from '@/styles/typography';
 import { toIconName } from '@/utils/icons';
-import { Language, pick, setLanguage, useLanguage } from '@/utils/language';
+import { LanguageToggle } from '@/components/common/language-toggle';
+import { pick, useLanguage } from '@/utils/language';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useNarrator } from '@/hooks/use-narrator';
 import { Href, useFocusEffect, useRouter } from 'expo-router';
@@ -70,7 +71,7 @@ export default function GuideScreen() {
     <View style={{ flex: 1, backgroundColor: colors.background }}>
       <ScreenHeader
         title={t(UI.title)}
-        right={<LanguageToggle language={language} />}
+        right={<LanguageToggle />}
       />
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <View style={[styles.search, { borderColor: colors.border, backgroundColor: colors.inputBackground }]}>
@@ -159,22 +160,6 @@ export default function GuideScreen() {
   );
 }
 
-/** One tap switches language; it shows the language you'd switch to. */
-function LanguageToggle({ language }: { language: Language }) {
-  const { colors } = useAppTheme();
-  const next: Language = language === 'en' ? 'ne' : 'en';
-  return (
-    <TouchableOpacity
-      onPress={() => setLanguage(next)}
-      style={[styles.toggle, { borderColor: colors.primary, backgroundColor: colors.primary + '14' }]}
-      accessibilityLabel={next === 'ne' ? 'नेपालीमा हेर्नुहोस्' : 'Show in English'}
-    >
-      <Ionicons name="language" size={14} color={colors.primary} />
-      <Text style={[typography.caption, { fontWeight: '700', color: colors.primary }]}>{next === 'ne' ? 'ने' : 'EN'}</Text>
-    </TouchableOpacity>
-  );
-}
-
 /** ▶ reads it aloud, ■ stops. */
 function PlayButton({ playing, onPress }: { playing: boolean; onPress: () => void }) {
   const { colors } = useAppTheme();
@@ -211,5 +196,4 @@ const styles = StyleSheet.create({
   body: { lineHeight: 21 },
   link: { flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'flex-start', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 14, marginTop: 4 },
   play: { width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
-  toggle: { flexDirection: 'row', alignItems: 'center', gap: 3, borderWidth: 1, borderRadius: 14, paddingHorizontal: 8, paddingVertical: 4 },
 });
