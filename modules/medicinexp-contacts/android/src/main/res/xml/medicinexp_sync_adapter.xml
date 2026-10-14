@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Never actually syncs anything: it only makes the account a contacts account so its
+     contacts show in the Contacts app and on the call screen. -->
+<sync-adapter xmlns:android="http://schemas.android.com/apk/res/android"
+  android:contentAuthority="com.android.contacts"
+  android:accountType="com.medicinexp.affiliates.contacts"
+  android:userVisible="false"
+  android:supportsUploading="false"
+  android:allowParallelSyncs="false"
+  android:isAlwaysSyncable="true" />

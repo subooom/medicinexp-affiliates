@@ -1,7 +1,7 @@
 MEDICINEXP AFFILIATES - WHAT'S LEFT
 (tick with [x]) - verified 15 Oct 2026 (evening)
 
-Order: merge PRs -> run-book -> codes fix + push -> pilot (How you earn, bucket) ->
+Order: merge PRs -> run-book -> push -> pilot (How you earn, bucket) ->
 journal import -> companions + contacts -> team up / credit / holds -> rep map -> pitch recordings ->
 portal live map (any time) -> HUD performance (any time) -> near-expiry ->
 security fixes (any time, small) -> server upgrade LAST
@@ -47,11 +47,6 @@ security fixes (any time, small) -> server upgrade LAST
 
 - [x] Agent docs: AGENTS.md + agents/ in server, app and landing
   - [ ] Keep agents/log.md updated (one line per change) and decisions.md when rules change
-
-- [ ] Codes not showing at Bronze
-  - [ ] Run the 3 diagnostic SQL queries on staging
-  - [ ] Self-repair: opening My codes tops up missing codes (PR)
-  - [ ] If tiers lack coupon_count: re-run affiliate seeder or SQL update
 
 - [ ] Push notifications (not arriving: no Firebase set up)
   - [ ] Firebase project, Android app com.medicinexp.affiliates, google-services.json (you)
@@ -201,26 +196,27 @@ security fixes (any time, small) -> server upgrade LAST
     - [ ] During the lock: another rep must agree a split with the holder (bidding screen) to work it
     - [ ] Lock lapses unconverted -> another rep can take the shop (fresh hold)
 
-- [ ] Contact sync
-  - [ ] Save to phone on lead create/edit (tick, on by default), never on visits
-  - [ ] Manual "Save to contacts" on venue and lead
-  - [ ] Name: "Ram Thapa (Shree Ganesh Pharmacy) MedicineXP" (search "medicinexp" finds all)
-  - [ ] Update by phone number, never duplicate, never delete
+- [x] Contact sync - BUILT (app feat-contact-sync; Android)
+  - [x] Save to phone on lead create/edit (tick, on by default, remembered), never on visits
+  - [x] Manual "Save to contacts" on venue and lead
+  - [x] Name: "Ram Thapa (Shree Ganesh Pharmacy) MedicineXP" (search "medicinexp" finds all)
+  - [x] Update by phone number (last 10 digits), never duplicate, never delete one by one
+  - [ ] Test on the vivo after the new build (steps in the PR)
   - [x] Tested vivo: call screen (in and out) shows company + job title on one line
-  - [ ] Remarks on the call screen, updated on events
-    - [ ] Company = status + product ("Interested · Premium plan")
-    - [ ] Job title = next step / latest event ("Follow up Fri 3 PM · demo done")
-    - [ ] Note = last visit/call note (contact card only); keep line under ~55 chars
-    - [ ] Pad: company ends with a space, title starts with one (vivo joins them with "-")
+  - [x] Remarks on the call screen, updated on events (lead saved/edited, status change, call logged)
+    - [x] Company = status + product ("Interested · Premium plan")
+    - [x] Job title = next step / latest event ("Follow up Fri 3 PM · New lead", "Called 15 Oct")
+    - [x] Note = the lead's notes (contact card only); both lines kept under ~55 chars
+    - [x] Pad: company ends with a space, title starts with one (vivo joins them with "-")
   - [x] Test contact "Ram Thapa (Shree Ganesh Pharmacy)" 9880001234 deleted from the vivo
   - [x] Decided: reps don't keep our contacts when they leave
-    - [ ] Android: save contacts under the app's own "MedicineXP" account (not Google)
-      - [ ] Not synced to their Google account; removed automatically if the app is uninstalled
-      - [ ] Still shown on the call screen and in contact search
-      - [ ] Needs a small native module (account + sync adapter); expo-contacts can't do this alone
-    - [ ] On suspension/leaving: app deletes its contacts at next launch (backup to the above)
-    - [ ] iOS: no app-owned accounts; best effort only (delete on suspension)
-    - [ ] Build the native module with the next build for push (one build for both)
+    - [x] Android: saved under the app's own "MedicineXP" account (not Google)
+      - [x] Not synced to their Google account; removed automatically if the app is uninstalled
+      - [x] Shown on the call screen and in contact search (no-op sync adapter + visible settings)
+      - [x] Local native module modules/medicinexp-contacts (account + sync adapter, Kotlin)
+    - [x] On suspension/leaving (no active program, one suspended/left): app removes all its contacts
+    - [ ] iOS: not built (no app-owned accounts there); decide if iPhone reps need it
+    - [x] Ships in the next EAS build (Firebase/push still later)
 
 - [ ] Rep map: available pharmacies (after shop holds)
   - [ ] Own program only; nothing from other programs

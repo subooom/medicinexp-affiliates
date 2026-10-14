@@ -57,6 +57,9 @@ Open work: `checklist.txt` (owner's list) · older roadmap `TODO.md`. Paths are 
 - Speech: `utils/speech-support.ts` (Nepali voice / recognition checks, settings links), `hooks/use-narrator.ts`
   (guide read-aloud). Voice memos must check `recognitionPlanFor()` first: a language the phone lacks makes
   recognition (and its recording) stop at once.
+- Contacts: `utils/contact-sync.ts` (call-screen lines, permissions, save/refresh/remove) over the local native
+  module `modules/medicinexp-contacts` (Android: "MedicineXP" account + no-op sync adapter, Kotlin). Missing
+  module (iPhone, old build) → `contactSyncAvailable` false and every call is a no-op.
 - `utils/`: `formatPaisa`/`formatRate`, `apiErrorMessage`, `readableColor`, `toIconName`, `uuidv4`.
 - `types/models.ts`: API types (money paisa, rates basis points).
 - `constants/colors.ts`: theme tokens, mirrored in `global.css`; `secondary` = orange #FF8A00.

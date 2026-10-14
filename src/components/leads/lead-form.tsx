@@ -8,6 +8,7 @@ import { typography } from '@/styles/typography';
 import { Lead, LeadInput, LeadType, Product, Venue } from '@/types/models';
 import { LEAD_TYPES, leadTypeColor } from '@/utils/lead-types';
 import { uuidv4 } from '@/utils/uuid';
+import { contactSyncAvailable, saveDefault, syncLeadContact } from '@/utils/contact-sync';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
@@ -57,6 +58,11 @@ export function LeadForm({ lead, venueId, visitId, onSaved }: LeadFormProps) {
   const [followUp, setFollowUp] = useState<Date | null>(lead?.next_follow_up_at ? new Date(lead.next_follow_up_at) : null);
   const [showFollowUpPicker, setShowFollowUpPicker] = useState(false);
   const [saving, setSaving] = useState(false);
+  // Save the contact to the phone (MedicineXP account) when the lead saves; remembers the last choice
+  const [saveToPhone, setSaveToPhone] = useState(true);
+  useEffect(() => {
+    saveDefault.get().then(setSaveToPhone);
+  }, []);
   const clientUuid = useRef(uuidv4());
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -129,6 +135,25 @@ export function LeadForm({ lead, venueId, visitId, onSaved }: LeadFormProps) {
             data: { ...payload, status, visit_id: visitId ?? null, client_uuid: clientUuid.current },
             label: `New lead: ${who}`,
           });
+      // Contact on the phone: saved now even if the lead itself is still waiting to sync
+      if (contactSyncAvailable && payload.contact_phone) {
+        if (saveToPhone || lead) {
+          await syncLeadContact(
+            {
+              contactName: payload.contact_name,
+              phone: payload.contact_phone,
+              venueName: venue?.name,
+              status: lead?.status ?? status,
+              productName: products.find((p) => p.id === productId)?.name ?? null,
+              followUpAt: payload.next_follow_up_at,
+              notes: payload.notes,
+            },
+            // Editing only refreshes a saved contact unless the rep ticked "Save"
+            { create: saveToPhone, event: lead ? null : 'New lead' }
+          );
+        }
+      }
+
       if (result.queued) {
         Alert.alert('Saved on your phone', queuedMessage);
         onSaved(null);
@@ -301,6 +326,22 @@ export function LeadForm({ lead, venueId, visitId, onSaved }: LeadFormProps) {
       <Text style={[typography.body2, styles.label, { color: colors.foreground }]}>Notes</Text>
       {input('notes', 'What did they say? Objections? What do they use now?', { multiline: true })}
 
+      {contactSyncAvailable && !!values.contact_phone.trim() && (
+        <TouchableOpacity
+          style={styles.saveContact}
+          onPress={() => {
+            setSaveToPhone(!saveToPhone);
+            saveDefault.set(!saveToPhone);
+          }}
+        >
+          <Ionicons name={saveToPhone ? 'checkbox' : 'square-outline'} size={22} color={colors.primary} />
+          <View style={{ flex: 1 }}>
+            <Text style={[typography.body2, { color: colors.foreground, fontWeight: '600' }]}>Save to phone contacts</Text>
+            <Text style={[typography.caption, { color: colors.mutedForeground }]}>Shows who's calling, with the lead's status. Removed if you leave.</Text>
+          </View>
+        </TouchableOpacity>
+      )}
+
       <TouchableOpacity style={[styles.submit, { backgroundColor: colors.primary }, saving && { opacity: 0.6 }]} onPress={save} disabled={saving}>
         {saving ? (
           <ActivityIndicator color={colors.primaryForeground} />
@@ -326,6 +367,7 @@ export function LeadForm({ lead, venueId, visitId, onSaved }: LeadFormProps) {
 const createStyles = (colors: AppColors) =>
   StyleSheet.create({
     form: { padding: 16, gap: 8, paddingBottom: 40 },
+    saveContact: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 10 },
     label: { fontWeight: '600', marginTop: 8 },
     typeGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
     typeCard: { width: '48%', flexGrow: 1, padding: 12, borderRadius: 12, borderWidth: 1.5, gap: 4 },

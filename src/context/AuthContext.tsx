@@ -4,6 +4,7 @@ import { ACTIVE_PROGRAM_KEY } from '@/api/client';
 import { responseCache } from '@/offline/cache';
 import { outbox } from '@/offline/outbox';
 import { venueIndex } from '@/offline/venue-index';
+import { removeAllContacts } from '@/utils/contact-sync';
 import { Membership, User } from '@/types/models';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
@@ -57,6 +58,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const applyUser = useCallback(async (nextUser: User) => {
     const programId = pickActiveProgramId(nextUser);
+    // Suspended or left every program: lead contacts don't stay on the phone (decided)
+    const memberships = nextUser.memberships ?? [];
+    if (
+      memberships.length > 0 &&
+      !memberships.some((m) => m.status === 'active') &&
+      memberships.some((m) => m.status === 'suspended' || m.status === 'left')
+    ) {
+      removeAllContacts();
+    }
     setUser(nextUser);
     setActiveProgramId(programId);
     await AsyncStorage.setItem('user_data', JSON.stringify(nextUser));

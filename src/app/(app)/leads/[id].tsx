@@ -3,6 +3,7 @@ import { AttachmentsCard } from '@/components/field/attachments-card';
 import { SignupLinkCard } from '@/components/field/signup-link-card';
 import { LeadSalesCard } from '@/components/leads/lead-sales-card';
 import { useCallLogger } from '@/hooks/use-call-logger';
+import { contactSyncAvailable, LeadContact, syncLeadContact } from '@/utils/contact-sync';
 import { callLogApi } from '@/api/call-logs';
 import { leadApi } from '@/api/leads';
 import { AppColors } from '@/constants/colors';
@@ -65,9 +66,31 @@ export default function LeadDetailScreen() {
   // Tap to call / WhatsApp, then one tap to log it when back in the app
   const logger = useCallLogger(load);
 
+  // The lead as its phone contact sees it (name, status, product, follow-up, notes)
+  const asContact = (l: Lead): LeadContact => ({
+    contactName: l.contact_name,
+    phone: l.contact_phone || l.venue?.phone,
+    venueName: l.venue?.name,
+    status: l.status,
+    productName: l.product?.name,
+    followUpAt: l.next_follow_up_at,
+    notes: l.notes,
+  });
+
+  const saveContact = async () => {
+    if (!lead) return;
+    const result = await syncLeadContact(asContact(lead), { create: true });
+    Alert.alert(
+      result === 'created' ? 'Saved to contacts' : result === 'updated' ? 'Contact updated' : 'Could not save',
+      result === 'unavailable' ? 'Allow contacts access for MedicineXP in your phone settings.' : 'Search "medicinexp" in Contacts to find all your leads.'
+    );
+  };
+
   const changeStatus = async (status: 'new' | 'contacted' | 'qualified' | 'lost') => {
     try {
       const response = await leadApi.updateStatus(leadId, status);
+      // Saved contact: the call screen shows the new status
+      syncLeadContact(asContact(response.data.data as Lead), { create: false, event: `Now ${status === 'qualified' ? 'interested' : status}` });
       // The status response is the short form: keep what only the detail endpoint sends
       setLead({
         ...response.data.data,
@@ -184,6 +207,12 @@ export default function LeadDetailScreen() {
               <Text style={[typography.caption, { color: '#fff', fontWeight: '600' }]}>WhatsApp</Text>
             </TouchableOpacity>
           </View>
+        )}
+        {phone && contactSyncAvailable && (
+          <TouchableOpacity style={styles.linkRow} onPress={saveContact}>
+            <Ionicons name="person-add-outline" size={16} color={colors.primary} />
+            <Text style={[typography.body2, { color: colors.primary }]}>Save to contacts</Text>
+          </TouchableOpacity>
         )}
       </View>
 

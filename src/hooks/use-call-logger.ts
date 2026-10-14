@@ -2,6 +2,7 @@
 // Phones don't let apps read call duration without heavy permissions, so the time away
 // from the app is used as the estimate and the MR confirms how it went.
 import { queuedMessage, sendOrQueue } from '@/offline/send';
+import { noteContactEvent } from '@/utils/contact-sync';
 import { toLocalDateString } from '@/utils/time';
 import { uuidv4 } from '@/utils/uuid';
 import { useEffect, useRef } from 'react';
@@ -45,6 +46,9 @@ export function useCallLogger(onLogged?: () => void) {
             },
           });
           if (result.queued) Alert.alert('Call logged', queuedMessage);
+          // A saved contact shows the latest event on the call screen
+          const day = started.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+          noteContactEvent(call.target.phone, status === 'completed' ? `Called ${day}` : `No answer ${day}`);
           onLogged?.();
         } catch (error: any) {
           Alert.alert('Could not log the call', error.message || 'Please add it from Calls.');
