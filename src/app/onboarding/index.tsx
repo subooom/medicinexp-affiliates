@@ -36,6 +36,7 @@ const TEXT = {
   start: { en: 'Get started', ne: 'सुरु गरौं' },
   done: { en: 'Done', ne: 'सकियो' },
   guide: { en: 'Read the full guide', ne: 'पूरा गाइड पढ्नुहोस्' },
+  earn: { en: 'See how you earn, with your numbers', ne: 'आफ्नै अंकसहित कसरी कमाउने हेर्नुहोस्' },
 };
 
 export default function OnboardingScreen() {
@@ -254,7 +255,13 @@ export default function OnboardingScreen() {
         </View>
 
         {/* Last slide, signed in: the Guide has the details. Otherwise: skip the tour. */}
-        {currentIndex === slides.length - 1 && signedIn ? (
+        {/* The earning slide, signed in: open How you earn with the rep's own numbers */}
+        {slides[currentIndex]?.id === '4' && signedIn ? (
+          <TouchableOpacity style={styles.skipButton} onPress={() => router.replace('/(app)/earn')}>
+            <Ionicons name="cash-outline" size={16} color={colors.primary} />
+            <Text style={[typography.body2, styles.skipText, { color: colors.primary }]}>{t(TEXT.earn)}</Text>
+          </TouchableOpacity>
+        ) : currentIndex === slides.length - 1 && signedIn ? (
           <TouchableOpacity style={styles.skipButton} onPress={openGuide}>
             <Ionicons name="book-outline" size={16} color={colors.primary} />
             <Text style={[typography.body2, styles.skipText, { color: colors.primary }]}>{t(TEXT.guide)}</Text>
