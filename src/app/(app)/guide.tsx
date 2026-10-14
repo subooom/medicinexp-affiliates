@@ -8,8 +8,9 @@ import { typography } from '@/styles/typography';
 import { toIconName } from '@/utils/icons';
 import { Language, pick, setLanguage, useLanguage } from '@/utils/language';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { Href, useRouter } from 'expo-router';
-import { useEffect, useMemo, useState } from 'react';
+import { useNarrator } from '@/hooks/use-narrator';
+import { Href, useFocusEffect, useRouter } from 'expo-router';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 const UI = {
@@ -28,6 +29,12 @@ export default function GuideScreen() {
   const [query, setQuery] = useState('');
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const [openSection, setOpenSection] = useState<string | null>(null);
+  const narrator = useNarrator(language);
+
+  // This screen stays mounted: stop reading when the rep leaves it (or follows a link)
+  useFocusEffect(useCallback(() => narrator.stop, [narrator.stop]));
+  // A reading in the old language makes no sense after switching
+  useEffect(() => narrator.stop(), [language]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Show what the phone has at once, then swap in a newer version if the server has one
   useEffect(() => {
@@ -97,6 +104,10 @@ export default function GuideScreen() {
                   <View style={styles.row}>
                     <Ionicons name="help-circle-outline" size={20} color={colors.secondary} />
                     <Text style={[typography.body1, { color: colors.foreground, fontWeight: '600', flex: 1 }]}>{t(item.q)}</Text>
+                    <PlayButton
+                      playing={narrator.speakingId === `faq-${index}`}
+                      onPress={() => narrator.toggle(`faq-${index}`, [item.q, item.a])}
+                    />
                     <Ionicons name={expanded ? 'chevron-up' : 'chevron-down'} size={18} color={colors.mutedForeground} />
                   </View>
                   {expanded && (
@@ -121,6 +132,11 @@ export default function GuideScreen() {
                   <Ionicons name={toIconName(section.icon, 'book-outline')} size={20} color={colors.primary} />
                 </View>
                 <Text style={[typography.body1, { color: colors.foreground, fontWeight: '700', flex: 1 }]}>{t(section.title)}</Text>
+                <PlayButton
+                  playing={narrator.speakingId === `section-${section.id}`}
+                  // The whole section: its title, then each topic's title and text
+                  onPress={() => narrator.toggle(`section-${section.id}`, [section.title, ...section.items.flatMap((item) => [item.title, item.body])])}
+                />
                 <Ionicons name={expanded ? 'chevron-up' : 'chevron-down'} size={18} color={colors.mutedForeground} />
               </TouchableOpacity>
               {expanded &&
@@ -159,6 +175,21 @@ function LanguageToggle({ language }: { language: Language }) {
   );
 }
 
+/** ▶ reads it aloud, ■ stops. */
+function PlayButton({ playing, onPress }: { playing: boolean; onPress: () => void }) {
+  const { colors } = useAppTheme();
+  return (
+    <TouchableOpacity
+      onPress={onPress}
+      hitSlop={8}
+      style={[styles.play, { backgroundColor: playing ? colors.primary : colors.primary + '14' }]}
+      accessibilityLabel={playing ? 'Stop reading' : 'Read aloud'}
+    >
+      <Ionicons name={playing ? 'stop' : 'volume-high-outline'} size={16} color={playing ? colors.primaryForeground : colors.primary} />
+    </TouchableOpacity>
+  );
+}
+
 function LinkButton({ text, onPress }: { text: string; onPress: () => void }) {
   const { colors } = useAppTheme();
   return (
@@ -179,5 +210,6 @@ const styles = StyleSheet.create({
   item: { borderTopWidth: StyleSheet.hairlineWidth, paddingTop: 10, gap: 4 },
   body: { lineHeight: 21 },
   link: { flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'flex-start', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 14, marginTop: 4 },
+  play: { width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
   toggle: { flexDirection: 'row', alignItems: 'center', gap: 3, borderWidth: 1, borderRadius: 14, paddingHorizontal: 8, paddingVertical: 4 },
 });
