@@ -1,5 +1,5 @@
 MEDICINEXP AFFILIATES - WHAT'S LEFT
-(tick with [x]) - verified 14 Oct 2026
+(tick with [x]) - verified 15 Oct 2026
 
 Order: merge PRs -> run-book -> codes fix + push -> pilot (How you earn, bucket) ->
 journal import -> companions + contacts -> team up / credit / holds -> rep map -> pitch recordings ->
@@ -8,20 +8,27 @@ security fixes (any time, small) -> server upgrade LAST
 
 - [ ] PRs
   - [x] pharmacyxp #54 - lead sales, leads "Open" filter fix, visits link the shop's lead (merged 13 Oct)
-  - [ ] medicinexp-affiliates #1 - field kit, earning model, dashboard (into main)
-  - [ ] medicinexp-affiliates #2 - convert to sale, back to leads list, agent docs (stacked on #1)
+  - [x] medicinexp-affiliates #1 - field kit, earning model, dashboard (merged into main)
+  - [x] medicinexp-affiliates #2, #3 (team up), #4 (check-in pitching) - merged, but into the stacked
+        branches AFTER #1 went into main, so main doesn't have them yet
+  - [ ] Merge the catch-up PR feat-lead-sales -> main (brings #2, #3, #4 and this checklist to main)
+    - [ ] Then: git checkout main, git pull, npm install, npx expo start --dev-client --clear
+    - [ ] Delete feat-field-kit-offline, feat-lead-sales, feat-team-up, feat-checkin-pitch after
   - [ ] pharmacyxp-landing #22 - sign-up filled from the visit, phone layout, agent docs
   - [ ] pharmacyxp #46 - bulk entry (feat-bulk-entry-gemini), yours
   - [x] pharmacyxp #55 - AGENTS.md + agents/ docs (merged)
     - [ ] Pull production on your machine (the local copies were removed so the pull won't clash)
   - [x] pharmacyxp #56 - HUD one-request dashboard (merged)
   - [x] pharmacyxp #58 - HUD filters + facet counts (merged)
-  - [ ] pharmacyxp #59 - HUD incident actions show at once, bulk resolve closes acknowledged
+  - [x] pharmacyxp #59 - HUD incident actions show at once, bulk resolve closes acknowledged (merged)
+  - [x] pharmacyxp #60 - team up + team credit (merged)
+    - [ ] Run the affiliate migration on staging, then production (2026_10_15_000100)
+  - [x] pharmacyxp #61 - check-in: a visit for each program pitched (merged, no migration)
   - [ ] Delete merged server branches
     - [ ] feat-affiliate-portal, feat-affiliate-programs, feat-affiliate-lead-sales
     - [ ] bug-fix-ajax-delete-redirect, bug-fix-validation-messages
     - [x] docs-agents (deleted)
-    - [ ] enhancement-hud-dashboard, enhancement-hud-filters (after #59)
+    - [ ] enhancement-hud-dashboard, enhancement-hud-filters, feat-team-up, feat-checkin-programs
 
 - [x] Agent docs: AGENTS.md + agents/ in server, app and landing
   - [ ] Keep agents/log.md updated (one line per change) and decisions.md when rules change
@@ -85,26 +92,41 @@ security fixes (any time, small) -> server upgrade LAST
   - [ ] SQL file with preview block, run on a copy/staging first, then production
   - [ ] Old visits count toward tiers (tier updates on each person's next app action)
 
+- [x] Check-in: pitching several programs - BUILT (pharmacyxp #61, app #4)
+  - [x] "Pitching here" checkboxes; active program ticked by default, any can be unticked (one stays)
+  - [x] A visit for each ticked program, with or without materials; none for unticked programs
+  - [x] Materials: ticked programs only, active first, others labelled "From <program>"
+  - [x] Each ticked program's pitch kit inside the form (products, tips, demo if downloaded)
+  - [ ] Test (steps in app PR #4)
+  - [ ] Later, if a company asks: per-program setting to forbid handing its materials out with other programs
+
+- [ ] Also found and fixed
+  - [x] API rate limit was one 60/min bucket for ALL reps + the HUD; now per caller (#60)
+  - [x] Local MySQL (XAMPP) Aria crash repaired; backup at C:\xampp\mysql\data_backup_20261014 (delete when happy)
+
 - [ ] Visits: who went with you
   - [ ] "Who came with you?" chips at check-in and on the visit
     - [ ] App users linked to their account, others by name (Dad, Suwan)
   - [ ] Visit shows linked people with status
 
-- [ ] Team up
-  - [ ] QR link (short-lived signed token, camera already in app)
-  - [ ] Find teammate screen (location only while open, cache only, other side accepts)
-  - [ ] Session banner, auto-adds partner to every check-in, ends end of day
-  - [ ] "Were you with Naindra?" suggestion from check-in GPS (same shop / 100 m / 15 min)
-  - [ ] Dashboard -> Team up -> scan/show: max 2 taps
+- [x] Team up - BUILT (pharmacyxp #60, app #3)
+  - [x] Code + QR (6 letters, 10 min; QR = medicinexp://team-up?code=..., opens the app from the phone camera)
+  - [ ] In-app QR scanner (needs expo-camera + new EAS build; do it with the Firebase build)
+  - [x] Find teammate screen (location only while on, server cache only, other side accepts)
+  - [x] Dashboard banner, partner added to every check-in and new lead, ends at midnight
+  - [x] "Were you with Naindra?" after a check-in (same shop / 100 m / 15 min)
+  - [x] Dashboard -> Team up -> show/enter code: 2 taps
+  - [x] Split modal opens after a team-up starts: shared bar, set split / agree, polled (3 s, stops after 5 min, backs off on 429)
+  - [ ] Test on two phones (steps in app PR #3)
+  - [ ] Pilot: drop find-nearby / the suggestion if reps don't use them (they are the complex parts)
 
-- [ ] Team credit (decided: pot capped at the lower tier)
-  - [ ] Pot = lower tier's rate (minus code discount), split by shares
-  - [ ] Bidding screen to agree shares ("I want 70" / "I can give 50"), back and forth
-    - [ ] Each rep has a default share to start from; offer, counter, accept or decline
-    - [ ] Offers expire after 24 h; max ~5 rounds; accepted split is locked and shown on the lead
-  - [ ] Shares locked at pharmacy sign-up
-  - [ ] Activity bonus x share
+- [x] Team credit - BUILT (decided: pot capped at the lower tier)
+  - [x] Pot = lower tier's rate (minus code discount), split by shares
+  - [x] Split bar replaces the bidding screen: 10-90% in 5% steps, max 10 changes, agreed = locked; not agreed = 50/50
+  - [x] Shares + lower rate locked on the referral at the first payment; renewals reuse them
+  - [x] Activity bonus x share
   - [x] Tier counts follow the agreed share (70/30 -> 0.7 and 0.3 of a sale)
+  - [x] Each rep's first sale (solo or team) releases their sign-up bonus
   - [ ] Watch if seniors stop teaming with juniors (uneven shares / mentoring bonus)
 
 - [ ] Shop holds
@@ -266,7 +288,8 @@ security fixes (any time, small) -> server upgrade LAST
   - [x] Window maximised + fixed, no console window, pauses only when minimised
   - [x] Incident colours follow status (red/amber/green), actions show at once (needs #59)
   - [x] hud-monitor agents/ docs (architecture, features, log)
-  - [ ] You: merge #59, rebuild hud-monitor, test incident colours
+  - [x] You: merge #59 (merged)
+  - [ ] Rebuild hud-monitor, test incident colours
   - [ ] Later (internal tool only): Discord alerts, then Jira or Notion tasks from incidents
 
 - [ ] Security fixes (small PR, before the upgrade)
