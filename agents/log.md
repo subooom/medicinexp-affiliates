@@ -2,6 +2,9 @@
 
 One line per change: date · what · where (PR/branch). Append when you finish work.
 
+- 2026-10-15 · Team up: Team up screen (code + QR deep link, enter code, find nearby),
+  live split bar (`components/team-up/`, polled, `hooks/use-team-up.ts` store + host in (app) layout),
+  dashboard button + banner, "Were you with X?" after check-in, team line on lead detail · feat-team-up.
 - 2026-10-14 · agents/architecture.md is the single entry point (index, keep-current rules,
   anti-abuse); replaces overview.md; CLAUDE.md imports it · PR #2.
 - 2026-10-14 · AGENTS.md + agents/ docs; checklist.txt (owner's open-work list).

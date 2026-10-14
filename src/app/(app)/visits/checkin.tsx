@@ -6,6 +6,9 @@ import { VoiceMemo } from '@/components/field/voice-memo';
 import { VenueForm } from '@/components/venues/venue-form';
 import { CapturedFile, uploadAttachment } from '@/offline/attachments';
 import { queuedMessage, sendOrQueue } from '@/offline/send';
+import { teamUpApi } from '@/api/team-ups';
+import { teamUpStore, useTeamUp } from '@/hooks/use-team-up';
+import { apiErrorMessage } from '@/utils/errors';
 import { MaterialPicker } from '@/components/visits/material-picker';
 import { AppColors } from '@/constants/colors';
 import { useAppTheme } from '@/hooks/use-app-theme';
@@ -77,6 +80,8 @@ export default function CheckInScreen() {
   const [showPicker, setShowPicker] = useState(false);
 
   const [submitting, setSubmitting] = useState(false);
+  // Teamed up: this check-in counts for both reps (the server adds the teammate)
+  const { running: teamUp } = useTeamUp();
   // One id per check-in so a retried submit is stored once
   const clientUuid = useRef(uuidv4());
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -194,6 +199,9 @@ export default function CheckInScreen() {
         router.back();
       } else {
         router.replace({ pathname: '/(app)/visits/[id]', params: { id: result.data.id } });
+        // Another rep checked in here at the same time and you're not teamed up
+        const suggestion = result.data.team_up_suggestion;
+        if (suggestion) askTeamUp(suggestion);
       }
     } catch (error: any) {
       if (error.data?.code === 'visit_too_soon') {
@@ -212,6 +220,25 @@ export default function CheckInScreen() {
     }
   };
 
+  const askTeamUp = (suggestion: { membership_id: number; name: string }) =>
+    Alert.alert('Were you with ' + suggestion.name + '?', 'Team up for today: your check-ins and new leads count for both of you, and you agree how to split the commission.', [
+      { text: 'No', style: 'cancel' },
+      {
+        text: 'Yes, team up',
+        onPress: async () => {
+          try {
+            const teamUp = (await teamUpApi.ask(suggestion.membership_id, 'suggested')).data.data;
+            teamUpStore.apply(teamUp);
+            // They asked first: already teamed up. Otherwise wait for their yes on the Team up screen.
+            if (teamUp.status === 'active') teamUpStore.openSplit(teamUp.id);
+            else router.push('/(app)/team-up');
+          } catch (err) {
+            Alert.alert('Team up', apiErrorMessage(err, 'Could not ask.'));
+          }
+        },
+      },
+    ]);
+
   const venueList = search.length >= 2 ? results : nearby;
 
   return (
@@ -226,6 +253,13 @@ export default function CheckInScreen() {
 
       <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
         {/* Where */}
+        {teamUp && !planLater && (
+          <View style={[styles.teamChip, { backgroundColor: colors.primary + '1A' }]}>
+            <Ionicons name="people" size={16} color={colors.primary} />
+            <Text style={[typography.caption, { color: colors.primary, fontWeight: '600' }]}>With {teamUp.partner?.name}: counts for both of you</Text>
+          </View>
+        )}
+
         <Text style={[typography.body1, styles.sectionTitle, { color: colors.foreground }]}>Where are you?</Text>
 
         {venue ? (
@@ -429,6 +463,7 @@ const createStyles = (colors: AppColors) =>
     headerSide: { width: 40 },
     body: { padding: 16, gap: 10, paddingBottom: 120 },
     sectionTitle: { fontWeight: '600', marginTop: 8 },
+    teamChip: { flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'flex-start', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 14 },
     selectedVenue: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14, borderRadius: 12, borderWidth: 2 },
     search: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 12, paddingVertical: 10, borderRadius: 12, borderWidth: 1 },
     venueRow: { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 12, borderRadius: 10, borderWidth: 1 },
