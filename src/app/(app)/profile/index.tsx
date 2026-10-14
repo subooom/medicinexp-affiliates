@@ -219,14 +219,23 @@ export default function ProfileScreen() {
         </View>
       </View>
 
-      <TouchableOpacity
-        style={[styles.menuItem, styles.menu, { backgroundColor: colors.card, borderColor: colors.border }]}
-        onPress={() => router.push('/onboarding?returnTo=/(app)/profile')}
-      >
-        <Ionicons name="school-outline" size={22} color={colors.primary} />
-        <Text style={[typography.body1, { flex: 1, color: colors.foreground }]}>How it works</Text>
-        <Ionicons name="chevron-forward" size={18} color={colors.mutedForeground} />
-      </TouchableOpacity>
+      {/* Help: the full guide (English / नेपाली) and the short welcome tour */}
+      <View style={[styles.menu, { backgroundColor: colors.card, borderColor: colors.border }]}>
+        <TouchableOpacity
+          style={[styles.menuItem, { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.border }]}
+          onPress={() => router.push('/(app)/guide')}
+        >
+          <Ionicons name="book-outline" size={22} color={colors.primary} />
+          <Text style={[typography.body1, { flex: 1, color: colors.foreground }]}>Guide</Text>
+          <Text style={[typography.caption, { color: colors.mutedForeground }]}>FAQ · EN / ने</Text>
+          <Ionicons name="chevron-forward" size={18} color={colors.mutedForeground} />
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/onboarding?returnTo=/(app)/profile')}>
+          <Ionicons name="school-outline" size={22} color={colors.primary} />
+          <Text style={[typography.body1, { flex: 1, color: colors.foreground }]}>How it works</Text>
+          <Ionicons name="chevron-forward" size={18} color={colors.mutedForeground} />
+        </TouchableOpacity>
+      </View>
 
       <TouchableOpacity style={[styles.logout, { borderColor: colors.destructive }]} onPress={handleLogout}>
         <Ionicons name="log-out-outline" size={20} color={colors.destructive} />

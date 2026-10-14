@@ -1,0 +1,461 @@
+{
+  "version": 1,
+  "updated": "2026-10-15",
+  "faq": [
+    {
+      "q": { "en": "How do I earn money?", "ne": "म कसरी पैसा कमाउँछु?" },
+      "a": {
+        "en": "When a pharmacy signs up with your code and pays, you earn a share of what it paid. Your tier sets the share. Weekly activity adds a bonus on top of each sale.",
+        "ne": "तपाईंको कोडबाट फार्मेसीले साइन अप गरी भुक्तानी गरेपछि तपाईंले त्यसको केही प्रतिशत कमाउनुहुन्छ। प्रतिशत तपाईंको टियरले तय गर्छ। हप्ताको कामले हरेक बिक्रीमा थप बोनस दिन्छ।"
+      },
+      "link": { "label": { "en": "See your tier", "ne": "आफ्नो टियर हेर्नुहोस्" }, "route": "/(app)/tiers" }
+    },
+    {
+      "q": { "en": "When do I get paid?", "ne": "मलाई कहिले पैसा आउँछ?" },
+      "a": {
+        "en": "Every payout cycle. Sales confirmed before the cut-off are in the next payout. Your next payout day is on the Earnings tab.",
+        "ne": "हरेक भुक्तानी चक्रमा। कट-अफ अघि पुष्टि भएका बिक्री अर्को भुक्तानीमा पर्छन्। अर्को भुक्तानी मिति Earnings ट्याबमा छ।"
+      },
+      "link": { "label": { "en": "Open Earnings", "ne": "Earnings खोल्नुहोस्" }, "route": "/(app)/commissions" }
+    },
+    {
+      "q": { "en": "Why don't I have a code yet?", "ne": "मसँग अझै कोड किन छैन?" },
+      "a": {
+        "en": "Codes unlock at your first tier. In MedicineXP your first lead takes you to Bronze, which gives you your code.",
+        "ne": "पहिलो टियरमा पुगेपछि कोड खुल्छ। MedicineXP मा पहिलो लिडले तपाईंलाई Bronze मा पुर्‍याउँछ र कोड दिन्छ।"
+      },
+      "link": { "label": { "en": "My codes", "ne": "मेरा कोडहरू" }, "route": "/(app)/coupons" }
+    },
+    {
+      "q": { "en": "If I give a discount, who pays for it?", "ne": "छुट दिँदा त्यो कसले बेहोर्छ?" },
+      "a": {
+        "en": "You do. A code's discount comes out of your commission, never more than you would earn. It applies to the first year only.",
+        "ne": "तपाईंले। कोडको छुट तपाईंको कमिसनबाट कटौती हुन्छ, तपाईंले कमाउने भन्दा बढी कहिल्यै हुँदैन। यो पहिलो वर्षमा मात्र लागू हुन्छ।"
+      }
+    },
+    {
+      "q": { "en": "My check-in was refused. Why?", "ne": "मेरो चेक-इन किन अस्वीकार भयो?" },
+      "a": {
+        "en": "Check-ins must be at least 10 minutes apart. The app shows when you can check in again.",
+        "ne": "चेक-इनबीच कम्तीमा १० मिनेटको फरक चाहिन्छ। फेरि कहिले चेक-इन गर्न सकिन्छ भनेर एपले देखाउँछ।"
+      }
+    },
+    {
+      "q": { "en": "Can I work without internet?", "ne": "इन्टरनेट बिना काम गर्न सकिन्छ?" },
+      "a": {
+        "en": "Yes. Check-ins, leads, calls and photos are saved on your phone and sent when you are back online. The Sync screen shows what is waiting.",
+        "ne": "सकिन्छ। चेक-इन, लिड, कल र फोटो फोनमै सुरक्षित हुन्छन् र इन्टरनेट आएपछि पठाइन्छन्। के बाँकी छ भनेर Sync स्क्रिनमा देखिन्छ।"
+      },
+      "link": { "label": { "en": "Open Sync", "ne": "Sync खोल्नुहोस्" }, "route": "/(app)/sync" }
+    },
+    {
+      "q": { "en": "I worked a shop with another rep. Who gets paid?", "ne": "अर्को रेपसँग मिलेर काम गरें। पैसा कसलाई?" },
+      "a": {
+        "en": "Team up in the app first. You both agree a split, and a sale from that day's work is shared that way.",
+        "ne": "पहिले एपमा Team up गर्नुहोस्। दुवैले भाग तय गर्नुहुन्छ, र त्यो दिनको कामबाट भएको बिक्री त्यही अनुसार बाँडिन्छ।"
+      },
+      "link": { "label": { "en": "Team up", "ne": "Team up" }, "route": "/(app)/team-up" }
+    },
+    {
+      "q": { "en": "Can my tier go down?", "ne": "मेरो टियर घट्न सक्छ?" },
+      "a": {
+        "en": "No. Tiers only go up, and the rate you had when a pharmacy signed up stays for that pharmacy.",
+        "ne": "सक्दैन। टियर माथि मात्र जान्छ, र फार्मेसी साइन अप हुँदाको दर त्यो फार्मेसीका लागि कायम रहन्छ।"
+      }
+    }
+  ],
+  "sections": [
+    {
+      "id": "start",
+      "icon": "rocket-outline",
+      "title": { "en": "Getting started", "ne": "सुरु गर्दा" },
+      "items": [
+        {
+          "title": { "en": "Your account", "ne": "तपाईंको खाता" },
+          "body": {
+            "en": "After you register, a program approves you. Until then the app shows \"Waiting for approval\".",
+            "ne": "दर्ता गरेपछि प्रोग्रामले तपाईंलाई स्वीकृत गर्छ। त्यतिन्जेल एपमा \"Waiting for approval\" देखिन्छ।"
+          }
+        },
+        {
+          "title": { "en": "Programs", "ne": "प्रोग्रामहरू" },
+          "body": {
+            "en": "A program is a company you work for (MedicineXP or a pharma company). You can be in several. Switch from the name at the top of the dashboard. Everything you see belongs to the program you are in.",
+            "ne": "प्रोग्राम भनेको तपाईंले काम गर्ने कम्पनी हो (MedicineXP वा फार्मा कम्पनी)। एकभन्दा बढीमा हुन सक्नुहुन्छ। ड्यासबोर्डको माथिको नामबाट बदल्नुहोस्। देखिने सबै कुरा अहिलेको प्रोग्रामको हो।"
+          }
+        },
+        {
+          "title": { "en": "Join another program", "ne": "अर्को प्रोग्राममा जोडिनुहोस्" },
+          "body": {
+            "en": "Got an invite code from a company? Enter it on your Profile.",
+            "ne": "कम्पनीबाट निमन्त्रणा कोड पाउनुभयो? Profile मा हाल्नुहोस्।"
+          },
+          "link": { "label": { "en": "Open Profile", "ne": "Profile खोल्नुहोस्" }, "route": "/(app)/profile" }
+        },
+        {
+          "title": { "en": "The dashboard", "ne": "ड्यासबोर्ड" },
+          "body": {
+            "en": "Shows this week's earnings, your weekly goal, today's work, follow-ups due and quick actions for the things you do most.",
+            "ne": "यो हप्ताको कमाइ, हप्ताको लक्ष्य, आजको काम, बाँकी फलो-अप र धेरै गरिने कामका छिटो बटनहरू देखाउँछ।"
+          },
+          "link": { "label": { "en": "Open Dashboard", "ne": "ड्यासबोर्ड खोल्नुहोस्" }, "route": "/(app)" }
+        }
+      ]
+    },
+    {
+      "id": "checkin",
+      "icon": "location-outline",
+      "title": { "en": "Check-ins", "ne": "चेक-इन" },
+      "items": [
+        {
+          "title": { "en": "Checking in", "ne": "चेक-इन गर्ने" },
+          "body": {
+            "en": "Tap Check in, pick the pharmacy (nearby ones come first) and save. Not on the list? Add it right there.",
+            "ne": "Check in थिच्नुहोस्, फार्मेसी छान्नुहोस् (नजिकका पहिले देखिन्छन्) र सेभ गर्नुहोस्। सूचीमा छैन? त्यहीँ थप्नुहोस्।"
+          },
+          "link": { "label": { "en": "Check in now", "ne": "अहिले चेक-इन गर्नुहोस्" }, "route": "/(app)/visits/checkin" }
+        },
+        {
+          "title": { "en": "What counts as a visit", "ne": "भ्रमण भनेको के हो" },
+          "body": {
+            "en": "Be at the shop. A visit counts toward your weekly goal when your phone's location is within 300 m of the shop, or you add a shop photo. One per shop per day.",
+            "ne": "पसलमै हुनुहोस्। फोनको लोकेसन पसलबाट ३०० मिटरभित्र भए वा पसलको फोटो थपे भ्रमण हप्ताको लक्ष्यमा गनिन्छ। एउटा पसलमा दिनको एक पटक।"
+          }
+        },
+        {
+          "title": { "en": "10 minutes between check-ins", "ne": "चेक-इनबीच १० मिनेट" },
+          "body": {
+            "en": "Check-ins must be at least 10 minutes apart.",
+            "ne": "चेक-इनबीच कम्तीमा १० मिनेटको फरक हुनुपर्छ।"
+          }
+        },
+        {
+          "title": { "en": "Pitching several programs", "ne": "धेरै प्रोग्रामको पिच" },
+          "body": {
+            "en": "If you are in more than one program, tick every program you pitched at this shop. Each ticked program gets the visit, with or without materials. Unticked programs get nothing.",
+            "ne": "एकभन्दा बढी प्रोग्राममा हुनुहुन्छ भने यो पसलमा पिच गरेका सबै प्रोग्राममा टिक लगाउनुहोस्। टिक लगाएका प्रोग्राममा मात्र भ्रमण दर्ता हुन्छ, सामग्री दिए पनि नदिए पनि।"
+          }
+        },
+        {
+          "title": { "en": "Leaving materials", "ne": "सामग्री छोड्ने" },
+          "body": {
+            "en": "Pick what you leave from your bag while checking in. Each item has a limit per visit. Write who received it if you like.",
+            "ne": "चेक-इन गर्दा झोलाबाट के छोड्नुभयो छान्नुहोस्। हरेक सामानको एक भ्रमणको सीमा हुन्छ। चाहे कसले लियो लेख्नुहोस्।"
+          }
+        },
+        {
+          "title": { "en": "Photo, voice memo, notes", "ne": "फोटो, भ्वाइस मेमो, नोट" },
+          "body": {
+            "en": "A shop photo proves the visit. A voice memo is quicker than typing. Only you and your program can see them.",
+            "ne": "पसलको फोटोले भ्रमण प्रमाणित गर्छ। भ्वाइस मेमो टाइप गर्नभन्दा छिटो हुन्छ। यी तपाईं र तपाईंको प्रोग्रामले मात्र देख्छन्।"
+          }
+        },
+        {
+          "title": { "en": "Planning a visit", "ne": "भ्रमणको योजना" },
+          "body": {
+            "en": "Turn on \"Plan for later\" on the check-in screen to schedule a visit. Planned visits can't hand out materials.",
+            "ne": "भ्रमण तय गर्न चेक-इन स्क्रिनमा \"Plan for later\" खोल्नुहोस्। योजना गरिएका भ्रमणमा सामग्री दिन मिल्दैन।"
+          }
+        }
+      ]
+    },
+    {
+      "id": "leads",
+      "icon": "people-outline",
+      "title": { "en": "Leads and sign-ups", "ne": "लिड र साइन अप" },
+      "items": [
+        {
+          "title": { "en": "Adding a lead", "ne": "लिड थप्ने" },
+          "body": {
+            "en": "A lead is a shop or person who might buy. Add the shop and a contact name and phone. You can make one straight from a visit.",
+            "ne": "लिड भनेको किन्न सक्ने पसल वा व्यक्ति हो। पसल र सम्पर्क व्यक्तिको नाम र फोन थप्नुहोस्। भ्रमणबाटै सिधै बनाउन सकिन्छ।"
+          },
+          "link": { "label": { "en": "New lead", "ne": "नयाँ लिड" }, "route": "/(app)/leads/create" }
+        },
+        {
+          "title": { "en": "Status and follow-ups", "ne": "स्थिति र फलो-अप" },
+          "body": {
+            "en": "Move a lead from New to Contacted to Qualified as you go. Set a follow-up time and the app reminds you. Converted happens by itself when the pharmacy signs up.",
+            "ne": "काम अघि बढ्दै जाँदा लिडलाई New बाट Contacted र Qualified मा सार्नुहोस्। फलो-अप समय राख्नुभयो भने एपले सम्झाउँछ। फार्मेसी साइन अप भएपछि Converted आफैं हुन्छ।"
+          }
+        },
+        {
+          "title": { "en": "Sign-up link", "ne": "साइन-अप लिंक" },
+          "body": {
+            "en": "Send a pharmacy its own sign-up link from the lead. The form opens already filled in from your visit, with your code applied.",
+            "ne": "लिडबाट फार्मेसीलाई आफ्नै साइन-अप लिंक पठाउनुहोस्। फारम तपाईंको भ्रमणबाट पहिल्यै भरिएको र तपाईंको कोड लागेको अवस्थामा खुल्छ।"
+          }
+        },
+        {
+          "title": { "en": "Sales", "ne": "बिक्री" },
+          "body": {
+            "en": "MedicineXP sales come in by themselves when the pharmacy pays. Never record them by hand. In other programs, record the sale from the lead; it waits until the company confirms it.",
+            "ne": "MedicineXP को बिक्री फार्मेसीले भुक्तानी गरेपछि आफैं आउँछ, हातले कहिल्यै नराख्नुहोस्। अरू प्रोग्राममा लिडबाट बिक्री दर्ता गर्नुहोस्; कम्पनीले पुष्टि नगरुन्जेल पर्खन्छ।"
+          }
+        }
+      ]
+    },
+    {
+      "id": "codes",
+      "icon": "pricetag-outline",
+      "title": { "en": "Your codes", "ne": "तपाईंका कोड" },
+      "items": [
+        {
+          "title": { "en": "What a code is", "ne": "कोड के हो" },
+          "body": {
+            "en": "Pharmacies enter your code when they sign up, so the sale is yours. Show your QR from the dashboard so they can scan it.",
+            "ne": "फार्मेसीले साइन अप गर्दा तपाईंको कोड हाल्छन्, त्यसैले बिक्री तपाईंको हुन्छ। स्क्यान गर्न ड्यासबोर्डबाट QR देखाउनुहोस्।"
+          },
+          "link": { "label": { "en": "Show my QR", "ne": "मेरो QR देखाउनुहोस्" }, "route": "/(app)/referral" }
+        },
+        {
+          "title": { "en": "Naming and discounts", "ne": "नाम र छुट" },
+          "body": {
+            "en": "Rename a code (4–12 letters and numbers) and give it a discount. The discount comes out of your commission and applies to the first year only, so you can never lose money on it.",
+            "ne": "कोडको नाम बदल्नुहोस् (४–१२ अक्षर र अंक) र छुट दिनुहोस्। छुट तपाईंको कमिसनबाट कटौती हुन्छ र पहिलो वर्षमा मात्र लाग्छ, त्यसैले तपाईंलाई कहिल्यै घाटा हुँदैन।"
+          },
+          "link": { "label": { "en": "My codes", "ne": "मेरा कोडहरू" }, "route": "/(app)/coupons" }
+        },
+        {
+          "title": { "en": "More codes", "ne": "थप कोड" },
+          "body": {
+            "en": "Higher tiers unlock more codes, so you can give different discounts to different shops.",
+            "ne": "माथिल्ला टियरले थप कोड खोल्छन्, जसले गर्दा फरक पसललाई फरक छुट दिन सकिन्छ।"
+          }
+        }
+      ]
+    },
+    {
+      "id": "earning",
+      "icon": "cash-outline",
+      "title": { "en": "How you earn", "ne": "कसरी कमाउने" },
+      "items": [
+        {
+          "title": { "en": "Commission", "ne": "कमिसन" },
+          "body": {
+            "en": "You earn your tier's rate on what a pharmacy pays. The rate you had when it signed up is locked for that pharmacy, even after you move up. Some tiers also earn on renewals in later years.",
+            "ne": "फार्मेसीले तिरेको रकममा तपाईंको टियरको दरले कमाउनुहुन्छ। साइन अप हुँदाको दर त्यो फार्मेसीका लागि स्थिर रहन्छ, पछि टियर बढे पनि। केही टियरले पछिल्ला वर्षको नवीकरणमा पनि कमाउँछन्।"
+          },
+          "link": { "label": { "en": "Rates by tier", "ne": "टियर अनुसार दर" }, "route": "/(app)/tiers" }
+        },
+        {
+          "title": { "en": "Tiers", "ne": "टियर" },
+          "body": {
+            "en": "You move up by yourself when you reach a tier's numbers (sales, visits). A higher tier means a higher rate and more codes. Tiers never go down.",
+            "ne": "टियरका संख्या (बिक्री, भ्रमण) पुगेपछि तपाईं आफैं माथि जानुहुन्छ। माथिल्लो टियर भनेको बढी दर र बढी कोड। टियर कहिल्यै घट्दैन।"
+          },
+          "link": { "label": { "en": "Tiers & rewards", "ne": "टियर र पुरस्कार" }, "route": "/(app)/tiers" }
+        },
+        {
+          "title": { "en": "Weekly activity bonus", "ne": "हप्ताको गतिविधि बोनस" },
+          "body": {
+            "en": "Visits, leads, calls and sales earn points each week. Points pay out only through sales: each sale that week gets a bonus based on your points. No sale by the cut-off and the points reset. Work on a lead in earlier weeks still counts when it converts. Weeks in a row with a sale add a streak boost.",
+            "ne": "भ्रमण, लिड, कल र बिक्रीले हरेक हप्ता अंक दिन्छन्। अंकको पैसा बिक्रीबाट मात्र आउँछ: त्यो हप्ताको हरेक बिक्रीमा अंक अनुसार बोनस थपिन्छ। कट-अफसम्म बिक्री नभए अंक सुरुबाट गनिन्छ। अघिल्ला हप्ताको लिडमा गरेको काम त्यो लिड बिक्री भएपछि पनि गनिन्छ। लगातार बिक्री भएका हप्ताले स्ट्रिक बोनस थप्छन्।"
+          },
+          "link": { "label": { "en": "My weekly goal", "ne": "मेरो हप्ताको लक्ष्य" }, "route": "/(app)" }
+        },
+        {
+          "title": { "en": "Sign-up bonus", "ne": "साइन-अप बोनस" },
+          "body": {
+            "en": "Your sign-up bonus is held until your first sale, then paid with it.",
+            "ne": "साइन-अप बोनस पहिलो बिक्रीसम्म रोकिन्छ, त्यसपछि त्यही बिक्रीसँग भुक्तानी हुन्छ।"
+          }
+        },
+        {
+          "title": { "en": "Payouts", "ne": "भुक्तानी" },
+          "body": {
+            "en": "Paid every cycle on your program's payout day. Money shows as \"Being verified\" until the payment is confirmed. Refunded sales are taken back from a later payout.",
+            "ne": "तपाईंको प्रोग्रामको भुक्तानी दिनमा हरेक चक्रमा भुक्तानी हुन्छ। भुक्तानी पुष्टि नभएसम्म रकम \"Being verified\" मा देखिन्छ। फिर्ता भएका बिक्रीको रकम पछिको भुक्तानीबाट कटौती हुन्छ।"
+          },
+          "link": { "label": { "en": "Open Earnings", "ne": "Earnings खोल्नुहोस्" }, "route": "/(app)/commissions" }
+        }
+      ]
+    },
+    {
+      "id": "team",
+      "icon": "people-circle-outline",
+      "title": { "en": "Team up", "ne": "Team up" },
+      "items": [
+        {
+          "title": { "en": "Working with another rep", "ne": "अर्को रेपसँग काम" },
+          "body": {
+            "en": "Team up for the day: one of you shows a code (or QR), the other enters it. You can also find each other nearby, or answer \"Were you with ...?\" after a check-in. Both of you always agree.",
+            "ne": "दिनभरका लागि Team up गर्नुहोस्: एकले कोड (वा QR) देखाउँछ, अर्कोले हाल्छ। नजिकै खोज्न वा चेक-इनपछि \"... सँग हुनुहुन्थ्यो?\" को जवाफ दिन पनि सकिन्छ। दुवैको सहमति सधैं चाहिन्छ।"
+          },
+          "link": { "label": { "en": "Team up", "ne": "Team up" }, "route": "/(app)/team-up" }
+        },
+        {
+          "title": { "en": "The split", "ne": "भाग बाँडफाँड" },
+          "body": {
+            "en": "Agree a split on the bar together (10% to 90%). One sets it, the other agrees, and it is locked for the day. Until you both agree it is 50/50.",
+            "ne": "बारमा सँगै भाग तय गर्नुहोस् (१०% देखि ९०%)। एकले राख्छ, अर्कोले सहमति जनाउँछ, र दिनभरका लागि लक हुन्छ। दुवैको सहमति नभएसम्म ५०/५०।"
+          }
+        },
+        {
+          "title": { "en": "What is shared", "ne": "के बाँडिन्छ" },
+          "body": {
+            "en": "Check-ins and new leads made while teamed up are the team's. A sale from them pays the lower tier's rate of the two, split your way. Tier progress and weekly bonus follow your share. It ends at midnight.",
+            "ne": "Team up हुँदा गरिएका चेक-इन र नयाँ लिड टोलीका हुन्छन्। तिनबाट भएको बिक्रीमा दुईमध्ये तल्लो टियरको दर लाग्छ र तय गरेको भागमा बाँडिन्छ। टियर प्रगति र हप्ताको बोनस पनि आफ्नो भाग अनुसार। मध्यरातमा सकिन्छ।"
+          }
+        }
+      ]
+    },
+    {
+      "id": "materials",
+      "icon": "bag-handle-outline",
+      "title": { "en": "Materials and stock", "ne": "सामग्री र स्टक" },
+      "items": [
+        {
+          "title": { "en": "Your bag", "ne": "तपाईंको झोला" },
+          "body": {
+            "en": "My stock shows what you carry for each program. It goes down when you leave items at a check-in.",
+            "ne": "My stock मा हरेक प्रोग्रामको तपाईंसँग भएको सामान देखिन्छ। चेक-इनमा सामान छोडेपछि घट्छ।"
+          },
+          "link": { "label": { "en": "My stock", "ne": "मेरो स्टक" }, "route": "/(app)/inventory" }
+        },
+        {
+          "title": { "en": "Pickups", "ne": "सामान लिन जाने" },
+          "body": {
+            "en": "Request a pickup from a hub. When it is approved you see where and when. Tap \"I'm here\" when you arrive, and the hub hands it over.",
+            "ne": "हबबाट सामान लिन अनुरोध गर्नुहोस्। स्वीकृत भएपछि कहाँ र कहिले देखिन्छ। पुगेपछि \"I'm here\" थिच्नुहोस्, हबले सामान दिन्छ।"
+          },
+          "link": { "label": { "en": "Pickups", "ne": "पिकअप" }, "route": "/(app)/pickups" }
+        },
+        {
+          "title": { "en": "Drop-offs", "ne": "छोडिएका सामान" },
+          "body": {
+            "en": "Every item you left at a shop, by shop and date.",
+            "ne": "पसल र मिति अनुसार पसलमा छोडिएका सबै सामान।"
+          },
+          "link": { "label": { "en": "Drop-offs", "ne": "ड्रप-अफ" }, "route": "/(app)/distributions" }
+        }
+      ]
+    },
+    {
+      "id": "pitch",
+      "icon": "easel-outline",
+      "title": { "en": "Pitch kit", "ne": "पिच किट" },
+      "items": [
+        {
+          "title": { "en": "What to say and show", "ne": "के भन्ने, के देखाउने" },
+          "body": {
+            "en": "Products with prices, tips on what to say, and a demo video. The video downloads on Wi-Fi and plays without internet. The pitch kit also opens inside the check-in form.",
+            "ne": "मूल्यसहितका उत्पादन, के भन्ने सुझाव र डेमो भिडियो। भिडियो Wi-Fi मा डाउनलोड हुन्छ र इन्टरनेट बिना चल्छ। पिच किट चेक-इन फारमभित्र पनि खुल्छ।"
+          },
+          "link": { "label": { "en": "Open pitch kit", "ne": "पिच किट खोल्नुहोस्" }, "route": "/(app)/pitch" }
+        }
+      ]
+    },
+    {
+      "id": "calls",
+      "icon": "call-outline",
+      "title": { "en": "Calls", "ne": "कल" },
+      "items": [
+        {
+          "title": { "en": "Logging calls", "ne": "कल दर्ता" },
+          "body": {
+            "en": "Call or WhatsApp a lead from its page and the call is logged for you. You can also log or schedule calls yourself; scheduled calls remind you.",
+            "ne": "लिडको पेजबाट कल वा WhatsApp गर्दा कल आफैं दर्ता हुन्छ। आफैं पनि कल दर्ता वा तय गर्न सकिन्छ; तय गरिएका कलले सम्झाउँछन्।"
+          },
+          "link": { "label": { "en": "Calls", "ne": "कलहरू" }, "route": "/(app)/call-logs" }
+        }
+      ]
+    },
+    {
+      "id": "more",
+      "icon": "map-outline",
+      "title": { "en": "Map, meetups, leaderboard", "ne": "नक्सा, भेटघाट, लिडरबोर्ड" },
+      "items": [
+        {
+          "title": { "en": "Pharmacies near me", "ne": "नजिकका फार्मेसी" },
+          "body": {
+            "en": "A map of shops around you and how far along you are with each.",
+            "ne": "तपाईं वरपरका पसलको नक्सा र हरेकसँग कहाँसम्म पुग्नुभयो।"
+          },
+          "link": { "label": { "en": "Open map", "ne": "नक्सा खोल्नुहोस्" }, "route": "/(app)/map" }
+        },
+        {
+          "title": { "en": "Meetups", "ne": "भेटघाट" },
+          "body": {
+            "en": "Meetings with your program. Answer invites and tap \"I'm here\" when you arrive.",
+            "ne": "प्रोग्रामसँगको बैठक। निमन्त्रणाको जवाफ दिनुहोस् र पुगेपछि \"I'm here\" थिच्नुहोस्।"
+          },
+          "link": { "label": { "en": "Meetups", "ne": "भेटघाट" }, "route": "/(app)/meetups" }
+        },
+        {
+          "title": { "en": "Leaderboard", "ne": "लिडरबोर्ड" },
+          "body": {
+            "en": "How your week compares with other reps in your program.",
+            "ne": "तपाईंको हप्ता प्रोग्रामका अरू रेपसँग कस्तो छ।"
+          },
+          "link": { "label": { "en": "Leaderboard", "ne": "लिडरबोर्ड" }, "route": "/(app)/leaderboard" }
+        }
+      ]
+    },
+    {
+      "id": "offline",
+      "icon": "cloud-offline-outline",
+      "title": { "en": "Working offline", "ne": "इन्टरनेट बिना काम" },
+      "items": [
+        {
+          "title": { "en": "No signal? Keep working", "ne": "सिग्नल छैन? काम जारी राख्नुहोस्" },
+          "body": {
+            "en": "Check-ins, leads, calls, photos and voice memos save on your phone and go up in order when you are back online. Lists show what you last saw.",
+            "ne": "चेक-इन, लिड, कल, फोटो र भ्वाइस मेमो फोनमै सेभ हुन्छन् र इन्टरनेट आएपछि क्रमैसँग पठाइन्छन्। सूचीमा पछिल्लो पटक देखेको कुरा देखिन्छ।"
+          }
+        },
+        {
+          "title": { "en": "Sync", "ne": "Sync" },
+          "body": {
+            "en": "The Sync screen shows what is waiting to be sent and lets you send it now.",
+            "ne": "पठाउन बाँकी कुरा Sync स्क्रिनमा देखिन्छ र अहिल्यै पठाउन पनि सकिन्छ।"
+          },
+          "link": { "label": { "en": "Open Sync", "ne": "Sync खोल्नुहोस्" }, "route": "/(app)/sync" }
+        }
+      ]
+    },
+    {
+      "id": "fair-play",
+      "icon": "shield-checkmark-outline",
+      "title": { "en": "Fair play", "ne": "इमानदारीका नियम" },
+      "items": [
+        {
+          "title": { "en": "Real work only", "ne": "साँचो काम मात्र" },
+          "body": {
+            "en": "Check in only where you really are, and only shops you really visited. Fake locations, made-up leads or someone else's phone number all show up in the program's reports.",
+            "ne": "साँच्चै भएको ठाउँमा र साँच्चै गएको पसलमा मात्र चेक-इन गर्नुहोस्। नक्कली लोकेसन, बनावटी लिड वा अरूको फोन नम्बर प्रोग्रामको रिपोर्टमा देखिन्छ।"
+          }
+        },
+        {
+          "title": { "en": "Codes and sales", "ne": "कोड र बिक्री" },
+          "body": {
+            "en": "Don't record MedicineXP sales by hand, and don't ask pharmacies to switch codes. When two reps claim one pharmacy, the program decides who gets the credit.",
+            "ne": "MedicineXP को बिक्री हातले नराख्नुहोस्, र फार्मेसीलाई कोड बदल्न नभन्नुहोस्। एउटै फार्मेसी दुई रेपले दाबी गरे कसलाई क्रेडिट दिने प्रोग्रामले तय गर्छ।"
+          }
+        }
+      ]
+    },
+    {
+      "id": "help",
+      "icon": "help-buoy-outline",
+      "title": { "en": "Help", "ne": "सहायता" },
+      "items": [
+        {
+          "title": { "en": "Who to contact", "ne": "कसलाई सम्पर्क गर्ने" },
+          "body": {
+            "en": "Your program's contact is at the bottom of the pitch kit. For app problems, tell your program and mention what you tapped and what you saw.",
+            "ne": "तपाईंको प्रोग्रामको सम्पर्क पिच किटको तल छ। एपमा समस्या भए के थिच्नुभयो र के देख्नुभयो भनेर प्रोग्रामलाई भन्नुहोस्।"
+          },
+          "link": { "label": { "en": "Open pitch kit", "ne": "पिच किट खोल्नुहोस्" }, "route": "/(app)/pitch" }
+        },
+        {
+          "title": { "en": "The welcome tour", "ne": "परिचय टुर" },
+          "body": {
+            "en": "Want the short tour again? It is on your Profile under \"How it works\".",
+            "ne": "छोटो टुर फेरि हेर्न चाहनुहुन्छ? Profile मा \"How it works\" मा छ।"
+          }
+        }
+      ]
+    }
+  ]
+}
