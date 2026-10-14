@@ -11,11 +11,12 @@ security fixes (any time, small) -> server upgrade LAST
   - [x] medicinexp-affiliates #1 - field kit, earning model, dashboard (merged into main)
   - [x] medicinexp-affiliates #2, #3 (team up), #4 (check-in pitching) - merged, but into the stacked
         branches AFTER #1 went into main, so main doesn't have them yet
-  - [ ] Merge the catch-up PR feat-lead-sales -> main (brings #2, #3, #4 and this checklist to main)
+  - [x] medicinexp-affiliates #5 - catch-up PR: #2, #3, #4 and this checklist now on main (merged)
     - [ ] Then: git checkout main, git pull, npm install, npx expo start --dev-client --clear
-    - [ ] Delete feat-field-kit-offline, feat-lead-sales, feat-team-up, feat-checkin-pitch after
+    - [x] Deleted feat-field-kit-offline, feat-lead-sales, feat-team-up, feat-checkin-pitch, fix-catch-up-main
   - [ ] pharmacyxp-landing #22 - sign-up filled from the visit, phone layout, agent docs
   - [ ] pharmacyxp #46 - bulk entry (feat-bulk-entry-gemini), yours
+    - [x] Production merged in, conflict resolved (service_tenant migration), 146 tests pass - ready to merge
   - [x] pharmacyxp #55 - AGENTS.md + agents/ docs (merged)
     - [ ] Pull production on your machine (the local copies were removed so the pull won't clash)
   - [x] pharmacyxp #56 - HUD one-request dashboard (merged)
@@ -24,11 +25,19 @@ security fixes (any time, small) -> server upgrade LAST
   - [x] pharmacyxp #60 - team up + team credit (merged)
     - [ ] Run the affiliate migration on staging, then production (2026_10_15_000100)
   - [x] pharmacyxp #61 - check-in: a visit for each program pitched (merged, no migration)
-  - [ ] Delete merged server branches
-    - [ ] feat-affiliate-portal, feat-affiliate-programs, feat-affiliate-lead-sales
-    - [ ] bug-fix-ajax-delete-redirect, bug-fix-validation-messages
-    - [x] docs-agents (deleted)
-    - [ ] enhancement-hud-dashboard, enhancement-hud-filters, feat-team-up, feat-checkin-programs
+  - [x] pharmacyxp #65 - deploy keeps public/storage -> ../storage/app/public and checks it (merged)
+  - [x] pharmacyxp #66 - stray newline in config/supabase.php broke every served file (merged, guarded by a test)
+  - [ ] Draft PRs opened for a look at unmerged work (all conflict with production)
+    - [ ] #62 A-Z drugs of India (was only on your PC)
+    - [ ] #63 HUD audit telemetry (probably replaced by #56/#58: close?)
+    - [ ] #64 prescriptions: unfinished; 96 MB of CSVs (shrink or fetch at seed time); SNOMED CT licence
+    - [ ] #44 old "Production" PR into main: close?
+  - [x] Delete merged server branches (GitHub + local, checked against production first)
+    - [x] feat-affiliate-portal, feat-affiliate-programs, feat-affiliate-lead-sales
+    - [x] bug-fix-ajax-delete-redirect, bug-fix-validation-messages
+    - [x] docs-agents, docs-hud-repo
+    - [x] enhancement-hud-dashboard, enhancement-hud-filters, feat-team-up, feat-checkin-programs
+    - [ ] Merged but kept (ask): staging, v2, bug-fix-menu-items-being-reverted-after-migration, bug-fix-old-shipment-not-seen-in-drug-create
 
 - [x] Agent docs: AGENTS.md + agents/ in server, app and landing
   - [ ] Keep agents/log.md updated (one line per change) and decisions.md when rules change
@@ -103,6 +112,13 @@ security fixes (any time, small) -> server upgrade LAST
 - [ ] Also found and fixed
   - [x] API rate limit was one 60/min bucket for ALL reps + the HUD; now per caller (#60)
   - [x] Local MySQL (XAMPP) Aria crash repaired; backup at C:\xampp\mysql\data_backup_20261014 (delete when happy)
+  - [x] Portal photos broken: stray newline before <?php in config/supabase.php (#66)
+  - [x] public/storage pointed at the runner's folder; deploy fixes and verifies the link (#65)
+    - [ ] Copy any uploads left in the runner's storage/app/public to /var/www/medicinexp (cp -rn)
+  - [x] Shop photos / voice memos stay private (storage/app/affiliates, served only to logged-in users) - by design
+  - [ ] PHP-FPM hit pm.max_children (5) ~30 times on 14 Oct: raise to 12 in /etc/php/7.4/fpm/pool.d/www.conf, reload
+  - [ ] Test helper agents/scripts/wt-bootstrap.php: fix ../ paths for classes missing in the main checkout (small PR)
+  - [ ] Bots scanning for .env / .ssh / credentials: all blocked by nginx rules (nothing to do)
 
 - [ ] Visits: who went with you
   - [ ] "Who came with you?" chips at check-in and on the visit
@@ -318,5 +334,5 @@ security fixes (any time, small) -> server upgrade LAST
   - [ ] 5. Update the PHP 7.4 rule in server/agents/architecture.md
 
 - [ ] Small things
-  - [ ] Deploy workflow: remove pull_request trigger (red X on every PR)
+  - [ ] Deploy workflow: remove pull_request trigger (red X on every PR; it also runs the deploy steps for PRs)
   - [ ] Optional: "signed up without my code" claim button for MedicineXP leads
