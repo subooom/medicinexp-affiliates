@@ -14,8 +14,11 @@ import { IconName } from '@/utils/icons';
 import { formatPaisa } from '@/utils/money';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { Href, useFocusEffect, useRouter } from 'expo-router';
-import { useCallback, useMemo, useState } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Alert, ScrollView, Share, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+
+const OPEN_GROUPS_KEY = 'profile.open_groups';
 
 export default function ProfileScreen() {
   const router = useRouter();
@@ -96,6 +99,18 @@ export default function ProfileScreen() {
   };
 
   type MenuItem = { icon: IconName; label: string; route: Href; hint?: string };
+  // Groups fold away; Selling starts open, the rest closed; the phone remembers what was open
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({ Selling: true });
+  useEffect(() => {
+    AsyncStorage.getItem(OPEN_GROUPS_KEY)
+      .then((saved) => saved && setOpenGroups(JSON.parse(saved)))
+      .catch(() => undefined);
+  }, []);
+  const toggleGroup = (title: string) => {
+    const next = { ...openGroups, [title]: !openGroups[title] };
+    setOpenGroups(next);
+    AsyncStorage.setItem(OPEN_GROUPS_KEY, JSON.stringify(next)).catch(() => undefined);
+  };
   // Grouped so the list reads in three short blocks instead of one long one
   const menuGroups: { title: string; items: MenuItem[] }[] = [
     {
@@ -206,7 +221,14 @@ export default function ProfileScreen() {
 
       {menuGroups.map((group) => (
         <View key={group.title} style={{ gap: 6 }}>
-          <Text style={[typography.caption, styles.groupTitle, { color: colors.mutedForeground }]}>{group.title}</Text>
+          <TouchableOpacity style={styles.groupHeader} onPress={() => toggleGroup(group.title)} accessibilityRole="button" accessibilityState={{ expanded: !!openGroups[group.title] }}>
+            <Text style={[typography.caption, styles.groupTitle, { color: colors.mutedForeground, flex: 1 }]}>
+              {group.title}
+              {!openGroups[group.title] ? ` · ${group.items.length}` : ''}
+            </Text>
+            <Ionicons name={openGroups[group.title] ? 'chevron-up' : 'chevron-down'} size={16} color={colors.mutedForeground} />
+          </TouchableOpacity>
+          {openGroups[group.title] && (
           <View style={[styles.menu, { backgroundColor: colors.card, borderColor: colors.border }]}>
             {group.items.map((item, index) => (
               <TouchableOpacity
@@ -221,6 +243,7 @@ export default function ProfileScreen() {
               </TouchableOpacity>
             ))}
           </View>
+          )}
         </View>
       ))}
       </>
@@ -294,6 +317,7 @@ const createStyles = (colors: AppColors) =>
     codeCard: { flexDirection: 'row', alignItems: 'center', padding: 14, borderRadius: 12, borderWidth: 1 },
     code: { fontSize: 22, fontWeight: '800', letterSpacing: 2 },
     stats: { flexDirection: 'row', paddingVertical: 14, borderRadius: 12, borderWidth: 1 },
+    groupHeader: { flexDirection: 'row', alignItems: 'center', paddingVertical: 6, paddingRight: 6 },
     groupTitle: { fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.6, marginLeft: 4 },
     menu: { borderRadius: 12, borderWidth: 1, overflow: 'hidden' },
     menuItem: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 14, paddingVertical: 14 },

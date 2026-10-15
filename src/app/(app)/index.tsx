@@ -10,7 +10,7 @@ import { AppColors } from '@/constants/colors';
 import { useAuth } from '@/context/AuthContext';
 import { useAppTheme } from '@/hooks/use-app-theme';
 import { typography } from '@/styles/typography';
-import { DashboardData } from '@/types/models';
+import { DashboardData, Visit } from '@/types/models';
 import { readableColor } from '@/utils/color';
 import { IconName, toIconName } from '@/utils/icons';
 import { leadStatusLabel } from '@/utils/lead-types';
@@ -35,6 +35,31 @@ const visitWhen = (iso: string) => {
   if (days === 0) return `Today ${time}`;
   if (days === 1) return `Yesterday ${time}`;
   return `${date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })} ${time}`;
+};
+
+type BadgeTone = 'success' | 'secondary' | 'info' | 'warning' | 'destructive' | 'primary' | 'accent';
+
+/**
+ * What happened at a visit, as small badges: "Planned", "2 items left" / "1 × Brochure",
+ * "Lead: Interested", "Team", photo / voice memo. (Older servers send no drop-offs or leads.)
+ */
+const visitBadges = (visit: Visit): { label: string; icon: IconName; tone: BadgeTone }[] => {
+  const badges: { label: string; icon: IconName; tone: BadgeTone }[] = [];
+  if (visit.status === 'planned') badges.push({ label: 'Planned', icon: 'calendar-outline', tone: 'info' });
+  if (visit.status === 'cancelled') badges.push({ label: 'Cancelled', icon: 'close-circle-outline', tone: 'destructive' });
+  const dropoffs = visit.dropoffs ?? [];
+  const items = dropoffs.reduce((sum, d) => sum + d.quantity, 0);
+  if (items > 0) {
+    const label = dropoffs.length === 1 && dropoffs[0].material?.name ? `${items} × ${dropoffs[0].material.name}` : `${items} item${items > 1 ? 's' : ''} left`;
+    badges.push({ label, icon: 'gift-outline', tone: 'accent' });
+  }
+  const lead = visit.leads?.[0];
+  if (lead) badges.push({ label: `Lead: ${leadStatusLabel(lead.status)}`, icon: 'person-add-outline', tone: 'secondary' });
+  if (visit.team_up_id) badges.push({ label: 'Team', icon: 'people-outline', tone: 'primary' });
+  const attachments = visit.attachments ?? [];
+  if (attachments.some((a) => a.kind === 'photo')) badges.push({ label: 'Photo', icon: 'camera-outline', tone: 'success' });
+  if (attachments.some((a) => a.kind === 'voice_memo')) badges.push({ label: 'Memo', icon: 'mic-outline', tone: 'success' });
+  return badges;
 };
 
 const payoutDayLabel = (dateString: string) => {
@@ -357,12 +382,23 @@ export default function DashboardScreen() {
                     <Ionicons name={visit.team_up_id ? 'people-outline' : 'location-outline'} size={18} color={getVisitStatusColor(colors, visit.status)} />
                     <View style={{ flex: 1 }}>
                       <Text style={[typography.body2, { color: colors.foreground }]} numberOfLines={1}>{visit.venue?.name}</Text>
-                      {/* Same shop twice in a row: the time and status tell the visits apart */}
+                      {/* Same shop twice in a row: the time and what happened there tell the visits apart */}
                       <Text style={[typography.caption, { color: colors.mutedForeground }]} numberOfLines={1}>
-                        {[visitWhen(visit.visited_at), visit.status !== 'completed' ? (visit.status === 'planned' ? 'Planned' : 'Cancelled') : null, visit.team_up_id ? 'Team' : null]
-                          .filter(Boolean)
-                          .join(' · ')}
+                        {visitWhen(visit.visited_at)}
                       </Text>
+                      {visitBadges(visit).length > 0 && (
+                        <View style={styles.badgeRow}>
+                          {visitBadges(visit).map((badge) => {
+                            const tint = colors[badge.tone];
+                            return (
+                              <View key={badge.label} style={[styles.badge, { backgroundColor: tint + (isDark ? '30' : '1A') }]}>
+                                <Ionicons name={badge.icon} size={11} color={tint} />
+                                <Text style={[styles.badgeText, { color: tint }]} numberOfLines={1}>{badge.label}</Text>
+                              </View>
+                            );
+                          })}
+                        </View>
+                      )}
                     </View>
                   </TouchableOpacity>
                 ))
@@ -495,6 +531,9 @@ const createStyles = (colors: AppColors) =>
     heroSub: { color: '#fff', fontSize: 13, marginTop: 2 },
     heroDivider: { height: 1, backgroundColor: 'rgba(255,255,255,0.2)', marginVertical: 12 },
     heroRow: { flexDirection: 'row', gap: 8 },
+    badgeRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 4, marginTop: 4 },
+    badge: { flexDirection: 'row', alignItems: 'center', gap: 3, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 8, maxWidth: '100%' },
+    badgeText: { fontSize: 11, fontWeight: '700' },
     quickActions: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, paddingHorizontal: 16, marginTop: 16 },
     quickAction: { width: '23%', flexGrow: 1, alignItems: 'center', gap: 6, paddingVertical: 12, borderRadius: 12, borderWidth: 1 },
     quickIcon: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
