@@ -1,5 +1,6 @@
 // app/(app)/materials.tsx — the program's materials and what the MR is carrying
 import { materialApi } from '@/api/materials';
+import { logLoadError } from '@/utils/errors';
 import { AppColors } from '@/constants/colors';
 import { useAppTheme } from '@/hooks/use-app-theme';
 import { typography } from '@/styles/typography';
@@ -24,7 +25,7 @@ export default function MaterialsScreen() {
       const response = await materialApi.getAll();
       setMaterials(response.data.data);
     } catch (error) {
-      console.error('Error loading materials:', error);
+      logLoadError('Error loading materials:', error);
     } finally {
       setLoading(false);
       setRefreshing(false);

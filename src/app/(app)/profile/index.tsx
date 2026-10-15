@@ -1,5 +1,6 @@
 // app/(app)/profile/index.tsx
 import { programApi } from '@/api/auth';
+import { logLoadError } from '@/utils/errors';
 import { earningsApi } from '@/api/earnings';
 import { tierApi } from '@/api/tiers';
 import { ProgramSwitcher } from '@/components/programs/program-switcher';
@@ -61,7 +62,7 @@ export default function ProfileScreen() {
       setCounts(tier.data.data.counts);
       setLifetimePaisa(earnings.data.data.lifetime_paisa);
     } catch (error) {
-      console.error('Error loading profile stats:', error);
+      logLoadError('Error loading profile stats:', error);
     }
   }, [activeMembership]);
 
@@ -194,6 +195,9 @@ export default function ProfileScreen() {
         </View>
       ))}
 
+      {/* Stats and the work menu need a program (suspended / waiting reps only get join, help, log out) */}
+      {activeMembership && (
+      <>
       <View style={[styles.stats, { backgroundColor: colors.card, borderColor: colors.border }]}>
         <Stat label="Pharmacies signed" value={counts?.sales ?? '—'} colors={colors} />
         <Stat label="Earned" value={lifetimePaisa != null ? formatPaisa(lifetimePaisa) : '—'} colors={colors} />
@@ -219,6 +223,8 @@ export default function ProfileScreen() {
           </View>
         </View>
       ))}
+      </>
+      )}
 
       <View style={[styles.menu, { backgroundColor: colors.card, borderColor: colors.border, padding: 16, gap: 10 }]}>
         <Text style={[typography.body1, { color: colors.foreground, fontWeight: '600' }]}>Join another program</Text>
