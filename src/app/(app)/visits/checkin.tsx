@@ -11,7 +11,7 @@ import { CapturedFile, uploadAttachment } from '@/offline/attachments';
 import { queuedMessage, sendOrQueue } from '@/offline/send';
 import { teamUpApi } from '@/api/team-ups';
 import { teamUpStore, useTeamUp } from '@/hooks/use-team-up';
-import { apiErrorMessage } from '@/utils/errors';
+import { apiErrorMessage, logLoadError } from '@/utils/errors';
 import { MaterialPicker } from '@/components/visits/material-picker';
 import { AppColors } from '@/constants/colors';
 import { useAppTheme } from '@/hooks/use-app-theme';
@@ -163,7 +163,7 @@ export default function CheckInScreen() {
       const response = await venueApi.getNearby({ latitude: nextFix.latitude, longitude: nextFix.longitude, radius: 2 });
       setNearby(response.data.data.slice(0, 15));
     } catch (error) {
-      console.error('Location / nearby failed:', error);
+      logLoadError('Location / nearby failed:', error);
     } finally {
       setLocating(false);
     }
@@ -183,13 +183,13 @@ export default function CheckInScreen() {
       // Every program's materials: one check-in can hand out several programs' items
       .getAll({ in_bag: true, all_programs: true })
       .then((response) => setMaterials(response.data.data))
-      .catch((error) => console.error('Error loading materials:', error));
+      .catch((error) => logLoadError('Error loading materials:', error));
 
     if (params.venueId) {
       venueApi
         .getById(parseInt(params.venueId))
         .then((response) => setVenue(response.data.data.venue))
-        .catch((error) => console.error('Error loading venue:', error));
+        .catch((error) => logLoadError('Error loading venue:', error));
     }
   }, [locate, params.venueId]);
 
@@ -206,7 +206,7 @@ export default function CheckInScreen() {
         const response = await venueApi.getAll({ search: text, per_page: 15 });
         setResults(response.data.data.data);
       } catch (error) {
-        console.error('Venue search failed:', error);
+        logLoadError('Venue search failed:', error);
       } finally {
         setSearching(false);
       }

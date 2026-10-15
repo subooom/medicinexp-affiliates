@@ -1,5 +1,6 @@
 // app/(app)/distributions/index.tsx — drop-offs: materials the MR left at pharmacies
 import { materialApi } from '@/api/materials';
+import { logLoadError } from '@/utils/errors';
 import { AppColors } from '@/constants/colors';
 import { useAppTheme } from '@/hooks/use-app-theme';
 import { typography } from '@/styles/typography';
@@ -32,7 +33,7 @@ export default function DropoffsScreen() {
       setLastPage(result.last_page);
       setTotal(result.total);
     } catch (error) {
-      console.error('Error loading drop-offs:', error);
+      logLoadError('Error loading drop-offs:', error);
     } finally {
       setLoading(false);
       setRefreshing(false);
