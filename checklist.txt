@@ -202,6 +202,14 @@ security fixes (any time, small) -> server upgrade LAST
   - [x] Check-in: "Save shop to phone contacts" tick, on for a first visit / shop added there, else off
     - [x] Saved contacts show "Visited 16 Oct"; a lead's contact keeps its name and status (feat-visit-contact)
     - [ ] Test on the new build (steps in the PR)
+  - [x] Sync all contacts (app feat-contacts-sync-all + pharmacyxp #71 GET /contacts)
+    - [x] Own + team-up leads (not lost) and visited shops, all active programs, one per number
+    - [x] Sync screen: "Phone contacts" count, last synced, Sync contacts button with progress
+    - [x] Daily refresh at app start when allowed; never allowed -> offered once
+    - [x] Lead with no phone uses the shop's number; denied permission explained once (Open settings)
+    - [x] Numbers saved one way (no +977, landlines with 0) so they don't duplicate
+    - [ ] Test after #71 is deployed (steps in the PR)
+    - [ ] Journal import: run the same sync after importing
   - [x] Name: "Ram Thapa (Shree Ganesh Pharmacy) MedicineXP" (search "medicinexp" finds all)
   - [x] Update by phone number (last 10 digits), never duplicate, never delete one by one
   - [ ] Test on the vivo after the new build (steps in the PR)

@@ -136,12 +136,13 @@ export function LeadForm({ lead, venueId, visitId, onSaved }: LeadFormProps) {
             label: `New lead: ${who}`,
           });
       // Contact on the phone: saved now even if the lead itself is still waiting to sync
-      if (contactSyncAvailable && payload.contact_phone) {
+      const contactPhone = payload.contact_phone || venue?.phone;
+      if (contactSyncAvailable && contactPhone) {
         if (saveToPhone || lead) {
           await syncLeadContact(
             {
               contactName: payload.contact_name,
-              phone: payload.contact_phone,
+              phone: contactPhone,
               venueName: venue?.name,
               status: lead?.status ?? status,
               productName: products.find((p) => p.id === productId)?.name ?? null,
@@ -326,7 +327,7 @@ export function LeadForm({ lead, venueId, visitId, onSaved }: LeadFormProps) {
       <Text style={[typography.body2, styles.label, { color: colors.foreground }]}>Notes</Text>
       {input('notes', 'What did they say? Objections? What do they use now?', { multiline: true })}
 
-      {contactSyncAvailable && !!values.contact_phone.trim() && (
+      {contactSyncAvailable && !!(values.contact_phone.trim() || venue?.phone) && (
         <TouchableOpacity
           style={styles.saveContact}
           onPress={() => {
