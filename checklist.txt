@@ -242,6 +242,10 @@ security fixes (any time, small) -> server upgrade LAST
     - [ ] Needs a native change (postal address) -> ships with the next EAS build (e.g. the Firebase one)
     - [ ] Server /contacts sends the address; old builds just skip it
     - [x] Ships in the next EAS build (Firebase/push still later)
+  - [x] Contact address (feat-contact-address + pharmacyxp /contacts address)
+    - [x] Lead's own address, else the shop's "address, city, district"; shop contacts get the shop's
+    - [x] Native setAddress (work postal address) -> needs a new EAS build; older builds skip addresses
+    - [ ] New build, then Sync contacts and open a contact: address shows
 
 - [ ] Rep map: available pharmacies (after shop holds)
   - [ ] Own program only; nothing from other programs

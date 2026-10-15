@@ -18,7 +18,7 @@ import { useAppTheme } from '@/hooks/use-app-theme';
 import { typography } from '@/styles/typography';
 import { MaterialWithStock, Venue, Visit, VisitInput } from '@/types/models';
 import { toIconName } from '@/utils/icons';
-import { contactSyncAvailable, eventDay, syncShopContact } from '@/utils/contact-sync';
+import { contactSyncAvailable, eventDay, syncShopContact, venueAddress } from '@/utils/contact-sync';
 import { uuidv4 } from '@/utils/uuid';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import * as Location from 'expo-location';
@@ -269,7 +269,7 @@ export default function CheckInScreen() {
       // A saved contact shows the visit on the call screen; ticked, a new one is saved
       if (!planLater && venue.phone) {
         await syncShopContact(
-          { phone: venue.phone, name: venue.name, isCustomer: venue.is_customer, typeName: venue.type?.name },
+          { phone: venue.phone, name: venue.name, isCustomer: venue.is_customer, typeName: venue.type?.name, address: venueAddress(venue) },
           { create: saveContact, event: `Visited ${eventDay()}` }
         );
       }

@@ -3,7 +3,7 @@ import { AttachmentsCard } from '@/components/field/attachments-card';
 import { SignupLinkCard } from '@/components/field/signup-link-card';
 import { LeadSalesCard } from '@/components/leads/lead-sales-card';
 import { useCallLogger } from '@/hooks/use-call-logger';
-import { contactSyncAvailable, LeadContact, syncLeadContact } from '@/utils/contact-sync';
+import { contactSyncAvailable, LeadContact, syncLeadContact, venueAddress } from '@/utils/contact-sync';
 import { callLogApi } from '@/api/call-logs';
 import { leadApi } from '@/api/leads';
 import { AppColors } from '@/constants/colors';
@@ -75,6 +75,7 @@ export default function LeadDetailScreen() {
     productName: l.product?.name,
     followUpAt: l.next_follow_up_at,
     notes: l.notes,
+    address: l.contact_address || venueAddress(l.venue),
   });
 
   const saveContact = async () => {

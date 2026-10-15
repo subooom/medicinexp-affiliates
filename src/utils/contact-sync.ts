@@ -19,6 +19,8 @@ type NativeContacts = {
   upsert(phone: string, displayName: string, company: string, title: string, note: string, create: boolean): Promise<'created' | 'updated' | 'skipped'>;
   removeAll(): Promise<number>;
   count(): Promise<number>;
+  // Builds from 17 Oct 2026 on; older ones don't have it and simply skip addresses
+  setAddress?(phone: string, address: string): Promise<boolean>;
 };
 
 // null on iPhone and on builds made before the module existed
@@ -43,6 +45,7 @@ export interface LeadContact {
   productName?: string | null;
   followUpAt?: string | null;
   notes?: string | null;
+  address?: string | null;
 }
 
 export interface ShopContact {
@@ -50,6 +53,25 @@ export interface ShopContact {
   name: string;
   isCustomer?: boolean;
   typeName?: string | null;
+  address?: string | null;
+}
+
+/** "New Road, Kathmandu" from a shop's address, city and district (no empty or repeated parts). */
+export function venueAddress(venue?: { address?: string | null; city?: string | null; district?: string | null } | null): string | null {
+  if (!venue) return null;
+  const parts: string[] = [];
+  for (const part of [venue.address, venue.city, venue.district]) {
+    const value = part?.trim();
+    if (value && !parts.some((p) => p.toLowerCase() === value.toLowerCase())) parts.push(value);
+  }
+  return parts.length ? parts.join(', ') : null;
+}
+
+/** The contact's address field, when this build has it and there's an address. */
+async function writeAddress(phone: string, address?: string | null) {
+  const value = address?.trim();
+  if (!value || typeof native?.setAddress !== 'function') return;
+  await native.setAddress(phone, value.slice(0, 200));
 }
 
 /**
@@ -133,7 +155,10 @@ async function permitted(ask: boolean): Promise<boolean> {
 async function writeLead(lead: LeadContact & { phone: string }, create: boolean, event?: string | null) {
   const { company, title } = callScreenLines(lead, event);
   const note = (lead.notes ?? '').trim().slice(0, 500);
-  return native!.upsert(normalizePhone(lead.phone), contactName(lead), company, title, note, create);
+  const phone = normalizePhone(lead.phone);
+  const result = await native!.upsert(phone, contactName(lead), company, title, note, create);
+  if (result !== 'skipped') await writeAddress(phone, lead.address);
+  return result;
 }
 
 async function writeShop(shop: ShopContact & { phone: string }, create: boolean, event?: string | null) {
@@ -143,7 +168,10 @@ async function writeShop(shop: ShopContact & { phone: string }, create: boolean,
   const refreshed = await native!.upsert(phone, '', '', title, '', false);
   if (refreshed !== 'skipped' || !create) return refreshed;
   const company = shop.isCustomer ? 'MedicineXP customer' : shop.typeName?.trim() || '';
-  return native!.upsert(phone, contactName({ venueName: shop.name }), company ? `${company} ` : '', title, '', true);
+  const created = await native!.upsert(phone, contactName({ venueName: shop.name }), company ? `${company} ` : '', title, '', true);
+  // Only new shop contacts get the shop's address: a lead's contact keeps the lead's
+  if (created !== 'skipped') await writeAddress(phone, shop.address);
+  return created;
 }
 
 /**
@@ -201,12 +229,13 @@ function writeSynced(contact: SyncContact) {
         productName: contact.product_name,
         followUpAt: contact.follow_up_at,
         notes: contact.notes,
+        address: contact.address,
       },
       true
     );
   }
   return writeShop(
-    { phone: contact.phone, name: contact.venue_name ?? 'Shop', isCustomer: contact.is_customer, typeName: contact.venue_type },
+    { phone: contact.phone, name: contact.venue_name ?? 'Shop', isCustomer: contact.is_customer, typeName: contact.venue_type, address: contact.address },
     true,
     contact.last_visited_at ? `Visited ${eventDay(new Date(contact.last_visited_at))}` : null
   );

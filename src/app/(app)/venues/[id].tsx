@@ -6,7 +6,7 @@ import { useAppTheme } from '@/hooks/use-app-theme';
 import { typography } from '@/styles/typography';
 import { CallLog, Dropoff, Venue, VenueStats, Visit } from '@/types/models';
 import { toIconName } from '@/utils/icons';
-import { contactSyncAvailable, syncShopContact } from '@/utils/contact-sync';
+import { contactSyncAvailable, syncShopContact, venueAddress } from '@/utils/contact-sync';
 import { getCallStatusColor, getVisitStatusColor } from '@/utils/status-colors';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
@@ -168,7 +168,7 @@ export default function VenueDetailScreen() {
             style={styles.phoneRow}
             onPress={async () => {
               const result = await syncShopContact(
-                { phone: venue.phone, name: venue.name, isCustomer: venue.is_customer, typeName: venue.type?.name },
+                { phone: venue.phone, name: venue.name, isCustomer: venue.is_customer, typeName: venue.type?.name, address: venueAddress(venue) },
                 { create: true }
               );
               Alert.alert(
