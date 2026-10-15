@@ -1,6 +1,6 @@
 // src/context/AuthContext.tsx
 import { authApi, programApi } from '@/api/auth';
-import { ACTIVE_PROGRAM_KEY } from '@/api/client';
+import { ACTIVE_PROGRAM_KEY, onProgramUnavailable } from '@/api/client';
 import { responseCache } from '@/offline/cache';
 import { outbox } from '@/offline/outbox';
 import { venueIndex } from '@/offline/venue-index';
@@ -8,7 +8,7 @@ import { removeAllContacts } from '@/utils/contact-sync';
 import { Membership, User } from '@/types/models';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
-import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { Alert } from 'react-native';
 
 interface AuthContextType {
@@ -37,6 +37,39 @@ export const isUsableMembership = (membership: Membership) =>
   membership.status === 'active' && !!membership.program && membership.program.is_active !== false;
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+const SUSPENSIONS_SEEN_KEY = 'suspensions_seen';
+
+/** "15 Oct 2026: bad actor" */
+export const suspensionText = (membership: Membership) =>
+  [
+    membership.suspended_at ? new Date(membership.suspended_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : null,
+    membership.suspension_reason,
+  ]
+    .filter(Boolean)
+    .join(': ');
+
+/**
+ * Suspended from a program while another still works: say so once (with the reason), and
+ * where the app moved them. With nothing left to work in, the dashboard shows it instead.
+ */
+async function announceSuspensions(user: User, programId: number | null) {
+  const memberships = user.memberships ?? [];
+  const suspended = memberships.filter((m) => m.status === 'suspended' && m.program);
+  if (suspended.length === 0 || !memberships.some(isUsableMembership)) return;
+  const seen: string[] = JSON.parse((await AsyncStorage.getItem(SUSPENSIONS_SEEN_KEY)) || '[]');
+  const fresh = suspended.filter((m) => !seen.includes(`${m.id}:${m.suspended_at}`));
+  if (fresh.length === 0) return;
+  await AsyncStorage.setItem(SUSPENSIONS_SEEN_KEY, JSON.stringify([...seen, ...fresh.map((m) => `${m.id}:${m.suspended_at}`)]));
+  const now = memberships.find((m) => m.program?.id === programId);
+  Alert.alert(
+    `Suspended from ${fresh.map((m) => m.program!.name).join(', ')}`,
+    [
+      ...fresh.map((m) => suspensionText(m) || 'No reason given.'),
+      now ? `You're now working in ${now.program!.name}.` : 'Choose the program you are working in.',
+    ].join('\n\n')
+  );
+}
 
 /**
  * The program to use: the server's saved choice, else the only active membership.
@@ -69,6 +102,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
     setUser(nextUser);
     setActiveProgramId(programId);
+    announceSuspensions(nextUser, programId).catch(() => undefined);
     await AsyncStorage.setItem('user_data', JSON.stringify(nextUser));
     if (programId) {
       await AsyncStorage.setItem(ACTIVE_PROGRAM_KEY, String(programId));
@@ -159,6 +193,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [applyUser]);
   const activeMembership = activeMemberships.find((m) => m.program!.id === activeProgramId) ?? null;
+
+  // The server refused the program in use (e.g. suspended just now): re-read the profile so the
+  // app moves to another program or shows why. At most every 10 s, however many calls failed.
+  const lastRefresh = useRef(0);
+  useEffect(
+    () =>
+      onProgramUnavailable(() => {
+        if (Date.now() - lastRefresh.current < 10000) return;
+        lastRefresh.current = Date.now();
+        refreshUser();
+      }),
+    [refreshUser]
+  );
 
   const value: AuthContextType = {
     user,
