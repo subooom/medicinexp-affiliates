@@ -5,13 +5,38 @@ import { outbox } from '@/offline/outbox';
 import { sync } from '@/offline/sync';
 import { useSyncState } from '@/offline/sync-provider';
 import { typography } from '@/styles/typography';
-import { useState } from 'react';
+import { contactSyncAvailable, lastContactSync, savedContactCount, syncAllContacts } from '@/utils/contact-sync';
+import { useFocusEffect } from 'expo-router';
+import { useCallback, useState } from 'react';
 import { Alert, FlatList, StyleSheet, Text, View } from 'react-native';
 
 export default function SyncScreen() {
   const { colors } = useAppTheme();
   const { items, online, failed } = useSyncState();
   const [busy, setBusy] = useState(false);
+
+  // Phone contacts: every lead and visited shop (own + team-ups), so calls show who it is
+  const [contactCount, setContactCount] = useState(0);
+  const [lastSync, setLastSync] = useState<Date | null>(null);
+  const [contactProgress, setContactProgress] = useState<string | null>(null);
+  const loadContacts = useCallback(() => {
+    savedContactCount().then(setContactCount);
+    lastContactSync().then(setLastSync);
+  }, []);
+  useFocusEffect(loadContacts);
+
+  const syncContacts = async () => {
+    setContactProgress('Getting your leads…');
+    try {
+      const result = await syncAllContacts({ ask: true, onProgress: (done, total) => setContactProgress(`Saving ${done} of ${total}…`) });
+      if (result) Alert.alert('Contacts synced', `${result.saved} contacts saved or updated. Search "medicinexp" in Contacts to see them.`);
+    } catch (error: any) {
+      Alert.alert('Could not sync contacts', error?.message || 'Check your internet and try again.');
+    } finally {
+      setContactProgress(null);
+      loadContacts();
+    }
+  };
 
   const sendNow = async () => {
     setBusy(true);
@@ -45,6 +70,24 @@ export default function SyncScreen() {
               {online ? 'You are online.' : 'You are offline.'} Work you do without internet is kept on your phone and sent in the order you made it.
             </Text>
             {items.length > 0 && <Button title={failed > 0 ? 'Try again' : 'Send now'} icon="cloud-upload-outline" onPress={sendNow} loading={busy} />}
+            {contactSyncAvailable && (
+              <Card style={{ gap: 8 }}>
+                <Text style={[typography.body1, { color: colors.foreground, fontWeight: '600' }]}>Phone contacts</Text>
+                <Text style={[typography.caption, { color: colors.mutedForeground }]}>
+                  Your leads and the shops you visited (yours and your team-ups&apos;), so calls show a name and where things stand.
+                  {'\n'}
+                  {contactCount} saved{lastSync ? ` · last synced ${lastSync.toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}` : ' · never synced'}
+                </Text>
+                <Button
+                  title={contactProgress ?? 'Sync contacts'}
+                  icon="people-outline"
+                  variant="outline"
+                  onPress={syncContacts}
+                  loading={!!contactProgress && contactProgress.startsWith('Getting')}
+                  disabled={!!contactProgress}
+                />
+              </Card>
+            )}
           </View>
         }
         ListEmptyComponent={<EmptyState icon="checkmark-done-circle-outline" title="All synced" message="Nothing is waiting on this phone." />}

@@ -1,8 +1,10 @@
 // app/(app)/_layout.tsx
 import { TeamUpHost } from '@/components/team-up/team-up-host';
 import { useAppTheme } from '@/hooks/use-app-theme';
+import { autoSyncContacts } from '@/utils/contact-sync';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { Tabs } from 'expo-router';
+import { useEffect } from 'react';
 
 // Routes reachable from screens but not shown in the tab bar. Every route in (app)
 // that isn't a tab must be listed here, or expo-router adds it as an extra tab.
@@ -28,6 +30,12 @@ const HIDDEN_ROUTES = [
 
 export default function AppLayout() {
   const { colors } = useAppTheme();
+
+  // Phone contacts: refreshed once a day if allowed, else offered once (after the screen settles)
+  useEffect(() => {
+    const timer = setTimeout(() => autoSyncContacts(), 5000);
+    return () => clearTimeout(timer);
+  }, []);
 
   return (
     <>
