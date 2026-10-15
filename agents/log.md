@@ -2,6 +2,8 @@
 
 One line per change: date · what · where (PR/branch). Append when you finish work.
 
+- 2026-10-16 · Recent visits show outcome badges (items left, lead, team, photo/memo); Profile groups collapsible
+  (Selling open, remembered) · feat-visit-badges-collapsible.
 - 2026-10-16 · UX quick wins: filled daily-action tiles, recent visits with time/status/team, quieter Delete Visit,
   Profile menu in groups, stronger secondary text for sunlight · feat-ux-quick-wins.
 - 2026-10-16 · No program (suspended / waiting): Dashboard status screen (reason, Check again, Join, Guide) and Profile only;
