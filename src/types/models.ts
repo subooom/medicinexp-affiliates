@@ -67,6 +67,9 @@ export interface Membership {
   // Pharmacy sign-up page with this code filled in (shown as a QR code)
   referral_url: string;
   joined_at: string | null;
+  // Suspended memberships only: when, and the reason the admin typed
+  suspended_at?: string | null;
+  suspension_reason?: string | null;
   program?: Program;
   tier?: Tier | null;
   has_custom_commission: boolean;
