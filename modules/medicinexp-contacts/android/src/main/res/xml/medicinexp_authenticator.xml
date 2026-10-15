@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<account-authenticator xmlns:android="http://schemas.android.com/apk/res/android"
+  android:accountType="com.medicinexp.affiliates.contacts"
+  android:icon="@drawable/medicinexp_account_icon"
+  android:smallIcon="@drawable/medicinexp_account_icon"
+  android:label="@string/medicinexp_account_label" />

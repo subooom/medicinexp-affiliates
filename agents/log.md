@@ -2,6 +2,8 @@
 
 One line per change: date · what · where (PR/branch). Append when you finish work.
 
+- 2026-10-15 · Contact sync: lead contacts under an app-owned "MedicineXP" account (native module), call-screen
+  status/next step updated on events, removed when the rep leaves; checklist drops the Bronze codes item · feat-contact-sync.
 - 2026-10-15 · In-app QR scanner for Team up (expo-camera, loaded lazily; scanned code joins at once) · feat-team-up-scanner.
 - 2026-10-15 · How you earn screen ((app)/earn, server text with the rep's numbers, EN/ने, read-aloud), linked
   from dashboard, Earnings (+ first-visit card) and the tour; shared LanguageToggle · feat-how-you-earn.

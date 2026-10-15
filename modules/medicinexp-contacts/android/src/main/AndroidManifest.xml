@@ -1,0 +1,35 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+  <!-- Lead contacts live under the app's own "MedicineXP" account: not synced to the rep's
+       Google account, and removed by Android when the app is uninstalled. -->
+  <uses-permission android:name="android.permission.READ_CONTACTS" />
+  <uses-permission android:name="android.permission.WRITE_CONTACTS" />
+  <uses-permission android:name="android.permission.READ_SYNC_SETTINGS" />
+  <uses-permission android:name="android.permission.WRITE_SYNC_SETTINGS" />
+
+  <application>
+    <service
+      android:name="expo.modules.medicinexpcontacts.AuthenticatorService"
+      android:exported="true">
+      <intent-filter>
+        <action android:name="android.accounts.AccountAuthenticator" />
+      </intent-filter>
+      <meta-data
+        android:name="android.accounts.AccountAuthenticator"
+        android:resource="@xml/medicinexp_authenticator" />
+    </service>
+
+    <service
+      android:name="expo.modules.medicinexpcontacts.SyncService"
+      android:exported="true">
+      <intent-filter>
+        <action android:name="android.content.SyncAdapter" />
+      </intent-filter>
+      <meta-data
+        android:name="android.content.SyncAdapter"
+        android:resource="@xml/medicinexp_sync_adapter" />
+      <meta-data
+        android:name="android.provider.CONTACTS_STRUCTURE"
+        android:resource="@xml/medicinexp_contacts" />
+    </service>
+  </application>
+</manifest>
