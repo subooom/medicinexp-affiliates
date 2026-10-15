@@ -1,5 +1,6 @@
 // app/(app)/call-logs/index.tsx
 import { callLogApi } from '@/api/call-logs';
+import { logLoadError } from '@/utils/errors';
 import { AppColors } from '@/constants/colors';
 import { useAppTheme } from '@/hooks/use-app-theme';
 import { typography } from '@/styles/typography';
@@ -44,7 +45,7 @@ export default function CallLogsListScreen() {
       setPage(result.current_page);
       setLastPage(result.last_page);
     } catch (error) {
-      console.error('Error loading call logs:', error);
+      logLoadError('Error loading call logs:', error);
     } finally {
       setLoading(false);
       setRefreshing(false);

@@ -1,5 +1,6 @@
 // app/(app)/venues/index.tsx
 import { venueApi, VenueFilters } from '@/api/venues';
+import { logLoadError } from '@/utils/errors';
 import { AppColors } from '@/constants/colors';
 import { useAppTheme } from '@/hooks/use-app-theme';
 import { typography } from '@/styles/typography';
@@ -54,7 +55,7 @@ export default function VenuesListScreen() {
         setLastPage(result.last_page);
         setTotal(result.total);
       } catch (error) {
-        console.error('Error loading venues:', error);
+        logLoadError('Error loading venues:', error);
       } finally {
         setLoading(false);
         setRefreshing(false);
@@ -68,7 +69,7 @@ export default function VenuesListScreen() {
     venueApi
       .getTypes()
       .then((response) => setTypes(response.data.data))
-      .catch((error) => console.error('Error loading venue types:', error));
+      .catch((error) => logLoadError('Error loading venue types:', error));
   }, []);
 
   // Reload when coming back from create/edit

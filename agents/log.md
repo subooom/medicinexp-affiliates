@@ -2,6 +2,8 @@
 
 One line per change: date · what · where (PR/branch). Append when you finish work.
 
+- 2026-10-16 · No program (suspended / waiting): Dashboard status screen (reason, Check again, Join, Guide) and Profile only;
+  Visits/Leads/Earnings tabs and the work menu hidden, no contact sync · fix-no-program-gate.
 - 2026-10-16 · Contacts get an address (lead's own, else the shop's) via native setAddress; needs a new build · feat-contact-address.
 - 2026-10-16 · Checklist: contact sync tested on the vivo, new build done, login + suspension fixes, contact address idea · fix-checklist-16-oct.
 - 2026-10-16 · Suspended rep: app re-reads /me on a 409, moves to another program with a one-time notice, or shows

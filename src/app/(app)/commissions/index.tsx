@@ -1,5 +1,6 @@
 // app/(app)/commissions/index.tsx (Earnings tab)
 import { EARN_SEEN_KEY, earningsApi } from '@/api/earnings';
+import { logLoadError } from '@/utils/errors';
 import { AppColors } from '@/constants/colors';
 import { useAppTheme } from '@/hooks/use-app-theme';
 import { typography } from '@/styles/typography';
@@ -82,7 +83,7 @@ export default function EarningsScreen() {
       setCommissions(commissionsResponse.data.data.data);
       setPayouts(payoutsResponse.data.data.data);
     } catch (error) {
-      console.error('Error loading earnings:', error);
+      logLoadError('Error loading earnings:', error);
     } finally {
       setLoading(false);
       setRefreshing(false);

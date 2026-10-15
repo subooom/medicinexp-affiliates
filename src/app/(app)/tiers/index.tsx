@@ -1,5 +1,6 @@
 // app/(app)/tiers/index.tsx
 import { tierApi } from '@/api/tiers';
+import { logLoadError } from '@/utils/errors';
 import { AppColors } from '@/constants/colors';
 import { useAppTheme } from '@/hooks/use-app-theme';
 import { typography } from '@/styles/typography';
@@ -28,7 +29,7 @@ export default function TiersScreen() {
       setTiers(list.data.data.tiers);
       setCurrent(mine.data.data);
     } catch (error) {
-      console.error('Error loading tiers:', error);
+      logLoadError('Error loading tiers:', error);
     } finally {
       setLoading(false);
       setRefreshing(false);

@@ -1,5 +1,6 @@
 // app/(app)/call-logs/[id].tsx
 import { callLogApi } from '@/api/call-logs';
+import { logLoadError } from '@/utils/errors';
 import { AppColors } from '@/constants/colors';
 import { useAppTheme } from '@/hooks/use-app-theme';
 import { typography } from '@/styles/typography';
@@ -38,7 +39,7 @@ export default function CallLogDetailScreen() {
       const response = await callLogApi.getById(parseInt(id));
       setCallLog(response.data.data);
     } catch (error) {
-      console.error('Error loading call log:', error);
+      logLoadError('Error loading call log:', error);
       Alert.alert('Error', 'Failed to load call log details');
     } finally {
       setLoading(false);

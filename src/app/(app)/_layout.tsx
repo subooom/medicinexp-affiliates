@@ -1,9 +1,10 @@
 // app/(app)/_layout.tsx
 import { TeamUpHost } from '@/components/team-up/team-up-host';
+import { useAuth } from '@/context/AuthContext';
 import { useAppTheme } from '@/hooks/use-app-theme';
 import { autoSyncContacts } from '@/utils/contact-sync';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { Tabs } from 'expo-router';
+import { Tabs, useRouter } from 'expo-router';
 import { useEffect } from 'react';
 
 // Routes reachable from screens but not shown in the tab bar. Every route in (app)
@@ -30,12 +31,24 @@ const HIDDEN_ROUTES = [
 
 export default function AppLayout() {
   const { colors } = useAppTheme();
+  const { user, activeMembership, needsProgramChoice } = useAuth();
+  // Suspended or not approved yet: only Dashboard (the status) and Profile (invitations, join,
+  // guide, log out). Every other tab needs a program and would only fail.
+  const noProgram = !!user && !activeMembership && !needsProgramChoice;
+  const workTab = noProgram ? { href: null } : {};
+  const router = useRouter();
+  useEffect(() => {
+    // Suspended while on Visits / Leads / Earnings: those tabs are gone, show the status instead
+    if (noProgram) router.navigate('/(app)');
+  }, [noProgram]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Phone contacts: refreshed once a day if allowed, else offered once (after the screen settles)
+  const programId = activeMembership?.program?.id;
   useEffect(() => {
+    if (!programId) return;
     const timer = setTimeout(() => autoSyncContacts(), 5000);
     return () => clearTimeout(timer);
-  }, []);
+  }, [programId]);
 
   return (
     <>
@@ -75,9 +88,9 @@ export default function AppLayout() {
       })}
     >
       <Tabs.Screen name="index" options={{ title: 'Dashboard' }} />
-      <Tabs.Screen name="visits" options={{ title: 'Visits' }} />
-      <Tabs.Screen name="leads" options={{ title: 'Leads', freezeOnBlur: true, popToTopOnBlur: true }} />
-      <Tabs.Screen name="commissions" options={{ title: 'Earnings', popToTopOnBlur: true }} />
+      <Tabs.Screen name="visits" options={{ title: 'Visits', ...workTab }} />
+      <Tabs.Screen name="leads" options={{ title: 'Leads', freezeOnBlur: true, popToTopOnBlur: true, ...workTab }} />
+      <Tabs.Screen name="commissions" options={{ title: 'Earnings', popToTopOnBlur: true, ...workTab }} />
       <Tabs.Screen name="profile" options={{ title: 'Profile' }} />
 
       {HIDDEN_ROUTES.map((name) => (
