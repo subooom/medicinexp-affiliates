@@ -12,6 +12,7 @@ import android.provider.ContactsContract.CommonDataKinds.Note
 import android.provider.ContactsContract.CommonDataKinds.Organization
 import android.provider.ContactsContract.CommonDataKinds.Phone
 import android.provider.ContactsContract.CommonDataKinds.StructuredName
+import android.provider.ContactsContract.CommonDataKinds.StructuredPostal
 import android.provider.ContactsContract.Data
 import android.provider.ContactsContract.RawContacts
 import expo.modules.kotlin.exception.Exceptions
@@ -43,6 +44,20 @@ class MedicineXpContactsModule : Module() {
      */
     AsyncFunction("upsert") { phone: String, displayName: String, company: String, title: String, note: String, create: Boolean ->
       upsert(phone, displayName, company, title, note, create)
+    }
+
+    /**
+     * Set the work address of the contact saved for this phone number (one formatted line,
+     * e.g. "New Road, Kathmandu"). Returns false when no contact has this number.
+     * Separate from upsert so builds without it keep working (the JS checks it exists).
+     */
+    AsyncFunction("setAddress") { phone: String, address: String ->
+      val existing = findByPhone(phone) ?: return@AsyncFunction false
+      setData(existing, StructuredPostal.CONTENT_ITEM_TYPE, ContentValues().apply {
+        put(StructuredPostal.FORMATTED_ADDRESS, address)
+        put(StructuredPostal.TYPE, StructuredPostal.TYPE_WORK)
+      })
+      true
     }
 
     /** Delete every contact the app saved and the account itself (rep left / suspended). */

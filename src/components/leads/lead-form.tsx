@@ -8,7 +8,7 @@ import { typography } from '@/styles/typography';
 import { Lead, LeadInput, LeadType, Product, Venue } from '@/types/models';
 import { LEAD_TYPES, leadTypeColor } from '@/utils/lead-types';
 import { uuidv4 } from '@/utils/uuid';
-import { contactSyncAvailable, saveDefault, syncLeadContact } from '@/utils/contact-sync';
+import { contactSyncAvailable, saveDefault, syncLeadContact, venueAddress } from '@/utils/contact-sync';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
@@ -148,6 +148,7 @@ export function LeadForm({ lead, venueId, visitId, onSaved }: LeadFormProps) {
               productName: products.find((p) => p.id === productId)?.name ?? null,
               followUpAt: payload.next_follow_up_at,
               notes: payload.notes,
+              address: payload.contact_address || venueAddress(venue),
             },
             // Editing only refreshes a saved contact unless the rep ticked "Save"
             { create: saveToPhone, event: lead ? null : 'New lead' }

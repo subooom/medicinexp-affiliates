@@ -11,6 +11,8 @@ export interface SyncContact {
   product_name: string | null;
   follow_up_at: string | null;
   notes: string | null;
+  // The lead's own address, else its shop's (older servers don't send it)
+  address?: string | null;
   is_customer: boolean;
   venue_type: string | null;
   last_visited_at: string | null;
