@@ -86,7 +86,8 @@ export const lightColors: AppColors = {
   secondary: '#FF8A00',
   secondaryForeground: '#FFFFFF',
   muted: '#F1EFF5',
-  mutedForeground: '#6E6880',
+  // Readable in sunlight: a step darker than before (#6E6880)
+  mutedForeground: '#5B5570',
   accent: '#0D9488', // Teal accent that complements purple nicely
   accentForeground: '#FFFFFF',
   destructive: '#DC2626',
@@ -139,7 +140,8 @@ export const darkColors: AppColors = {
   secondary: '#FF9A26',
   secondaryForeground: '#1A0F00',
   muted: '#1E153E',
-  mutedForeground: '#9E95B8',
+  // Readable in sunlight: a step lighter than before (#9E95B8)
+  mutedForeground: '#B6AED0',
   accent: '#2DD4BF', // Vibrant teal contrast for dark mode
   accentForeground: '#0F0A1F',
   destructive: '#EF4444',
