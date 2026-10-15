@@ -1,5 +1,5 @@
 // src/components/programs/program-switcher.tsx
-import { isUsableMembership, useAuth } from '@/context/AuthContext';
+import { isUsableMembership, suspensionText, useAuth } from '@/context/AuthContext';
 import { useAppTheme } from '@/hooks/use-app-theme';
 import { typography } from '@/styles/typography';
 import { Membership } from '@/types/models';
@@ -26,7 +26,8 @@ export function ProgramSwitcher({ visible, onClose, onSwitched, required }: Prog
   const [switching, setSwitching] = useState<number | null>(null);
   const [refreshing, setRefreshing] = useState(false);
 
-  const memberships = user?.memberships ?? [];
+  // Programs the rep left aren't listed; suspended ones show why
+  const memberships = (user?.memberships ?? []).filter((m) => m.status !== 'left');
 
   // Fresh statuses each time it opens: a program may have been paused since login
   useEffect(() => {
@@ -98,9 +99,11 @@ export function ProgramSwitcher({ visible, onClose, onSwitched, required }: Prog
                       ? [membership.tier?.name, `Code ${membership.referral_code}`].filter(Boolean).join(' • ')
                       : paused
                         ? 'Paused by MedicineXP. You can switch to it once it is back on.'
-                        : membership.status === 'invited'
-                          ? 'Invitation waiting'
-                          : 'Waiting for approval'}
+                        : membership.status === 'suspended'
+                          ? `Suspended${suspensionText(membership) ? ` ${suspensionText(membership)}` : ''}`
+                          : membership.status === 'invited'
+                            ? 'Invitation waiting'
+                            : 'Waiting for approval'}
                   </Text>
                 </View>
                 {switching === program.id ? (

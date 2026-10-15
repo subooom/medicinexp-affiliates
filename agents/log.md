@@ -2,6 +2,8 @@
 
 One line per change: date · what · where (PR/branch). Append when you finish work.
 
+- 2026-10-16 · Suspended rep: app re-reads /me on a 409, moves to another program with a one-time notice, or shows
+  "Suspended from X" with the admin's reason on the dashboard; switcher shows suspensions · fix-suspended-rep.
 - 2026-10-16 · Login no longer stuck on "Waiting for approval": auth/_layout had its own AuthProvider · fix-login-stuck-approval.
 - 2026-10-16 · Check-in offers "Save shop to phone contacts" (on for a first visit), saved contacts show the visit;
   shop saves no longer rename a lead's contact · feat-visit-contact.

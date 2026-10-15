@@ -22,6 +22,17 @@ const apiClient = axios.create({
 
 export const apiBaseUrl = API_URL;
 
+// The server refused the program the app is working in (suspended, left, paused, or a
+// choice is needed). AuthContext listens and re-reads the profile.
+type ProgramUnavailableListener = (data: { code?: string; message?: string }) => void;
+const programUnavailableListeners = new Set<ProgramUnavailableListener>();
+export function onProgramUnavailable(listener: ProgramUnavailableListener): () => void {
+  programUnavailableListeners.add(listener);
+  return () => {
+    programUnavailableListeners.delete(listener);
+  };
+}
+
 // Request interceptor
 apiClient.interceptors.request.use(
   async (config) => {
@@ -112,6 +123,10 @@ apiClient.interceptors.response.use(
         status: error.response?.status,
         data: error.response?.data,
       });
+    }
+
+    if (error.response?.status === 409 && Array.isArray(error.response?.data?.programs)) {
+      programUnavailableListeners.forEach((listener) => listener(error.response.data));
     }
 
     // Handle other errors

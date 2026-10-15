@@ -6,7 +6,7 @@ import { dashboardApi } from '@/api/dashboard';
 import { Logo } from '@/components/common/logo';
 import { ProgramSwitcher } from '@/components/programs/program-switcher';
 import { AppColors } from '@/constants/colors';
-import { useAuth } from '@/context/AuthContext';
+import { suspensionText, useAuth } from '@/context/AuthContext';
 import { useAppTheme } from '@/hooks/use-app-theme';
 import { typography } from '@/styles/typography';
 import { DashboardData } from '@/types/models';
@@ -67,7 +67,29 @@ export default function DashboardScreen() {
     }, [load])
   );
 
-  // Signed in, but no program to work in yet
+  // Signed in, but no program to work in: suspended (with the reason the admin gave), or not approved yet
+  const suspended = (user?.memberships ?? []).filter((m) => m.status === 'suspended' && m.program);
+  if (!activeMembership && !needsProgramChoice && suspended.length > 0) {
+    const waiting = (user?.memberships ?? []).filter((m) => m.status === 'pending' && m.program);
+    return (
+      <View style={[styles.centered, { backgroundColor: colors.background }]}>
+        <Ionicons name="ban-outline" size={48} color={colors.destructive} />
+        <Text style={[typography.h5, { color: colors.foreground, textAlign: 'center' }]}>
+          Suspended from {suspended.map((m) => m.program!.name).join(', ')}
+        </Text>
+        {suspended.map((m) => (
+          <Text key={m.id} style={[typography.body2, { color: colors.foreground, textAlign: 'center' }]}>
+            {suspensionText(m) || 'No reason given.'}
+          </Text>
+        ))}
+        <Text style={[typography.body2, { color: colors.mutedForeground, textAlign: 'center' }]}>
+          Hi {user?.name}. Your code doesn't work and you can't log work there for now. Talk to your program admin to get back in.
+          {waiting.length > 0 ? ` Waiting for approval: ${waiting.map((m) => m.program!.name).join(', ')}.` : ''}
+        </Text>
+      </View>
+    );
+  }
+
   if (!activeMembership && !needsProgramChoice) {
     return (
       <View style={[styles.centered, { backgroundColor: colors.background }]}>
