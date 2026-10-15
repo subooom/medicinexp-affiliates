@@ -6,7 +6,7 @@ import { useAppTheme } from '@/hooks/use-app-theme';
 import { typography } from '@/styles/typography';
 import { CallLog, Dropoff, Venue, VenueStats, Visit } from '@/types/models';
 import { toIconName } from '@/utils/icons';
-import { contactSyncAvailable, syncLeadContact } from '@/utils/contact-sync';
+import { contactSyncAvailable, syncShopContact } from '@/utils/contact-sync';
 import { getCallStatusColor, getVisitStatusColor } from '@/utils/status-colors';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
@@ -167,7 +167,10 @@ export default function VenueDetailScreen() {
           <TouchableOpacity
             style={styles.phoneRow}
             onPress={async () => {
-              const result = await syncLeadContact({ phone: venue.phone, venueName: venue.name }, { create: true });
+              const result = await syncShopContact(
+                { phone: venue.phone, name: venue.name, isCustomer: venue.is_customer, typeName: venue.type?.name },
+                { create: true }
+              );
               Alert.alert(
                 result === 'created' ? 'Saved to contacts' : result === 'updated' ? 'Contact updated' : 'Could not save',
                 result === 'unavailable' ? 'Allow contacts access for MedicineXP in your phone settings.' : 'Search "medicinexp" in Contacts to find it.'

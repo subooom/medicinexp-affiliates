@@ -2,6 +2,8 @@
 
 One line per change: date · what · where (PR/branch). Append when you finish work.
 
+- 2026-10-16 · Check-in offers "Save shop to phone contacts" (on for a first visit), saved contacts show the visit;
+  shop saves no longer rename a lead's contact · feat-visit-contact.
 - 2026-10-15 · Contact sync: lead contacts under an app-owned "MedicineXP" account (native module), call-screen
   status/next step updated on events, removed when the rep leaves; checklist drops the Bronze codes item · feat-contact-sync.
 - 2026-10-15 · In-app QR scanner for Team up (expo-camera, loaded lazily; scanned code joins at once) · feat-team-up-scanner.

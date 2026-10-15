@@ -197,8 +197,11 @@ security fixes (any time, small) -> server upgrade LAST
     - [ ] Lock lapses unconverted -> another rep can take the shop (fresh hold)
 
 - [x] Contact sync - BUILT (app feat-contact-sync; Android)
-  - [x] Save to phone on lead create/edit (tick, on by default, remembered), never on visits
+  - [x] Save to phone on lead create/edit (tick, on by default, remembered)
   - [x] Manual "Save to contacts" on venue and lead
+  - [x] Check-in: "Save shop to phone contacts" tick, on for a first visit / shop added there, else off
+    - [x] Saved contacts show "Visited 16 Oct"; a lead's contact keeps its name and status (feat-visit-contact)
+    - [ ] Test on the new build (steps in the PR)
   - [x] Name: "Ram Thapa (Shree Ganesh Pharmacy) MedicineXP" (search "medicinexp" finds all)
   - [x] Update by phone number (last 10 digits), never duplicate, never delete one by one
   - [ ] Test on the vivo after the new build (steps in the PR)

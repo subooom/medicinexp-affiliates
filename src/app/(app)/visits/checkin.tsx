@@ -18,6 +18,7 @@ import { useAppTheme } from '@/hooks/use-app-theme';
 import { typography } from '@/styles/typography';
 import { MaterialWithStock, Venue, Visit, VisitInput } from '@/types/models';
 import { toIconName } from '@/utils/icons';
+import { contactSyncAvailable, eventDay, syncShopContact } from '@/utils/contact-sync';
 import { uuidv4 } from '@/utils/uuid';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import * as Location from 'expo-location';
@@ -116,6 +117,29 @@ export default function CheckInScreen() {
         .sort((a, b) => Number(b.program_id === activeProgramId) - Number(a.program_id === activeProgramId) || ticked.indexOf(a.program_id) - ticked.indexOf(b.program_id)),
     [materials, ticked, activeProgramId]
   );
+
+  // Save the shop's number to the phone: on by default for a first visit (they may call back),
+  // off for shops the rep already knows, so walk-past shops don't fill up their contacts
+  const [saveContact, setSaveContact] = useState(false);
+  const [addedHere, setAddedHere] = useState(false);
+  useEffect(() => {
+    setSaveContact(false);
+    if (!venue?.phone || !contactSyncAvailable) return;
+    if (addedHere) {
+      setSaveContact(true);
+      return;
+    }
+    let cancelled = false;
+    venueApi
+      .getById(venue.id)
+      .then((response) => {
+        if (!cancelled) setSaveContact(response.data.data.stats.my_visits === 0);
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, [venue?.id, venue?.phone, addedHere]);
 
   const [submitting, setSubmitting] = useState(false);
   // Teamed up: this check-in counts for both reps (the server adds the teammate)
@@ -242,6 +266,14 @@ export default function CheckInScreen() {
       if (photo) await uploadAttachment('photo', photo, target, `Shop photo: ${venue.name}`).catch(() => undefined);
       if (memo) await uploadAttachment('voice_memo', memo, target, `Voice memo: ${venue.name}`).catch(() => undefined);
 
+      // A saved contact shows the visit on the call screen; ticked, a new one is saved
+      if (!planLater && venue.phone) {
+        await syncShopContact(
+          { phone: venue.phone, name: venue.name, isCustomer: venue.is_customer, typeName: venue.type?.name },
+          { create: saveContact, event: `Visited ${eventDay()}` }
+        );
+      }
+
       if (result.queued) {
         Alert.alert(planLater ? 'Visit planned' : 'Checked in', queuedMessage);
         router.back();
@@ -319,7 +351,12 @@ export default function CheckInScreen() {
                 {[venue.address, venue.city].filter(Boolean).join(', ')}
               </Text>
             </View>
-            <TouchableOpacity onPress={() => setVenue(null)}>
+            <TouchableOpacity
+              onPress={() => {
+                setVenue(null);
+                setAddedHere(false);
+              }}
+            >
               <Text style={[typography.caption, { color: colors.primary, fontWeight: '600' }]}>Change</Text>
             </TouchableOpacity>
           </View>
@@ -461,6 +498,18 @@ export default function CheckInScreen() {
           </>
         )}
 
+        {!planLater && !!venue?.phone && contactSyncAvailable && (
+          <TouchableOpacity style={[styles.planRow, { backgroundColor: colors.card, borderColor: colors.border, gap: 10 }]} onPress={() => setSaveContact(!saveContact)}>
+            <Ionicons name={saveContact ? 'checkbox' : 'square-outline'} size={22} color={colors.primary} />
+            <View style={{ flex: 1 }}>
+              <Text style={[typography.body2, { color: colors.foreground, fontWeight: '600' }]}>Save shop to phone contacts</Text>
+              <Text style={[typography.caption, { color: colors.mutedForeground }]}>
+                {venue.phone} · see who's calling back. Removed if you leave.
+              </Text>
+            </View>
+          </TouchableOpacity>
+        )}
+
         {/* Notes */}
         <Text style={[typography.body1, styles.sectionTitle, { color: colors.foreground }]}>Notes</Text>
         <TextInput
@@ -515,6 +564,7 @@ export default function CheckInScreen() {
             onSaved={(created, pending) => {
               // Offline: the new place is usable right away with a temporary id
               setVenue(created ?? pending ?? null);
+              setAddedHere(true);
               setShowCreate(false);
             }}
           />

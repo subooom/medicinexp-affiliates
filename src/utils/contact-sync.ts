@@ -93,6 +93,40 @@ export async function syncLeadContact(lead: LeadContact, options: { create: bool
   }
 }
 
+export interface ShopContact {
+  phone?: string | null;
+  name: string;
+  isCustomer?: boolean;
+  typeName?: string | null;
+}
+
+/**
+ * Save or refresh a shop's own number (after a visit, or from the shop's page). A contact
+ * already saved for this number (e.g. from a lead) keeps its name and status line: only the
+ * latest event changes. create = false never adds a new contact.
+ */
+export async function syncShopContact(shop: ShopContact, options: { create: boolean; event?: string | null }): Promise<'created' | 'updated' | 'skipped' | 'unavailable'> {
+  if (!native || !shop.phone?.trim()) return 'unavailable';
+  try {
+    if (!(await permitted())) return 'unavailable';
+    const phone = shop.phone.trim();
+    const title = options.event ? ` ${options.event}`.slice(0, MAX_LINE) : '';
+    // Saved already: empty name / company leave them as they are
+    const refreshed = await native.upsert(phone, '', '', title, '', false);
+    if (refreshed !== 'skipped' || !options.create) return refreshed;
+    const company = shop.isCustomer ? 'MedicineXP customer' : shop.typeName?.trim() || '';
+    return await native.upsert(phone, contactName({ venueName: shop.name }), company ? `${company} ` : '', title, '', true);
+  } catch (err) {
+    console.warn('Shop contact sync failed', err);
+    return 'unavailable';
+  }
+}
+
+/** "16 Oct", the day format used in call-screen events. */
+export function eventDay(date: Date = new Date()): string {
+  return date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+}
+
 /** Only refresh the call-screen "job title" of a saved contact (e.g. after a call). */
 export async function noteContactEvent(phone: string | null | undefined, event: string): Promise<void> {
   if (!native || !phone?.trim()) return;
