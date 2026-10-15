@@ -1,5 +1,5 @@
 MEDICINEXP AFFILIATES - WHAT'S LEFT
-(tick with [x]) - verified 15 Oct 2026 (evening)
+(tick with [x]) - verified 16 Oct 2026
 
 Order: merge PRs -> run-book -> push -> pilot (How you earn, bucket) ->
 journal import -> companions + contacts -> team up / credit / holds -> rep map -> pitch recordings ->
@@ -32,6 +32,10 @@ security fixes (any time, small) -> server upgrade LAST
   - [x] pharmacyxp #69 - /how-you-earn (merged)
   - [x] medicinexp-affiliates #6 checklist, #7 guide + tour + Back fix, #8 read-aloud + Nepali voice memo fix,
         #9 How you earn, #10 ignore yarn.lock, #11 in-app QR scanner (all merged)
+  - [x] medicinexp-affiliates #13 contact sync, #14 check-in contacts, #15 sync all contacts,
+        #16 login stuck on "Waiting for approval" (all merged)
+  - [x] pharmacyxp #71 GET /contacts, #72 suspensions + reason in /me (merged)
+  - [ ] medicinexp-affiliates #17 suspended rep screen / program switch: merge + test (needs #72 deployed)
   - [ ] pharmacyxp #46 bulk entry: ready to merge (conflicts resolved, 146 tests pass)
   - [ ] Draft PRs opened for a look at unmerged work (all conflict with production)
     - [ ] #62 A-Z drugs of India (was only on your PC)
@@ -138,8 +142,15 @@ security fixes (any time, small) -> server upgrade LAST
   - [ ] Test helper agents/scripts/wt-bootstrap.php: fix ../ paths for classes missing in the main checkout (small PR)
   - [ ] Bots scanning for .env / .ssh / credentials: all blocked by nginx rules (nothing to do)
   - [x] EAS build failed: a stray untracked yarn.lock made EAS use yarn --frozen-lockfile (app #10 ignores it)
-    - [ ] Locally: del yarn.lock, git pull, npm install; use npm (not yarn) from now on
-  - [ ] New EAS dev build with expo-speech + expo-camera (from the E: folder, not the C:\Users\...\projects link)
+    - [x] Locally: del yarn.lock, git pull, npm install; use npm (not yarn) from now on
+  - [x] New EAS dev build with expo-speech, expo-camera + contacts module (16 Oct, installed on the vivo)
+  - [x] Login stuck on "Waiting for approval" until restart: login screens had a second AuthProvider (app #16)
+  - [x] Suspended rep got "Choose which program" errors and never saw why (pharmacyxp #72, app #17)
+    - [x] /me sends suspended/left memberships with date + reason; 409 says "You were suspended from X: reason"
+    - [x] App: other program -> switches with a one-time notice; none -> "Suspended from X" screen with the reason
+    - [x] Fixes contact removal on suspension (the app never saw suspended memberships before)
+    - [ ] Test after #17 merges (steps in the PR)
+  - [ ] 2 server tests depend on today's date (earnings "this week", "New week" push): fix in a separate PR
 
 - [ ] Visits: who went with you
   - [ ] "Who came with you?" chips at check-in and on the visit
@@ -201,18 +212,18 @@ security fixes (any time, small) -> server upgrade LAST
   - [x] Manual "Save to contacts" on venue and lead
   - [x] Check-in: "Save shop to phone contacts" tick, on for a first visit / shop added there, else off
     - [x] Saved contacts show "Visited 16 Oct"; a lead's contact keeps its name and status (feat-visit-contact)
-    - [ ] Test on the new build (steps in the PR)
+    - [x] Tested on the vivo (16 Oct)
   - [x] Sync all contacts (app feat-contacts-sync-all + pharmacyxp #71 GET /contacts)
     - [x] Own + team-up leads (not lost) and visited shops, all active programs, one per number
     - [x] Sync screen: "Phone contacts" count, last synced, Sync contacts button with progress
     - [x] Daily refresh at app start when allowed; never allowed -> offered once
     - [x] Lead with no phone uses the shop's number; denied permission explained once (Open settings)
     - [x] Numbers saved one way (no +977, landlines with 0) so they don't duplicate
-    - [ ] Test after #71 is deployed (steps in the PR)
+    - [x] Tested: sync works as expected (16 Oct)
     - [ ] Journal import: run the same sync after importing
   - [x] Name: "Ram Thapa (Shree Ganesh Pharmacy) MedicineXP" (search "medicinexp" finds all)
   - [x] Update by phone number (last 10 digits), never duplicate, never delete one by one
-  - [ ] Test on the vivo after the new build (steps in the PR)
+  - [x] Tested on the vivo after the new build: all #13 steps pass, incl. removal on suspension (16 Oct)
   - [x] Tested vivo: call screen (in and out) shows company + job title on one line
   - [x] Remarks on the call screen, updated on events (lead saved/edited, status change, call logged)
     - [x] Company = status + product ("Interested · Premium plan")
@@ -227,6 +238,9 @@ security fixes (any time, small) -> server upgrade LAST
       - [x] Local native module modules/medicinexp-contacts (account + sync adapter, Kotlin)
     - [x] On suspension/leaving (no active program, one suspended/left): app removes all its contacts
     - [ ] iOS: not built (no app-owned accounts there); decide if iPhone reps need it
+  - [ ] Address on the contact (shop address / lead address in the contact's address field)
+    - [ ] Needs a native change (postal address) -> ships with the next EAS build (e.g. the Firebase one)
+    - [ ] Server /contacts sends the address; old builds just skip it
     - [x] Ships in the next EAS build (Firebase/push still later)
 
 - [ ] Rep map: available pharmacies (after shop holds)
