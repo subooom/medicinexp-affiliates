@@ -94,18 +94,33 @@ export default function ProfileScreen() {
     ]);
   };
 
-  const menu: { icon: IconName; label: string; route: Href; hint?: string }[] = [
-    { icon: 'map-outline', label: 'Pharmacies near me', route: '/(app)/map' },
-    { icon: 'easel-outline', label: 'Pitch kit (tips & demo video)', route: '/(app)/pitch' },
-    { icon: 'trophy-outline', label: 'Tiers & rewards', route: '/(app)/tiers', hint: activeMembership?.tier?.name },
-    { icon: 'business-outline', label: 'Pharmacies & clinics', route: '/(app)/venues' },
-    { icon: 'bag-handle-outline', label: 'My stock', route: '/(app)/inventory' },
-    { icon: 'cube-outline', label: 'Materials pickup', route: '/(app)/pickups' },
-    { icon: 'archive-outline', label: 'Drop-offs', route: '/(app)/distributions' },
-    { icon: 'call-outline', label: 'Calls', route: '/(app)/call-logs' },
-    { icon: 'pricetag-outline', label: 'Coupons', route: '/(app)/coupons' },
-    { icon: 'people-circle-outline', label: 'Meetups', route: '/(app)/meetups' },
-    { icon: 'cloud-upload-outline', label: 'Sync', route: '/(app)/sync' },
+  type MenuItem = { icon: IconName; label: string; route: Href; hint?: string };
+  // Grouped so the list reads in three short blocks instead of one long one
+  const menuGroups: { title: string; items: MenuItem[] }[] = [
+    {
+      title: 'Selling',
+      items: [
+        { icon: 'map-outline', label: 'Pharmacies near me', route: '/(app)/map' },
+        { icon: 'business-outline', label: 'Pharmacies & clinics', route: '/(app)/venues' },
+        { icon: 'easel-outline', label: 'Pitch kit (tips & demo video)', route: '/(app)/pitch' },
+        { icon: 'call-outline', label: 'Calls', route: '/(app)/call-logs' },
+        { icon: 'pricetag-outline', label: 'Coupons', route: '/(app)/coupons' },
+        { icon: 'trophy-outline', label: 'Tiers & rewards', route: '/(app)/tiers', hint: activeMembership?.tier?.name },
+      ],
+    },
+    {
+      title: 'Materials',
+      items: [
+        { icon: 'bag-handle-outline', label: 'My stock', route: '/(app)/inventory' },
+        { icon: 'cube-outline', label: 'Materials pickup', route: '/(app)/pickups' },
+        { icon: 'archive-outline', label: 'Drop-offs', route: '/(app)/distributions' },
+        { icon: 'people-circle-outline', label: 'Meetups', route: '/(app)/meetups' },
+      ],
+    },
+    {
+      title: 'This phone',
+      items: [{ icon: 'cloud-upload-outline', label: 'Sync (offline work, phone contacts)', route: '/(app)/sync' }],
+    },
   ];
 
   return (
@@ -185,20 +200,25 @@ export default function ProfileScreen() {
         <Stat label="Visits" value={counts?.visits ?? '—'} colors={colors} />
       </View>
 
-      <View style={[styles.menu, { backgroundColor: colors.card, borderColor: colors.border }]}>
-        {menu.map((item, index) => (
-          <TouchableOpacity
-            key={item.label}
-            style={[styles.menuItem, index < menu.length - 1 && { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.border }]}
-            onPress={() => router.push(item.route)}
-          >
-            <Ionicons name={item.icon} size={22} color={colors.primary} />
-            <Text style={[typography.body1, { flex: 1, color: colors.foreground }]}>{item.label}</Text>
-            {item.hint ? <Text style={[typography.caption, { color: colors.mutedForeground }]}>{item.hint}</Text> : null}
-            <Ionicons name="chevron-forward" size={18} color={colors.mutedForeground} />
-          </TouchableOpacity>
-        ))}
-      </View>
+      {menuGroups.map((group) => (
+        <View key={group.title} style={{ gap: 6 }}>
+          <Text style={[typography.caption, styles.groupTitle, { color: colors.mutedForeground }]}>{group.title}</Text>
+          <View style={[styles.menu, { backgroundColor: colors.card, borderColor: colors.border }]}>
+            {group.items.map((item, index) => (
+              <TouchableOpacity
+                key={item.label}
+                style={[styles.menuItem, index < group.items.length - 1 && { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.border }]}
+                onPress={() => router.push(item.route)}
+              >
+                <Ionicons name={item.icon} size={22} color={colors.primary} />
+                <Text style={[typography.body1, { flex: 1, color: colors.foreground }]}>{item.label}</Text>
+                {item.hint ? <Text style={[typography.caption, { color: colors.mutedForeground }]}>{item.hint}</Text> : null}
+                <Ionicons name="chevron-forward" size={18} color={colors.mutedForeground} />
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+      ))}
 
       <View style={[styles.menu, { backgroundColor: colors.card, borderColor: colors.border, padding: 16, gap: 10 }]}>
         <Text style={[typography.body1, { color: colors.foreground, fontWeight: '600' }]}>Join another program</Text>
@@ -268,6 +288,7 @@ const createStyles = (colors: AppColors) =>
     codeCard: { flexDirection: 'row', alignItems: 'center', padding: 14, borderRadius: 12, borderWidth: 1 },
     code: { fontSize: 22, fontWeight: '800', letterSpacing: 2 },
     stats: { flexDirection: 'row', paddingVertical: 14, borderRadius: 12, borderWidth: 1 },
+    groupTitle: { fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.6, marginLeft: 4 },
     menu: { borderRadius: 12, borderWidth: 1, overflow: 'hidden' },
     menuItem: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 14, paddingVertical: 14 },
     logout: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 14, borderRadius: 12, borderWidth: 1, marginTop: 8 },

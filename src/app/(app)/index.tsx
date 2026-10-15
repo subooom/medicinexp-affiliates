@@ -14,12 +14,27 @@ import { readableColor } from '@/utils/color';
 import { IconName, toIconName } from '@/utils/icons';
 import { leadStatusLabel } from '@/utils/lead-types';
 import { formatPaisa, formatRate } from '@/utils/money';
+import { getVisitStatusColor } from '@/utils/status-colors';
 import { requirementLabel } from '@/utils/tiers';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Href, useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
 import { ActivityIndicator, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+
+/** "Today 2:15 PM", "Yesterday 10 AM", else "14 Oct 3 PM" */
+const visitWhen = (iso: string) => {
+  const date = new Date(iso);
+  const time = date.toLocaleTimeString('en-US', { hour: 'numeric', minute: date.getMinutes() ? '2-digit' : undefined });
+  const day = new Date(date);
+  day.setHours(0, 0, 0, 0);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const days = Math.round((today.getTime() - day.getTime()) / 86400000);
+  if (days === 0) return `Today ${time}`;
+  if (days === 1) return `Yesterday ${time}`;
+  return `${date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })} ${time}`;
+};
 
 const payoutDayLabel = (dateString: string) => {
   const date = new Date(`${dateString}T00:00:00`);
@@ -114,10 +129,11 @@ export default function DashboardScreen() {
   const earnings = data?.earnings;
   // Each action has a colour that matches what it does: green to go out, orange to grow
   // (leads, codes), blue to talk, teal to find, purple for the kit and stock
-  const quickActions: { label: string; icon: IconName; route: Href; color: string; anchor?: boolean }[] = [
-    { label: 'Check in', icon: 'location', route: '/(app)/visits/checkin', color: colors.success, anchor: true },
-    { label: 'New lead', icon: 'person-add', route: '/(app)/leads/create', color: colors.secondary, anchor: true },
-    { label: 'Log call', icon: 'call', route: '/(app)/call-logs/create', color: colors.info },
+  // primary: the daily work (filled tiles); the rest are reference tools (quieter tiles)
+  const quickActions: { label: string; icon: IconName; route: Href; color: string; anchor?: boolean; primary?: boolean }[] = [
+    { label: 'Check in', icon: 'location', route: '/(app)/visits/checkin', color: colors.success, anchor: true, primary: true },
+    { label: 'New lead', icon: 'person-add', route: '/(app)/leads/create', color: colors.secondary, anchor: true, primary: true },
+    { label: 'Log call', icon: 'call', route: '/(app)/call-logs/create', color: colors.info, primary: true },
     // Working with another rep today: show / enter a code (two taps from here)
     { label: 'Team up', icon: 'people', route: '/(app)/team-up' as Href, color: colors.info },
     { label: 'Near me', icon: 'map', route: '/(app)/map' as Href, color: colors.accent },
@@ -218,14 +234,21 @@ export default function DashboardScreen() {
           {quickActions.map((action) => (
             <TouchableOpacity
               key={action.label}
-              style={[styles.quickAction, { backgroundColor: colors.card, borderColor: action.color + '40' }]}
+              style={[
+                styles.quickAction,
+                action.primary
+                  ? { backgroundColor: action.color, borderColor: action.color, width: '31%' }
+                  : { backgroundColor: colors.card, borderColor: colors.border, width: '18%', paddingVertical: 10 },
+              ]}
               // Check-in and New lead open on top of their tab's list, so Back lands there
               onPress={() => router.push(action.route, action.anchor ? { withAnchor: true } : undefined)}
             >
-              <View style={[styles.quickIcon, { backgroundColor: action.color + (isDark ? '30' : '1A') }]}>
-                <Ionicons name={action.icon} size={22} color={action.color} />
+              <View style={[styles.quickIcon, { backgroundColor: action.primary ? 'rgba(255,255,255,0.22)' : action.color + (isDark ? '30' : '1A') }]}>
+                <Ionicons name={action.icon} size={22} color={action.primary ? '#FFFFFF' : action.color} />
               </View>
-              <Text style={[typography.caption, { color: colors.foreground, fontWeight: '600' }]}>{action.label}</Text>
+              <Text style={[typography.caption, { color: action.primary ? '#FFFFFF' : colors.foreground, fontWeight: action.primary ? '700' : '600' }]}>
+                {action.label}
+              </Text>
             </TouchableOpacity>
           ))}
         </View>
@@ -360,9 +383,16 @@ export default function DashboardScreen() {
                     style={[styles.todoRow, { borderTopColor: colors.border }]}
                     onPress={() => router.push({ pathname: '/(app)/visits/[id]', params: { id: visit.id } }, { withAnchor: true })}
                   >
-                    <Ionicons name="location-outline" size={18} color={colors.success} />
-                    <Text style={[typography.body2, { flex: 1, color: colors.foreground }]} numberOfLines={1}>{visit.venue?.name}</Text>
-                    <Text style={[typography.caption, { color: colors.mutedForeground }]}>{new Date(visit.visited_at).toLocaleDateString()}</Text>
+                    <Ionicons name={visit.team_up_id ? 'people-outline' : 'location-outline'} size={18} color={getVisitStatusColor(colors, visit.status)} />
+                    <View style={{ flex: 1 }}>
+                      <Text style={[typography.body2, { color: colors.foreground }]} numberOfLines={1}>{visit.venue?.name}</Text>
+                      {/* Same shop twice in a row: the time and status tell the visits apart */}
+                      <Text style={[typography.caption, { color: colors.mutedForeground }]} numberOfLines={1}>
+                        {[visitWhen(visit.visited_at), visit.status !== 'completed' ? (visit.status === 'planned' ? 'Planned' : 'Cancelled') : null, visit.team_up_id ? 'Team' : null]
+                          .filter(Boolean)
+                          .join(' · ')}
+                      </Text>
+                    </View>
                   </TouchableOpacity>
                 ))
               )}

@@ -323,13 +323,14 @@ export default function VisitDetailScreen() {
               <Text style={[typography.button, styles.actionButtonText, { color: colors.foreground }]}>Cancel Visit</Text>
             </TouchableOpacity>
           )}
+          {/* Quiet on purpose: easy to find, hard to hit by accident (and it asks first) */}
           <TouchableOpacity
-            style={[styles.actionButton, { backgroundColor: colors.destructive || '#EF4444' }]}
+            style={[styles.actionButton, styles.outlineButton, { borderColor: colors.destructive, marginTop: 12 }]}
             onPress={handleDelete}
             disabled={saving}
           >
-            <Ionicons name="trash-outline" size={20} color="#fff" />
-            <Text style={[typography.button, styles.actionButtonText, { color: '#fff' }]}>Delete Visit</Text>
+            <Ionicons name="trash-outline" size={20} color={colors.destructive} />
+            <Text style={[typography.button, styles.actionButtonText, { color: colors.destructive }]}>Delete Visit</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
