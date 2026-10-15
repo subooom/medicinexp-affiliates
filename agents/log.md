@@ -2,6 +2,7 @@
 
 One line per change: date · what · where (PR/branch). Append when you finish work.
 
+- 2026-10-16 · Login no longer stuck on "Waiting for approval": auth/_layout had its own AuthProvider · fix-login-stuck-approval.
 - 2026-10-16 · Check-in offers "Save shop to phone contacts" (on for a first visit), saved contacts show the visit;
   shop saves no longer rename a lead's contact · feat-visit-contact.
 - 2026-10-15 · Contact sync: lead contacts under an app-owned "MedicineXP" account (native module), call-screen
